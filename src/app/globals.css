@@ -932,9 +932,15 @@ button {
   }
 }
 
+@keyframes sk-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
 .out .out-blank {
   opacity: 1;
   transition: opacity .35s ease;
+  animation: sk-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 .out.built .out-blank,
