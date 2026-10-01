@@ -1119,17 +1119,7 @@ export default function Home() {
                         strokeWidth="1"
                       />
                       <g clipPath="url(#cp)">
-                        {/* blank state: dashed canvas waiting for AI */}
-                        <g className="out-blank">
-                          <rect x="22" y="314" width="144" height="116" rx="6" fill="none" stroke="#222" strokeDasharray="3 3" />
-                          <circle cx="94" cy="358" r="13" fill="#151515" stroke="#262624" />
-                          <path d="M90 358h8M94 354v8" stroke="#4b5563" strokeWidth="1.5" strokeLinecap="round" />
-                          <text x="94" y="386" textAnchor="middle" fill="#6b7280" fontSize="8.5" style={{ fontFamily: "'IBM Plex Mono', monospace", letterSpacing: "0.04em" }}>
-                            Awaiting plan...
-                          </text>
-                        </g>
 
-                        {/* populated dashboard (animates in when AI response arrives) */}
                         <g className="out-live" transform="translate(-6, -122)">
                           <rect x="22" y="436" width="26" height="128" rx="4" fill="#111" stroke="#20201f" />
                           {[0, 1, 2, 3].map((i) => (
