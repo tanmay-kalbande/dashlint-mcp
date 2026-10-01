@@ -938,6 +938,7 @@ button {
 }
 
 .out.built .out-blank,
+.out.active .out-blank,
 .out:hover .out-blank,
 .out:focus-visible .out-blank {
   opacity: 0;
@@ -950,6 +951,7 @@ button {
 }
 
 .out.built .out-live,
+.out.active .out-live,
 .out:hover .out-live,
 .out:focus-visible .out-live {
   opacity: 1;
@@ -961,6 +963,7 @@ button {
 }
 
 .out.built .k,
+.out.active .k,
 .out:hover .k,
 .out:focus-visible .k {
   opacity: 1;
@@ -975,6 +978,7 @@ button {
 }
 
 .out.built .b,
+.out.active .b,
 .out:hover .b,
 .out:focus-visible .b {
   transform: scaleY(1);
@@ -988,6 +992,7 @@ button {
 }
 
 .out.built .dw,
+.out.active .dw,
 .out:hover .dw,
 .out:focus-visible .dw {
   transform: none;
