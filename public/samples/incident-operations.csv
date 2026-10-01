@@ -1,0 +1,25 @@
+Number,Opened,Resolved,Closed,Priority,State,Assignment group,Category,Subcategory,Made SLA,Caller,Short description,Reopen Count,Location,Resolution Code
+INC-24001,2026-08-01 08:12,2026-08-01 10:42,2026-08-01 10:42,2 - High,Resolved,Workplace IT,Hardware,Laptop,Yes,Alex Morgan,Laptop will not start,0,London,Resolved
+INC-24002,2026-08-01 09:05,2026-08-01 17:20,2026-08-01 17:20,3 - Moderate,Closed,Service Desk,Access,Password reset,Yes,Jamie Lee,Account locked after password change,0,Manchester,Resolved
+INC-24003,2026-08-02 07:48,2026-08-02 15:55,2026-08-02 15:55,2 - High,Resolved,Network Operations,Network,VPN,No,Taylor Smith,VPN disconnects during calls,0,London,Resolved
+INC-24004,2026-08-02 10:14,2026-08-02 10:55,2026-08-02 10:55,4 - Low,Closed,Service Desk,Access,Password reset,Yes,Casey Brown,Password reset request,0,Bristol,Resolved
+INC-24005,2026-08-03 08:30,2026-08-03 14:10,2026-08-03 14:10,3 - Moderate,Resolved,Workplace IT,Hardware,Laptop,Yes,Jordan Davis,Docking station not detected,0,London,Resolved
+INC-24006,2026-08-03 09:22,2026-08-03 18:15,2026-08-03 18:15,2 - High,Closed,Network Operations,Network,Wi-Fi,No,Alex Morgan,Office Wi-Fi drops repeatedly,1,Manchester,Resolved
+INC-24007,2026-08-04 08:03,2026-08-04 12:35,2026-08-04 12:35,1 - Critical,Resolved,Network Operations,Network,VPN,Yes,Riley Chen,VPN unavailable for finance team,0,London,Resolved
+INC-24008,2026-08-04 10:40,,,3 - Moderate,In Progress,Workplace IT,Hardware,Laptop,Yes,Jamie Lee,Replacement laptop setup pending,0,Bristol,
+INC-24009,2026-08-05 07:55,2026-08-05 11:05,2026-08-05 11:05,4 - Low,Closed,Service Desk,Access,Password reset,Yes,Casey Brown,Password reset request,0,London,Resolved
+INC-24010,2026-08-05 11:18,2026-08-05 19:42,2026-08-05 19:42,2 - High,Resolved,Network Operations,Network,Wi-Fi,No,Taylor Smith,Wi-Fi drops in meeting rooms,0,Manchester,Resolved
+INC-24011,2026-08-06 08:24,2026-08-06 13:15,2026-08-06 13:15,3 - Moderate,Closed,Workplace IT,Hardware,Monitor,Yes,Jordan Davis,External monitor flickers,0,Bristol,Resolved
+INC-24012,2026-08-06 09:01,,,2 - High,On Hold,Network Operations,Network,VPN,Yes,Alex Morgan,VPN access approval pending,0,London,
+INC-24013,2026-08-07 07:40,2026-08-07 08:55,2026-08-07 08:55,4 - Low,Closed,Service Desk,Access,Password reset,Yes,Jamie Lee,Password reset request,0,London,Resolved
+INC-24014,2026-08-07 10:45,2026-08-07 21:20,2026-08-07 21:20,2 - High,Resolved,Network Operations,Network,VPN,No,Riley Chen,VPN disconnects after idle timeout,1,Manchester,Resolved
+INC-24015,2026-08-08 08:11,2026-08-08 16:25,2026-08-08 16:25,3 - Moderate,Resolved,Workplace IT,Hardware,Laptop,Yes,Casey Brown,Slow laptop after security update,0,Bristol,Resolved
+INC-24016,2026-08-08 12:30,,,1 - Critical,New,Network Operations,Network,Wi-Fi,Yes,Taylor Smith,Warehouse network outage,0,Manchester,
+INC-24017,2026-08-09 08:42,2026-08-09 09:20,2026-08-09 09:20,4 - Low,Closed,Service Desk,Access,Password reset,Yes,Jordan Davis,Password reset request,0,London,Resolved
+INC-24018,2026-08-09 09:50,2026-08-09 14:15,2026-08-09 14:15,3 - Moderate,Resolved,Workplace IT,Hardware,Docking station,Yes,Alex Morgan,Dock disconnects from laptop,0,Bristol,Resolved
+INC-24019,2026-08-10 07:35,2026-08-10 18:40,2026-08-10 18:40,2 - High,Resolved,Network Operations,Network,VPN,No,Jamie Lee,VPN disconnects during calls,0,London,Resolved
+INC-24020,2026-08-10 10:05,,,3 - Moderate,In Progress,Workplace IT,Hardware,Laptop,Yes,Riley Chen,Laptop replacement awaiting delivery,0,Manchester,
+INC-24021,2026-08-11 08:08,2026-08-11 12:45,2026-08-11 12:45,4 - Low,Closed,Service Desk,Access,Password reset,Yes,Casey Brown,Password reset request,0,Bristol,Resolved
+INC-24022,2026-08-11 11:32,2026-08-11 20:10,2026-08-11 20:10,2 - High,Resolved,Network Operations,Network,Wi-Fi,No,Taylor Smith,Wi-Fi drops in meeting rooms,1,Manchester,Resolved
+INC-24023,2026-08-12 08:18,,,2 - High,In Progress,Network Operations,Network,VPN,Yes,Alex Morgan,VPN disconnects for remote users,0,London,
+INC-24024,2026-08-12 09:24,2026-08-12 15:50,2026-08-12 15:50,3 - Moderate,Resolved,Workplace IT,Hardware,Laptop,Yes,Jordan Davis,Laptop battery drains quickly,0,Bristol,Resolved

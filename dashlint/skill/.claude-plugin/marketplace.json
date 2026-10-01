@@ -1,0 +1,22 @@
+{
+  "name": "dashlint",
+  "display_name": "DashLint — Dashboard Design Rulebook",
+  "description": "Chart selection, design tokens, layout hierarchy, and data-viz rules from production React dashboards. Use when building or reviewing any dashboard, analytics page, or KPI display.",
+  "version": "0.1.0",
+  "author": "TODO: your-github-username",
+  "homepage": "https://github.com/TODO/dashlint",
+  "repository": "https://github.com/TODO/dashlint",
+  "license": "MIT",
+  "keywords": [
+    "dashboard",
+    "data-visualization",
+    "design-system",
+    "chart-selection",
+    "analytics",
+    "recharts",
+    "react",
+    "kpi",
+    "dataviz"
+  ],
+  "skill_entry": "../SKILL.md"
+}

@@ -1,0 +1,3 @@
+[submodule "dashlint"]
+	path = dashlint
+	url = https://github.com/tanmay-kalbande/dashlint.git

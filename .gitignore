@@ -1,0 +1,11 @@
+node_modules/
+.next/
+dist/
+.vercel/
+*.tsbuildinfo
+.env
+.env*.local
+.env.*
+!.env.example
+src/lib/rulebook-compiled.json
+next-env.d.ts

@@ -1,0 +1,25 @@
+Date,Media Type,Abandoned,Total Queue,Total Handle,Total Hold,Wrap-up,Users,Disconnect Type,Queue,Time to Abandon,Conversation ID,Remote,Duration,Total Contacting,Abandoned in Queue
+2026-09-01 08:12:00,Voice,No,8500,420000,35000,Resolved,A. Patel,Agent,Customer Care,0,C-1001,5550101,463500,12000,No
+2026-09-01 09:04:00,Voice,No,12500,510000,62000,Resolved,M. Chen,Agent,Billing,0,C-1002,5550102,572500,18000,No
+2026-09-01 09:18:00,Voice,Yes,18000,0,0,Abandoned,Unassigned,Customer,Customer Care,18000,C-1003,5550103,18000,18000,Yes
+2026-09-01 10:22:00,Chat,No,3200,680000,0,Resolved,J. Rivera,Agent,Technical Support,0,C-1004,5550104,683200,42000,No
+2026-09-02 08:36:00,Voice,No,7200,395000,28000,Resolved,A. Patel,Agent,Customer Care,0,C-1005,5550105,430200,9000,No
+2026-09-02 09:41:00,Voice,No,22400,640000,74000,Resolved,M. Chen,Agent,Billing,0,C-1006,5550106,736400,16000,No
+2026-09-02 11:15:00,Voice,Yes,12000,0,0,Abandoned,Unassigned,Customer,Billing,12000,C-1007,5550107,12000,12000,Yes
+2026-09-02 13:05:00,Chat,No,4100,720000,0,Resolved,J. Rivera,Agent,Technical Support,0,C-1008,5550108,724100,35000,No
+2026-09-03 08:10:00,Voice,No,6500,380000,20000,Resolved,A. Patel,Agent,Customer Care,0,C-1009,5550109,406500,11000,No
+2026-09-03 09:52:00,Voice,No,19500,590000,68000,Resolved,M. Chen,Agent,Billing,0,C-1010,5550110,659500,15000,No
+2026-09-03 10:02:00,Voice,Yes,26000,0,0,Abandoned,Unassigned,Customer,Technical Support,26000,C-1011,5550111,26000,26000,Yes
+2026-09-03 14:18:00,Chat,No,2800,610000,0,Resolved,J. Rivera,Agent,Technical Support,0,C-1012,5550112,612800,29000,No
+2026-09-04 08:25:00,Voice,No,9200,440000,31000,Resolved,A. Patel,Agent,Customer Care,0,C-1013,5550113,480200,13000,No
+2026-09-04 09:12:00,Voice,No,27800,705000,92000,Resolved,M. Chen,Agent,Billing,0,C-1014,5550114,797800,19000,No
+2026-09-04 10:44:00,Voice,No,16800,560000,54000,Resolved,A. Patel,Agent,Customer Care,0,C-1015,5550115,630800,14000,No
+2026-09-05 08:40:00,Voice,No,5400,365000,18000,Resolved,A. Patel,Agent,Customer Care,0,C-1016,5550116,388400,8000,No
+2026-09-05 09:33:00,Voice,Yes,14500,0,0,Abandoned,Unassigned,Customer,Billing,14500,C-1017,5550117,14500,14500,Yes
+2026-09-05 11:28:00,Chat,No,3600,655000,0,Resolved,J. Rivera,Agent,Technical Support,0,C-1018,5550118,658600,31000,No
+2026-09-06 08:05:00,Voice,No,6800,402000,24000,Resolved,A. Patel,Agent,Customer Care,0,C-1019,5550119,432800,10000,No
+2026-09-06 09:56:00,Voice,No,31200,780000,105000,Resolved,M. Chen,Agent,Billing,0,C-1020,5550120,916200,21000,No
+2026-09-06 10:20:00,Voice,Yes,22000,0,0,Abandoned,Unassigned,Customer,Billing,22000,C-1021,5550121,22000,22000,Yes
+2026-09-07 08:17:00,Voice,No,5900,370000,22000,Resolved,A. Patel,Agent,Customer Care,0,C-1022,5550122,397900,9000,No
+2026-09-07 10:11:00,Chat,No,2500,590000,0,Resolved,J. Rivera,Agent,Technical Support,0,C-1023,5550123,592500,27000,No
+2026-09-07 11:03:00,Voice,No,24600,660000,83000,Resolved,M. Chen,Agent,Billing,0,C-1024,5550124,767600,17000,No
