@@ -321,7 +321,16 @@ button, input, textarea, select { font: inherit; }
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.07), 0 1px 1px rgba(0, 0, 0, 0.04);
 }`,
 
-    kpiCards: `/* ── KPI Cards ── */
+    kpiCards: `/* ── KPI Cards & Summary Grid (Incident/SLA Canonical) ── */
+.kpi-panel {
+  display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 8px;
+  height: 100%; min-height: 0; overflow: hidden;
+}
+.kpis {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(3, minmax(0, 1fr));
+  gap: 8px; min-height: 0; flex: 1; overflow: hidden;
+}
+.kpi-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
 .kpi {
   border: 1px solid var(--line); border-radius: 6px; background: var(--surface);
   padding: 12px 14px; display: grid; grid-template-rows: auto 1fr auto;
@@ -330,6 +339,7 @@ button, input, textarea, select { font: inherit; }
 }
 .kpi.clickable { cursor: pointer; }
 .kpi.clickable:hover { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
+.kpi.clickable .kpi-sub::after { content: ' · click to explore'; color: var(--accent); font-weight: 600; }
 .kpi-label {
   color: var(--muted); font-size: 9.5px; letter-spacing: .09em; text-transform: uppercase;
   font-weight: 600; font-family: var(--mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -445,41 +455,45 @@ button, input, textarea, select { font: inherit; }
 .badge.warn { background: var(--warn-dim); color: var(--warn); border-color: rgba(180, 83, 9, .25); }
 .badge.err { background: var(--err-dim); color: var(--err); border-color: rgba(192, 57, 43, .25); }`,
 
-    generatedOutput: `/* ── Generated Output Panel ── */
-.gen-output {
+    generatedOutput: `/* ── Generated Output & Message Panel (Incident/SLA Canonical) ── */
+.message-panel, .gen-output {
   background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
-  padding: 14px 16px; display: flex; flex-direction: column; gap: 10px;
-  box-shadow: 0 1px 3px rgba(0,0,0,.02); min-width: 0;
+  padding: 14px 16px; color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.02);
+  min-width: 0; min-height: 0; height: 100%;
+  display: grid; grid-template-rows: auto minmax(0, 1fr) auto auto; gap: 8px;
+  overflow: hidden;
 }
-.gen-output .panel-head .badge { font-size: 9px; padding: 2px 8px; }
-.output-area {
-  background: var(--surface-2); border: 1px solid var(--line); border-radius: 6px;
-  padding: 14px 16px; font-size: 12.5px; line-height: 1.65; color: var(--ink);
-  min-height: 120px; max-height: 320px; overflow-y: auto; white-space: pre-wrap;
-  font-family: var(--sans); position: relative;
+.message-panel .panel-head, .gen-output .panel-head { margin-bottom: 2px; }
+.summary-textarea, textarea.summary-textarea, .output-area {
+  width: 100%; height: 100%; min-height: 0; flex: 1;
+  border: 1px solid var(--line); border-radius: 6px;
+  background: var(--surface-2); color: var(--ink);
+  padding: 12px 14px; font: 11.5px/1.55 var(--mono);
+  resize: none; outline: none; white-space: pre-wrap; overflow-y: auto;
+  box-sizing: border-box;
 }
-.output-area .copy-btn {
-  position: absolute; top: 8px; right: 8px; height: 24px; padding: 0 8px;
-  border: 1px solid var(--line); border-radius: 3px; background: var(--surface);
-  color: var(--muted); font-size: 9px; font-family: var(--mono); font-weight: 600;
-  cursor: pointer; display: inline-flex; align-items: center; gap: 4px;
-  transition: background .12s, color .12s;
+.summary-textarea:focus, textarea.summary-textarea:focus, .output-area:focus {
+  border-color: var(--accent); background: var(--surface);
 }
-.output-area .copy-btn:hover { background: var(--ink); color: #fff; }
-.calc-toggle { border-top: 1px solid var(--line); padding-top: 8px; }
-.calc-toggle summary {
-  font-size: 10px; font-family: var(--mono); font-weight: 600; color: var(--muted);
-  letter-spacing: .05em; cursor: pointer; list-style: none;
-  display: flex; align-items: center; gap: 4px;
+.rules, .calc-toggle {
+  margin-top: 4px; border: 1px solid var(--line); border-radius: 5px;
+  background: var(--surface-2); padding: 6px 10px; color: var(--muted);
+  font-size: 10px; font-family: var(--mono);
 }
-.calc-toggle summary::before { content: '▸ '; }
-.calc-toggle[open] summary::before { content: '▾ '; }
-.calc-toggle .rules-body {
-  margin-top: 8px; font-size: 11px; color: var(--muted); font-family: var(--mono);
-  line-height: 1.6; white-space: pre-wrap;
+.rules summary, .calc-toggle summary {
+  cursor: pointer; color: var(--ink); font-weight: 600; list-style: none;
+  display: flex; align-items: center; gap: 6px;
 }
-.output-actions { display: flex; gap: 6px; flex-wrap: wrap; }
-.output-actions .btn { height: 32px; font-size: 11px; padding: 0 14px; flex: 1 0 auto; }`,
+.rules summary::before, .calc-toggle summary::before { content: '▶'; font-size: 7.5px; color: var(--accent); }
+details[open] summary::before, .calc-toggle[open] summary::before { content: '▼'; }
+.rules div, .calc-toggle .rules-body { margin-top: 5px; display: grid; gap: 3px; line-height: 1.4; }
+.actions, .output-actions {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px; align-items: center; margin-top: 4px; overflow: hidden;
+}
+.actions .btn, .output-actions .btn {
+  height: 36px; font-size: 11.5px; padding: 0 8px; width: 100%;
+}`,
 
     multiSelectFilter: `/* ── Multi-Select Filter Dropdown ── */
 .scope-bar-btn {
@@ -587,14 +601,60 @@ button, input, textarea, select { font: inherit; }
   ],
 } as const;
 
-export const SECTION_LAYOUT_CSS = `/* ── Section Layouts ── */
+export const SECTION_LAYOUT_CSS = `/* ── Section Layouts & 1-Screen Viewport Fitting (Incident/SLA Canonical) ── */
+.tab-content-area, .dashboard-body {
+  min-height: 0; flex: 1; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; height: 100%;
+}
+#tabPanels {
+  min-height: 0; flex: 1; display: flex; flex-direction: column; height: 100%; width: 100%;
+}
+.tab-pane, .tab-panel {
+  display: none; flex-direction: column; gap: 10px; min-height: 100%; height: 100%; width: 100%;
+}
+.tab-pane.active, .tab-panel.active {
+  display: flex; flex: 1; min-height: 0;
+}
+.workspace, .overview-split {
+  min-height: 0; height: 100%; flex: 1;
+  display: grid; grid-template-columns: minmax(400px, .9fr) minmax(460px, 1.1fr);
+  gap: 12px; overflow: hidden;
+}
+.kpi-panel {
+  display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 8px;
+  height: 100%; min-height: 0; overflow: hidden;
+}
+.kpis {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(3, minmax(0, 1fr));
+  gap: 8px; min-height: 0; flex: 1; overflow: hidden;
+}
 .kpi-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-.overview-split { display: grid; grid-template-columns: minmax(400px, .9fr) minmax(360px, 1.1fr); gap: 12px; }
+.message-panel, .gen-output {
+  display: grid; grid-template-rows: auto minmax(0, 1fr) auto auto; gap: 8px;
+  height: 100%; min-height: 0; overflow: hidden;
+}
+.summary-textarea, textarea.summary-textarea, .output-area {
+  width: 100%; height: 100%; min-height: 0; flex: 1;
+  border: 1px solid var(--line); border-radius: 6px; background: var(--surface-2); color: var(--ink);
+  padding: 12px 14px; font: 11.5px/1.55 var(--mono); resize: none; outline: none; white-space: pre-wrap; overflow-y: auto;
+  box-sizing: border-box;
+}
+.rules, .calc-toggle {
+  margin-top: 4px; border: 1px solid var(--line); border-radius: 5px;
+  background: var(--surface-2); padding: 6px 10px; color: var(--muted); font-size: 10px; font-family: var(--mono);
+}
+.rules summary, .calc-toggle summary {
+  cursor: pointer; color: var(--ink); font-weight: 600; list-style: none; display: flex; align-items: center; gap: 6px;
+}
+.rules summary::before, .calc-toggle summary::before { content: '▶'; font-size: 7.5px; color: var(--accent); }
+details[open] summary::before, .calc-toggle[open] summary::before { content: '▼'; }
+.rules div, .calc-toggle .rules-body { margin-top: 5px; display: grid; gap: 3px; line-height: 1.4; }
+.actions, .output-actions {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; align-items: center; margin-top: 4px; overflow: hidden;
+}
+.actions .btn, .output-actions .btn { height: 36px; font-size: 11.5px; padding: 0 8px; width: 100%; }
 .seg-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
 .chart-container { min-height: 200px; }
 .chart-container svg { width: 100%; height: 100%; }
-.tab-panel { display: none; }
-.tab-panel.active { display: block; }
 .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 300px; color: var(--muted); font-family: var(--mono); font-size: 12px; text-align: center; gap: 8px; }
 .finding-card { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; border-left: 3px solid var(--accent); margin-bottom: 8px; }
 .finding-card.positive { border-left-color: var(--ok); }
@@ -614,8 +674,11 @@ export const SECTION_LAYOUT_CSS = `/* ── Section Layouts ── */
   .menu-btn { display: grid; place-items: center; }
   .header { grid-template-columns: 1fr; }
   .upload-box { margin-top: 8px; }
+  .workspace, .overview-split { grid-template-columns: 1fr; overflow: visible; height: auto; }
+  .message-panel, .gen-output { min-height: 400px; }
+  .actions, .output-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .overview-split { grid-template-columns: 1fr; }
   .seg-grid { grid-template-columns: 1fr; }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -671,22 +734,25 @@ export const HTML_SNIPPETS = {
   <p class="finding-title">{{TITLE}}</p>
   <p class="finding-body">{{BODY}}</p>
 </div>`,
-  genOutput: `<div class="gen-output">
-  <div class="panel-head">
+  genOutput: `<div class="panel message-panel gen-output">
+  <div class="panel-head" style="margin-bottom:4px;">
     <h2 class="panel-title">{{TITLE}}</h2>
-    <span class="badge">auto</span>
+    <span class="badge" id="{{BADGE_ID}}">Output</span>
   </div>
-  <div class="output-area" id="{{OUTPUT_ID}}">
-    Upload data to generate the report
-    <button class="copy-btn" id="{{COPY_ID}}">Copy</button>
-  </div>
-  <details class="calc-toggle">
-    <summary>CALCULATION RULES</summary>
-    <div class="rules-body" id="{{RULES_ID}}">{{CALC_RULES}}</div>
+  <textarea id="{{TEXTAREA_ID}}" class="summary-textarea" readonly>{{PLACEHOLDER_TEXT}}</textarea>
+  <details class="rules calc-toggle">
+    <summary>Calculation rules</summary>
+    <div class="rules-body" id="{{RULES_ID}}">
+      <span>• Rate = events meeting threshold / total eligible volume.</span>
+      <span>• Duration = average turnaround time for completed records.</span>
+      <span>• Critical backlog = active uncompleted records exceeding threshold.</span>
+    </div>
   </details>
-  <div class="output-actions">
+  <div class="actions output-actions">
+    <button class="btn" id="{{COPY_BTN}}">Copy msg</button>
     <button class="btn info" id="{{INSIGHTS_BTN}}">Insights</button>
-    <button class="btn secondary" id="{{EXPORT_BTN}}">.txt</button>
+    <button class="btn secondary" id="{{DOWNLOAD_BTN}}">.txt</button>
+    <button class="btn ghost" id="{{OVERLAY_BTN}}">Deep Dive</button>
   </div>
 </div>`,
   dataTable: `<div style="overflow:auto">
@@ -716,9 +782,48 @@ export const HTML_SNIPPETS = {
     <svg id="{{SVG_ID}}" viewBox="0 0 {{WIDTH}} {{HEIGHT}}" preserveAspectRatio="xMidYMid meet" style="width:100%;height:100%"></svg>
   </div>
 </div>`,
-  overviewSplit: `<div class="overview-split">
-  <!-- Left column: findings or primary content -->
-  <!-- Right column: generated report -->
+  kpis: `<div class="kpis">
+  <!-- 6 KPI cards in 2x3 grid (repeats .kpi or .kpi.clickable) -->
+</div>`,
+  overviewSplit: `<div class="workspace overview-split">
+  <!-- Left Column: KPI SUMMARY (Balanced Architecture) -->
+  <div class="panel kpi-panel" id="execLeftPanel">
+    <div class="panel-head">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <h2 class="panel-title">KPI SUMMARY</h2>
+        <span class="badge" id="kpiCountBadge">Waiting</span>
+      </div>
+    </div>
+    <div class="kpis" id="execKpis">
+      <!-- 6 KPI cards in 2x3 grid (repeats .kpi or .kpi.clickable) -->
+    </div>
+    <div class="validation" id="execValidation">
+      <!-- 3 Validation check cards (.check) -->
+    </div>
+  </div>
+
+  <!-- Right Column: Generated Output Panel with Fixed Height & 4 Overlay Action Buttons -->
+  <div class="panel message-panel gen-output" id="execRightPanel">
+    <div class="panel-head">
+      <h2 class="panel-title">GENERATED OUTPUT</h2>
+      <span class="badge" id="outputBadge">Output</span>
+    </div>
+    <textarea id="message" class="summary-textarea" readonly>Upload CSV or Excel dataset to generate the operational update.</textarea>
+    <details class="rules calc-toggle">
+      <summary>Calculation rules</summary>
+      <div class="rules-body" id="rulesBody">
+        <span>• Rate = events meeting threshold / total eligible volume.</span>
+        <span>• Duration = average turnaround time for completed records.</span>
+        <span>• Critical backlog = active uncompleted records exceeding threshold.</span>
+      </div>
+    </details>
+    <div class="actions output-actions">
+      <button class="btn" id="copyBtn">Copy msg</button>
+      <button class="btn info" id="insightsBtn">Insights</button>
+      <button class="btn secondary" id="downloadBtn">.txt</button>
+      <button class="btn ghost" id="overlayBtn">Deep Dive</button>
+    </div>
+  </div>
 </div>`,
   segGrid: `<div class="seg-grid">
   <!-- Segment comparison panels -->
@@ -777,7 +882,7 @@ export function getComponentPatterns(componentNames: string[]): Record<string, {
     generatedOutput: {
       css: DASHBOARD_SHELL_CONTRACT.componentPatterns.generatedOutput,
       html: HTML_SNIPPETS.genOutput,
-      usage: "For AI-generated text narrative panels (executive briefings, operational updates). Place beside KPI summary in .overview-split { display:grid; grid-template-columns:minmax(400px,.9fr) minmax(460px,1.1fr); gap:12px }. Structure: .gen-output contains .panel-head (title + .badge 'auto'), .output-area (scrollable pre-wrap text, 12.5px sans, 1.65 line-height, min-height 120px, max-height 320px, var(--surface-2) bg, 6px radius), .copy-btn (absolute top-right, 24px height, 9px mono), collapsible .calc-toggle (<details> with <summary> styled 10px mono 600), and .output-actions (flex row of .btn). Reference: GeneratedOutput component uses a read-only textarea with auto-typing animation mimicking human cadence — pauses at periods, commas, newlines. Use typeText(el, text, callback) from JS utilities for this effect (20-55ms per char, 180ms at punctuation). Action buttons include: Flow, Insights, Analyze data, Locations — adapt to your domain. Always show placeholder 'Upload data to generate the report' in empty state."
+      usage: "For AI-generated text narrative panels (Executive briefings, operational updates). Place beside KPI summary in .workspace / .overview-split { display:grid; grid-template-columns:minmax(400px,.9fr) minmax(460px,1.1fr); gap:12px; height:100%; min-height:0; overflow:hidden; }. Structure: .message-panel / .gen-output is a grid (grid-template-rows: auto minmax(0,1fr) auto auto; gap:8px; height:100%; min-height:0;) containing: 1. .panel-head with .panel-title and .badge 'Output', 2. textarea.summary-textarea (width:100%; height:100%; min-height:0; flex:1; resize:none; overflow-y:auto; 11.5px/1.55 mono), 3. collapsible .rules / .calc-toggle (<details> with <summary>Calculation rules</summary> and formula bullets), 4. .actions / .output-actions grid of 4 buttons (repeat(4, minmax(0, 1fr))): 'Copy msg' (.btn), 'Insights' (.btn.info — opens Analytics/Insights overlay), '.txt' (.btn.secondary — downloads text file), and 'Deep Dive' / 'Locations' (.btn.ghost — opens second overlay or lab). Because textarea flexes with minmax(0,1fr), both left KPI panel and right Generated Output panel are the exact same height and fit within 100% of the screen without vertical scrollbars! Use typeText(el, text, callback) from JS utilities for human typing cadence into textarea."
     },
     multiSelectFilter: {
       css: DASHBOARD_SHELL_CONTRACT.componentPatterns.multiSelectFilter,
@@ -827,7 +932,7 @@ export function getComponentPatterns(componentNames: string[]): Record<string, {
     sectionLayouts: {
       css: SECTION_LAYOUT_CSS,
       html: HTML_SNIPPETS.overviewSplit + '\n\n' + HTML_SNIPPETS.segGrid + '\n\n' + HTML_SNIPPETS.kpiGrid,
-      usage: ".kpi-grid: 3-column responsive grid for KPI cards (repeat(3,minmax(0,1fr)), gap 12px; collapses to 2-col at 960px). .overview-split: asymmetric 2-column for KPI+findings left + generated report right (minmax(400px,.9fr) minmax(460px,1.1fr); 1-col at 960px). .seg-grid: auto-fit for segment comparison panels (repeat(auto-fit,minmax(280px,1fr)), gap 12px). .tab-panel/.tab-panel.active: tab visibility toggle. .empty-state: centered placeholder (flex column, center, 300px min-height, var(--muted), mono 12px). Reference layout patterns: ExecutiveOverview = .overview-split with KPIGrid left + GeneratedOutput right. VolumeTrends = stacked vertical layout: MTTRTrend panel → VolumeChart panel → 2-column grid of VelocityChart + IntakeRadar. SlaAging = 2 equal columns (SlaByPriority + AgingSpectrum) + full-width StaleBacklog row. GroupPerformance = segmented toggle between scorecards view (side-by-side 1.2fr 1fr panels) and reassignment loops view (KPI strip + 2-column matrix). CallerContact = 1.2fr 1fr grid with frequent callers table + distribution charts."
+      usage: "1-Screen Viewport Fitting & Grid Layouts. Crucial: Tab 1 (Executive Overview) must NEVER scroll vertically on desktop. Set .workspace / .overview-split to { height:100%; min-height:0; display:grid; grid-template-columns:minmax(400px,.9fr) minmax(460px,1.1fr); gap:12px; overflow:hidden; }. Inside Tab 1: left panel is .kpi-panel { display:grid; grid-template-rows:auto minmax(0,1fr) auto; gap:8px; height:100%; min-height:0; } containing .kpis (2-column x 3-row grid: repeat(2,minmax(0,1fr)) / repeat(3,minmax(0,1fr))) and .validation check strip. Right panel is .message-panel { display:grid; grid-template-rows:auto minmax(0,1fr) auto auto; gap:8px; height:100%; min-height:0; } containing textarea.summary-textarea, .rules, and 4-button .actions grid. Both sides match 100% height and fit the viewport perfectly. Other layouts: .seg-grid (auto-fit for segment comparison panels), .chart-container (min-height:200px SVG wrapper), .tab-content-area / .dashboard-body { height:100%; min-height:0; overflow-y:auto; }."
     },
     accessibility: {
       css: DASHBOARD_SHELL_CONTRACT.componentPatterns.accessibility,

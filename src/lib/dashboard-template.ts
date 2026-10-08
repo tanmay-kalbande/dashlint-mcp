@@ -39,6 +39,58 @@ export const SECTION_TEMPLATES = {
   font-variant-numeric: tabular-nums;
 }
 .kpi-sub { color: var(--muted); font-size: 10px; font-family: var(--mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }`,
+  },
+  overviewSplit: {
+    description: "The canonical Incident/SLA balanced workspace: 2x3 KPI grid + validation checks on the left, fixed-height Generated Output textarea with 4 overlay action buttons on the right. Fits 100% of screen height without vertical scrolling.",
+    html: `        <div class="workspace overview-split">
+          <div class="panel kpi-panel" id="execLeftPanel">
+            <div class="panel-head">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <h2 class="panel-title">KPI SUMMARY</h2>
+                <span class="badge" id="kpiCountBadge">Waiting</span>
+              </div>
+            </div>
+            <div class="kpis" id="execKpis">
+              <!-- 6 KPI cards in 2x3 grid -->
+            </div>
+            <div class="validation" id="execValidation">
+              <!-- 3 Validation checks -->
+            </div>
+          </div>
+          <div class="panel message-panel gen-output" id="execRightPanel">
+            <div class="panel-head">
+              <h2 class="panel-title">GENERATED OUTPUT</h2>
+              <span class="badge" id="outputBadge">Output</span>
+            </div>
+            <textarea id="message" class="summary-textarea" readonly>Upload dataset to generate the operational update.</textarea>
+            <details class="rules calc-toggle">
+              <summary>Calculation rules</summary>
+              <div class="rules-body" id="rulesBody">
+                <span>• SLA compliance = completed within target / total eligible.</span>
+                <span>• MTTR = average duration for completed items.</span>
+                <span>• Stale backlog = active items older than threshold.</span>
+              </div>
+            </details>
+            <div class="actions output-actions">
+              <button class="btn" id="copyBtn">Copy msg</button>
+              <button class="btn info" id="insightsBtn">Insights</button>
+              <button class="btn secondary" id="downloadBtn">.txt</button>
+              <button class="btn ghost" id="overlayBtn">Deep Dive</button>
+            </div>
+          </div>
+        </div>`,
+    css: `.workspace, .overview-split { min-height: 0; height: 100%; flex: 1; display: grid; grid-template-columns: minmax(400px, .9fr) minmax(460px, 1.1fr); gap: 12px; overflow: hidden; }
+.kpi-panel { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 8px; height: 100%; min-height: 0; overflow: hidden; }
+.kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(3, minmax(0, 1fr)); gap: 8px; min-height: 0; flex: 1; overflow: hidden; }
+.message-panel, .gen-output { display: grid; grid-template-rows: auto minmax(0, 1fr) auto auto; gap: 8px; height: 100%; min-height: 0; overflow: hidden; }
+.summary-textarea, textarea.summary-textarea, .output-area { width: 100%; height: 100%; min-height: 0; flex: 1; border: 1px solid var(--line); border-radius: 6px; background: var(--surface-2); color: var(--ink); padding: 12px 14px; font: 11.5px/1.55 var(--mono); resize: none; outline: none; white-space: pre-wrap; overflow-y: auto; box-sizing: border-box; }
+.rules, .calc-toggle { margin-top: 4px; border: 1px solid var(--line); border-radius: 5px; background: var(--surface-2); padding: 6px 10px; color: var(--muted); font-size: 10px; font-family: var(--mono); }
+.rules summary, .calc-toggle summary { cursor: pointer; color: var(--ink); font-weight: 600; list-style: none; display: flex; align-items: center; gap: 6px; }
+.rules summary::before, .calc-toggle summary::before { content: '▶'; font-size: 7.5px; color: var(--accent); }
+details[open] summary::before, .calc-toggle[open] summary::before { content: '▼'; }
+.rules div, .calc-toggle .rules-body { margin-top: 5px; display: grid; gap: 3px; line-height: 1.4; }
+.actions, .output-actions { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; align-items: center; margin-top: 4px; overflow: hidden; }
+.actions .btn, .output-actions .btn { height: 36px; font-size: 11.5px; padding: 0 8px; width: 100%; }`,
   }
 } as const;
 
@@ -119,12 +171,24 @@ function countUp(el, target, opts = {}) {
 
 // ── Typewriter Effect (20-55ms per char, 180ms pause at punctuation) ──
 function typeText(el, text, cb) {
+  if (!el) return;
+  const isTA = el.tagName === 'TEXTAREA' || el.tagName === 'INPUT';
   const prefersRM = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (prefersRM) { el.textContent = text; if (cb) cb(); return; }
-  let i = 0; el.textContent = '';
+  if (prefersRM) {
+    if (isTA) el.value = text; else el.textContent = text;
+    if (cb) cb();
+    return;
+  }
+  let i = 0;
+  if (isTA) el.value = ''; else el.textContent = '';
   function next() {
     if (i >= text.length) { if (cb) cb(); return; }
-    el.textContent += text[i];
+    if (isTA) {
+      el.value += text[i];
+      el.scrollTop = el.scrollHeight;
+    } else {
+      el.textContent += text[i];
+    }
     const c = text[i]; i++;
     const pause = /[.!?\\n]/.test(c) ? 180 : (20 + Math.random() * 35);
     setTimeout(next, pause);
@@ -294,22 +358,44 @@ document.getElementById('menuBtn').addEventListener('click', () => {
   document.getElementById('rail').classList.toggle('open');
 });
 
-// ── Copy Button ──
-document.getElementById('copyBtn').addEventListener('click', () => {
-  const text = document.getElementById('outputArea').textContent;
-  navigator.clipboard.writeText(text).then(() => {
-    const btn = document.getElementById('copyBtn');
-    btn.textContent = 'Copied'; setTimeout(() => btn.textContent = 'Copy', 1500);
+// ── Copy Message Button ──
+const copyBtn = document.getElementById('copyBtn');
+if (copyBtn) {
+  copyBtn.addEventListener('click', () => {
+    const el = document.getElementById('message') || document.getElementById('outputArea');
+    const text = el ? (el.value !== undefined ? el.value : el.textContent) : '';
+    navigator.clipboard.writeText(text).then(() => {
+      const orig = copyBtn.textContent;
+      copyBtn.textContent = 'Copied';
+      setTimeout(() => copyBtn.textContent = orig, 1500);
+    });
   });
-});
+}
 
-// ── Export .txt ──
-document.getElementById('btnExport').addEventListener('click', () => {
-  const text = document.getElementById('outputArea').textContent;
-  const blob = new Blob([text], { type: 'text/plain' });
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-  a.download = (S.fileName.replace(/\\.[^.]+$/, '') || 'report') + '_report.txt';
-  a.click(); URL.revokeObjectURL(a.href);
+// ── Export .txt Button ──
+const exportBtn = document.getElementById('downloadBtn') || document.getElementById('btnExport');
+if (exportBtn) {
+  exportBtn.addEventListener('click', () => {
+    const el = document.getElementById('message') || document.getElementById('outputArea');
+    const text = el ? (el.value !== undefined ? el.value : el.textContent) : '';
+    const blob = new Blob([text], { type: 'text/plain' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = (S.fileName.replace(/\\.[^.]+$/, '') || 'operational_update') + '_report.txt';
+    a.click(); URL.revokeObjectURL(a.href);
+  });
+}
+
+// ── Overlay Toggles (Insights / Locations / Deep Dive) ──
+document.getElementById('insightsBtn')?.addEventListener('click', () => {
+  const ov = document.getElementById('analyticsOverlay') || document.getElementById('insightsOverlay') || document.querySelector('.analytics-overlay');
+  if (ov) ov.classList.add('open');
+});
+document.getElementById('overlayBtn')?.addEventListener('click', () => {
+  const ov = document.getElementById('locationOverlay') || document.getElementById('labOverlay') || document.querySelector('.analytics-overlay');
+  if (ov) ov.classList.add('open');
+});
+document.getElementById('closeOverlayBtn')?.addEventListener('click', () => {
+  document.querySelectorAll('.analytics-overlay, .location-overlay').forEach(o => o.classList.remove('open'));
 });
 
 // ═══════════════════════════════════════════════════════
@@ -613,9 +699,12 @@ button, input, textarea, select { font: inherit; }
 }
 .slide-drawer.open { transform: translate3d(0, 0, 0); }
 
-/* Basic structural CSS */
-.tab-panel { display: none; }
-.tab-panel.active { display: block; }
+/* Basic structural CSS & 1-Screen Viewport Fitting (Incident/SLA Canonical) */
+.dashboard-body, .tab-content-area { min-height: 0; flex: 1; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; height: 100%; }
+#tabPanels { min-height: 0; flex: 1; display: flex; flex-direction: column; height: 100%; width: 100%; }
+.tab-pane, .tab-panel { display: none; flex-direction: column; gap: 10px; min-height: 100%; height: 100%; width: 100%; }
+.tab-pane.active, .tab-panel.active { display: flex; flex: 1; min-height: 0; }
+.workspace, .overview-split { min-height: 0; height: 100%; flex: 1; display: grid; grid-template-columns: minmax(400px, .9fr) minmax(460px, 1.1fr); gap: 12px; overflow: hidden; }
 .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 300px; color: var(--muted); font-family: var(--mono); font-size: 12px; text-align: center; gap: 8px; }
 .menu-btn { display: none; width: 32px; height: 32px; border: 1px solid var(--line-strong); border-radius: 4px; background: var(--surface); cursor: pointer; font-size: 15px; flex: 0 0 auto; }
 
@@ -624,6 +713,7 @@ button, input, textarea, select { font: inherit; }
   .rail { position: fixed; left: 12px; top: 12px; bottom: 12px; width: 268px; z-index: 150; transform: translate3d(-110%, 0, 0); transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: 0 10px 30px rgba(0,0,0,.25); }
   .rail.open { transform: translate3d(0, 0, 0); }
   .menu-btn { display: grid; place-items: center; }
+  .workspace, .overview-split { grid-template-columns: 1fr; overflow: visible; height: auto; }
 }
 
 @media (prefers-reduced-motion: reduce) {

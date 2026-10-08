@@ -188,12 +188,25 @@ export function buildDashboardBlueprint(input: {
   if (classified.some((field) => field.confirmMeaning)) warnings.push("Some field roles are uncertain. Resolve the flagged mappings from local inspection or user confirmation before asserting business meaning.");
   if (!input.businessQuestion) warnings.push("No business question supplied; infer a focused question from the dataset, in any domain, and state the chosen scope in the dashboard.");
 
+  const recommendedComponents: string[] = ["kpiCards", "panels", "validation", "generatedOutput", "buttons", "sectionLayouts"];
+  if (categories.length) recommendedComponents.push("horizontalBars", "multiSelectFilter");
+  if (timeFields.length) recommendedComponents.push("chartContainer");
+  if (ids.length || categories.length) recommendedComponents.push("dataTables", "drawers");
+  if (timeFields.length && categories.length) recommendedComponents.push("heatmap");
+  recommendedComponents.push("findingCards", "badges", "accessibility");
+
   return {
-    blueprintVersion: "1.0",
+    blueprintVersion: "1.1",
     datasetLabel: input.datasetLabel ?? "User dataset",
     businessQuestion: input.businessQuestion ?? null,
     audience: input.audience ?? null,
     privacy: "Only column metadata was provided to this tool. The AI must read rows and calculate values locally; never send file contents to DashLint.",
+    recommendedComponents,
+    layoutArchitecture: {
+      tab1: "Executive Overview: 1-screen balanced workspace (.workspace / .overview-split). Left column: .kpi-panel with 2x3 .kpis grid and .validation checks. Right column: .message-panel with textarea.summary-textarea, .rules, and 4-button .actions strip ('Copy msg', 'Insights', '.txt', 'Deep Dive/Locations'). Crucial: Tab 1 must NOT scroll on desktop — both panels must match 100% height.",
+      tab2: timeFields.length ? "Trends & Analysis: Stacked SVG trend charts (.chart-container) and segment distributions (.seg-grid)." : "Distribution & Rankings: Horizontal progress bars (.hbar-row) and category scorecards.",
+      tab3: ids.length ? "Record Explorer: Searchable, sortable data table (.data-table) with row-click detail drawer (.slide-drawer)." : "Deep Dive: Detailed breakdown matrices and category tables.",
+    },
     fieldMappings: classified,
     metricRecipes,
     chartPlan,
@@ -204,6 +217,7 @@ export function buildDashboardBlueprint(input: {
       "Preserve the existing reference shell, including the exact header upload-control position, while adapting the main dashboard body to this schema.",
       "The role matcher, metric recipes, and chart ideas in this blueprint are non-exhaustive heuristics, never a domain whitelist or required catalog. Build for any domain and use other verified fields, defensible formulas, and suitable custom visualizations when they better answer the user's question.",
       "Keep the reference 'built by Tanmay Kalbande' LinkedIn credit at the very bottom of the sidebar in its muted mono style; preserve the source name animation when available.",
+      "Crucial: Tab 1 (Executive Overview) must NEVER scroll vertically on desktop. Structure it as a 2-column balanced workspace (.workspace) where left KPI panel and right Generated Output panel are identically tall.",
       "CSV parsing should be hand-written (~50 lines). For Excel (.xlsx, .xls) support, load SheetJS via a CDN script tag — never inline the library source (it is ~700 KB). If the CDN is unreachable, disable Excel and prompt the user to export as CSV. Do not require a backend, development server, or network upload for data handling.",
     ],
     warnings,
