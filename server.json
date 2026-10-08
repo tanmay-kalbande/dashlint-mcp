@@ -1,0 +1,19 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "in.tanmaysk.dashlint/dashlint-mcp",
+  "title": "DashLint MCP",
+  "description": "Dashboard creation orchestration for AI coding assistants. Provides detailed workflow, design instructions, and schema-aware blueprints to help AI build interactive dashboards from user data — without ever receiving the data itself. No API keys required.",
+  "version": "0.1.0",
+  "websiteUrl": "https://dashlint.tanmaysk.in",
+  "packages": [
+    {
+      "registryType": "url",
+      "identifier": "https://dashlint.tanmaysk.in/mcp",
+      "version": "0.1.0",
+      "transport": {
+        "type": "sse",
+        "url": "https://dashlint.tanmaysk.in/mcp"
+      }
+    }
+  ]
+}

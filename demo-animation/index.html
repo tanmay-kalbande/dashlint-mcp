@@ -1,0 +1,3346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DashLint MCP - Complete Animated Product Demo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Oswald:wght@600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    /* =========================================
+       CLAUDE & DASHLINT DESIGN SYSTEM
+       ========================================= */
+    :root {
+      --claude-bg: #181816;
+      --claude-sidebar: #141413;
+      --claude-surface: #20201e;
+      --claude-surface-hover: #282825;
+      --claude-surface-active: #32322f;
+      --claude-border: rgba(255, 255, 255, 0.08);
+      --claude-border-strong: rgba(255, 255, 255, 0.16);
+      --claude-peach: #D97746;
+      --claude-peach-hover: #e58554;
+      --claude-peach-dim: rgba(217, 119, 70, 0.15);
+      --claude-text: #F0EFEA;
+      --claude-text-muted: #9C9A93;
+      --claude-text-faint: #6E6D66;
+      --claude-accent-blue: #38BDF8;
+      --claude-green: #10B981;
+      --claude-modal-bg: #1B1B19;
+      --claude-dialog-bg: #1f1f1d;
+      
+      /* DashLint Tokens */
+      --dl-rail-bg: #111111;
+      --dl-surface: #FFFFFF;
+      --dl-surface-2: #F8FAFC;
+      --dl-ink: #181C24;
+      --dl-muted: #6B7280;
+      --dl-line: #E2E8F0;
+      --dl-blue: #3B82F6;
+      --dl-teal: #0D9488;
+      
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-serif: 'Newsreader', Georgia, 'Times New Roman', serif;
+      --font-mono: 'IBM Plex Mono', monospace;
+      --font-display: 'Oswald', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: #0d0d0c;
+      color: var(--claude-text);
+      font-family: var(--font-sans);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .viewport-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 1440px;
+      height: 94vh;
+      max-height: 900px;
+      display: flex;
+      flex-direction: column;
+      border-radius: 14px;
+      background: #111110;
+      box-shadow: 0 30px 90px -20px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+    }
+
+    /* Top Video Player Chrome Bar */
+    .player-header {
+      height: 40px;
+      background: #151514;
+      border-bottom: 1px solid var(--claude-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      font-size: 12px;
+      color: var(--claude-text-muted);
+      z-index: 50;
+      flex-shrink: 0;
+    }
+
+    .window-controls {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+    }
+    .dot.red { background: #FF5F56; }
+    .dot.yellow { background: #FFBD2E; }
+    .dot.green { background: #27C93F; }
+
+    .player-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 500;
+      color: #E2E1DA;
+    }
+
+    .badge-live {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--claude-peach-dim);
+      color: var(--claude-peach);
+      border: 1px solid rgba(217, 119, 70, 0.3);
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .badge-live .pulse-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--claude-peach);
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(1.3); }
+    }
+
+    /* Screen Stage */
+    .screen-stage {
+      position: relative;
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      background: var(--claude-bg);
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* Claude Layout */
+    .claude-layout {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      background: var(--claude-bg);
+      z-index: 10;
+      transition: grid-template-columns 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .claude-layout.sidebar-collapsed {
+      grid-template-columns: 0px 1fr;
+    }
+
+    /* Sidebar */
+    .claude-sidebar {
+      background: var(--claude-sidebar);
+      border-right: 1px solid var(--claude-border);
+      display: flex;
+      flex-direction: column;
+      padding: 12px;
+      gap: 8px;
+      overflow: hidden;
+      white-space: nowrap;
+      transition: opacity 0.3s ease, padding 0.3s ease;
+    }
+    .claude-layout.sidebar-collapsed .claude-sidebar {
+      opacity: 0;
+      padding: 0;
+      border-right: none;
+      pointer-events: none;
+    }
+
+    .sidebar-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 8px;
+      font-family: var(--font-serif);
+      font-size: 20px;
+      font-weight: 500;
+      color: var(--claude-text);
+      letter-spacing: -0.2px;
+    }
+
+    .claude-star-icon {
+      width: 22px;
+      height: 22px;
+      color: var(--claude-peach);
+      flex-shrink: 0;
+    }
+
+    .new-chat-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--claude-border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      color: var(--claude-text);
+      font-size: 13.5px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .nav-list {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      margin-top: 4px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 10px;
+      border-radius: 6px;
+      font-size: 13px;
+      color: var(--claude-text-muted);
+      cursor: pointer;
+    }
+    .nav-item:hover, .nav-item.active {
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--claude-text);
+    }
+    .nav-item-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .nav-item svg {
+      width: 16px;
+      height: 16px;
+      opacity: 0.8;
+    }
+    .upgrade-pill {
+      font-size: 10px;
+      font-weight: 600;
+      background: rgba(56, 189, 248, 0.15);
+      color: #38BDF8;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .sidebar-section-title {
+      font-size: 11px;
+      color: var(--claude-text-faint);
+      padding: 12px 10px 4px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      letter-spacing: 0.3px;
+    }
+
+    .active-chat-item {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 10px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.06);
+      color: #F0EFEA;
+      font-size: 12.5px;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      margin-top: 2px;
+    }
+    .active-chat-item.show {
+      display: flex;
+    }
+    .active-chat-item .chat-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      border: 1.5px solid #999;
+      flex-shrink: 0;
+    }
+
+    .sidebar-spacer {
+      flex: 1;
+    }
+
+    /* Bottom Profile */
+    .user-profile-anchor {
+      position: relative;
+    }
+
+    .user-profile-btn {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .user-profile-btn:hover, .user-profile-btn.active-popover {
+      background: rgba(255, 255, 255, 0.07);
+    }
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .user-avatar {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: #2a2a26;
+      border: 1px solid var(--claude-border-strong);
+      display: grid;
+      place-items: center;
+      font-size: 11px;
+      font-weight: 600;
+      color: #E2E1DA;
+    }
+    .user-name {
+      color: var(--claude-text);
+      font-weight: 500;
+      font-size: 12px;
+    }
+    .profile-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--claude-text-faint);
+    }
+
+    /* Profile Popover Menu */
+    .profile-popover {
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 0;
+      width: 220px;
+      background: #1c1c1a;
+      border: 1px solid var(--claude-border-strong);
+      border-radius: 10px;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5);
+      padding: 6px;
+      display: none;
+      flex-direction: column;
+      gap: 2px;
+      z-index: 100;
+      opacity: 0;
+      transform: translateY(6px);
+      transition: opacity 0.18s ease, transform 0.18s ease;
+    }
+    .profile-popover.open {
+      display: flex;
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .popover-email {
+      padding: 8px 10px;
+      font-size: 11.5px;
+      color: var(--claude-text-muted);
+      border-bottom: 1px solid var(--claude-border);
+      margin-bottom: 4px;
+      word-break: break-all;
+    }
+    .popover-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 10px;
+      border-radius: 6px;
+      font-size: 12.5px;
+      color: var(--claude-text);
+      cursor: pointer;
+    }
+    .popover-item:hover, .popover-item.highlighted {
+      background: rgba(255, 255, 255, 0.08);
+    }
+    .popover-item-left {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+    .popover-item svg {
+      width: 15px;
+      height: 15px;
+      color: var(--claude-text-muted);
+    }
+
+    /* Main Area Container (Split / Full View) */
+    .claude-main-split {
+      position: relative;
+      display: flex;
+      height: 100%;
+      overflow: hidden;
+      background: var(--claude-bg);
+    }
+
+    /* Left Chat Pane */
+    .claude-chat-pane {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      height: 100%;
+      overflow: hidden;
+      border-right: 1px solid transparent;
+      transition: flex 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+    }
+    .claude-chat-pane.split-active {
+      flex: 0 0 50%;
+      border-right: 1px solid var(--claude-border);
+    }
+    .claude-chat-pane.chat-hidden {
+      display: none;
+    }
+
+    /* Top Bar in Chat */
+    .main-top-bar {
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      border-bottom: 1px solid transparent;
+      flex-shrink: 0;
+    }
+    .main-top-bar.has-border {
+      border-bottom-color: var(--claude-border);
+    }
+    .top-chat-title {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      font-size: 13.5px;
+      color: #E2E1DA;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .top-chat-title.show {
+      display: flex;
+    }
+
+    /* Sidebar Toggle Button */
+    .sidebar-toggle-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      display: grid;
+      place-items: center;
+      color: var(--claude-text-muted);
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .sidebar-toggle-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+    }
+
+    /* Empty Chat Hero View */
+    .chat-view-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 0 24px 40px;
+      max-width: 780px;
+      width: 100%;
+      margin: 0 auto;
+      transition: opacity 0.3s ease;
+    }
+    .chat-view-container.hidden {
+      display: none;
+    }
+
+    .hero-greeting {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .hero-star {
+      width: 32px;
+      height: 32px;
+      color: var(--claude-peach);
+    }
+    .hero-greeting h1 {
+      font-family: var(--font-serif);
+      font-size: 34px;
+      font-weight: 400;
+      color: #F4F3EE;
+      letter-spacing: -0.3px;
+    }
+
+    .excel-promo-banner {
+      width: 100%;
+      background: #1f1f1d;
+      border: 1px solid var(--claude-border);
+      border-radius: 10px;
+      padding: 8px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12.5px;
+      color: var(--claude-text);
+      margin-bottom: 8px;
+    }
+    .excel-promo-btn {
+      background: #2b2b28;
+      border: 1px solid var(--claude-border);
+      border-radius: 4px;
+      padding: 3px 8px;
+      font-size: 11px;
+      color: #D1D5DB;
+    }
+
+    /* Input Box */
+    .chat-input-box {
+      width: 100%;
+      background: #222220;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 14px 16px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Attached CSV File Badge */
+    .file-attachment-badge {
+      display: none;
+      flex-direction: column;
+      justify-content: space-between;
+      width: 140px;
+      height: 96px;
+      background: #222220;
+      border: none;
+      border-radius: 12px;
+      padding: 10px;
+      animation: fadeIn 0.25s ease;
+    }
+    .file-attachment-badge.show {
+      display: flex;
+    }
+    .file-name-label {
+      font-size: 12px;
+      color: #E2E1DA;
+      line-height: 1.35;
+      font-weight: 500;
+      word-break: break-all;
+    }
+    .file-ext-tag {
+      align-self: flex-start;
+      background: #282825;
+      color: #9C9A93;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 10.5px;
+      font-family: var(--font-mono);
+      font-weight: 600;
+    }
+
+    .input-textarea-fake {
+      font-size: 14px;
+      color: var(--claude-text);
+      min-height: 28px;
+      outline: none;
+      word-break: break-word;
+      line-height: 1.5;
+    }
+    .input-textarea-fake.placeholder {
+      color: var(--claude-text-faint);
+    }
+    .typing-cursor {
+      display: inline-block;
+      width: 2px;
+      height: 15px;
+      background: var(--claude-peach);
+      margin-left: 2px;
+      vertical-align: middle;
+      animation: blink 0.8s infinite;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    .chat-input-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .controls-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .mode-toggle {
+      display: flex;
+      align-items: center;
+      background: #191918;
+      border: 1px solid var(--claude-border);
+      border-radius: 6px;
+      padding: 2px;
+      font-size: 12px;
+    }
+    .mode-toggle-btn {
+      padding: 3px 8px;
+      border-radius: 4px;
+      color: var(--claude-text-muted);
+      font-weight: 500;
+    }
+    .mode-toggle-btn.active {
+      background: #2b2b29;
+      color: var(--claude-text);
+    }
+
+    .controls-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .model-selector {
+      font-size: 12px;
+      color: var(--claude-text-muted);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .send-submit-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: #333330;
+      color: #666;
+      display: grid;
+      place-items: center;
+      cursor: not-allowed;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .send-submit-btn.ready {
+      background: var(--claude-peach);
+      color: #ffffff;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(217, 119, 70, 0.4);
+    }
+    .send-submit-btn.clicked {
+      transform: scale(0.92);
+    }
+
+    /* Active Conversation Thread */
+    .conversation-thread {
+      position: absolute;
+      inset: 44px 0 0 0;
+      padding: 16px 20px 100px;
+      display: none;
+      flex-direction: column;
+      gap: 16px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    .conversation-thread.visible {
+      display: flex;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .user-msg-container {
+      align-self: flex-end;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+      max-width: 680px;
+    }
+    .msg-user {
+      background: #2a2a28;
+      border: none;
+      border-radius: 16px;
+      padding: 14px 18px;
+      font-size: 14px;
+      line-height: 1.5;
+      color: #E2E1DA;
+      box-shadow: none;
+    }
+
+    /* Streaming Status Lines (Realistic Pacing) */
+    .claude-streaming-area {
+      align-self: flex-start;
+      max-width: 680px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .mcp-live-step-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: #9C9A93;
+      padding: 4px 0;
+      animation: fadeIn 0.3s ease;
+    }
+    .dashlint-step-icon {
+      width: 16px;
+      height: 16px;
+      color: var(--claude-peach);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .tool-summary-pill {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--claude-text-muted);
+      cursor: pointer;
+    }
+    .tool-summary-pill.show {
+      display: inline-flex;
+    }
+
+    .claude-response-text {
+      display: none;
+      font-size: 14px;
+      line-height: 1.55;
+      color: #E2E1DA;
+      animation: fadeIn 0.3s ease;
+    }
+    .claude-response-text.show {
+      display: block;
+    }
+
+    /* HTML Artifact Card in Chat */
+    .chat-artifact-card {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      background: #232220;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 12px 16px;
+      width: 320px;
+      cursor: pointer;
+      animation: fadeIn 0.3s ease;
+    }
+    .chat-artifact-card.show {
+      display: flex;
+    }
+    .card-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .card-icon-box {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: #341f26;
+      border: 1px solid #5a2e3b;
+      display: grid;
+      place-items: center;
+      color: #ff6b8b;
+    }
+    .btn-download-artifact {
+      background: #2c2b28;
+      border: 1px solid var(--claude-border);
+      border-radius: 6px;
+      padding: 5px 12px;
+      font-size: 12px;
+      color: #fff;
+    }
+
+    .bottom-chat-input-bar { }
+    .bottom-chat-input-bar.show {
+      display: flex;
+    }
+
+    /* =========================================================
+       RIGHT PANE: ARTIFACT VIEWER
+       ========================================================= */
+    .artifact-viewer-pane {
+      display: none;
+      flex: 0 0 50%;
+      height: 100%;
+      background: #151514;
+      flex-direction: column;
+      overflow: hidden;
+      animation: slideInArtifact 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: flex 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .artifact-viewer-pane.show {
+      display: flex;
+    }
+    .artifact-viewer-pane.full-canvas {
+      flex: 1 1 100%;
+    }
+    @keyframes slideInArtifact {
+      from { transform: translateX(100%); }
+      to { transform: translateX(0); }
+    }
+
+    /* Artifact Viewer Top Bar */
+    .artifact-topbar {
+      height: 44px;
+      background: #1b1b19;
+      border-bottom: 1px solid var(--claude-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+      flex-shrink: 0;
+      font-size: 12px;
+    }
+    .artifact-top-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #E2E1DA;
+      font-weight: 500;
+    }
+    .artifact-top-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .artifact-btn-sm {
+      background: #262623;
+      border: 1px solid var(--claude-border);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 11.5px;
+      color: #D1D5DB;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Artifact Canvas Container (DashLint Web App) */
+    .artifact-content-canvas {
+      flex: 1;
+      background: #F4F6F9;
+      color: var(--dl-ink);
+      display: grid;
+      grid-template-columns: 210px 1fr;
+      overflow: hidden;
+    }
+
+    /* DashLint Dark Rail Sidebar */
+    .dashlint-rail {
+      background: var(--dl-rail-bg);
+      color: #E5E7EB;
+      display: flex;
+      flex-direction: column;
+      padding: 16px 14px;
+      gap: 14px;
+      border-right: 1px solid #222;
+      overflow-y: auto;
+    }
+    .rail-logo-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .rail-badge {
+      width: 38px;
+      height: 38px;
+      border-radius: 6px;
+      background: #fff;
+      color: #111;
+      display: grid;
+      place-items: center;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 14px;
+    }
+    .rail-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .rail-sub {
+      font-size: 10px;
+      color: #6B7280;
+      font-family: var(--font-mono);
+    }
+    .rail-status-pill {
+      font-size: 10px;
+      font-family: var(--font-mono);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #9CA3AF;
+    }
+    .rail-status-pill.connected {
+      color: #10B981;
+    }
+
+    .rail-section-heading {
+      font-size: 10px;
+      font-family: var(--font-mono);
+      color: #6B7280;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+    .rail-metric-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      color: #9CA3AF;
+      padding: 5px 0;
+      border-bottom: 1px solid #1f1f1d;
+    }
+    .rail-metric-val {
+      color: #fff;
+      font-weight: 600;
+    }
+    .rail-footer {
+      margin-top: auto;
+      font-size: 11px;
+      color: #6B7280;
+      font-family: var(--font-mono);
+    }
+
+    /* DashLint Main Canvas Area */
+    .dashlint-main-viewport {
+      display: flex;
+      flex-direction: column;
+      padding: 16px 20px;
+      gap: 14px;
+      overflow-y: auto;
+      background: #F4F6F9;
+    }
+
+    .dl-header-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+    .dl-title-box h2 {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--dl-ink);
+    }
+    .dl-title-box p {
+      font-size: 11.5px;
+      color: var(--dl-muted);
+      margin-top: 2px;
+    }
+
+    .dl-dropzone-box {
+      background: #fff;
+      border: 1.5px dashed #CBD5E1;
+      border-radius: 8px;
+      padding: 8px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      min-width: 290px;
+      cursor: pointer;
+    }
+    .dz-tag {
+      font-size: 9px;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: #64748B;
+      letter-spacing: 0.5px;
+    }
+    .dz-main-text {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--dl-ink);
+    }
+    .dz-sub-text {
+      font-size: 10px;
+      color: var(--dl-muted);
+      font-family: var(--font-mono);
+    }
+    .btn-choose-file {
+      background: #F8FAFC;
+      border: 1px solid #CBD5E1;
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--dl-ink);
+      cursor: pointer;
+    }
+
+    .dl-filter-bar {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      background: #fff;
+      border: 1px solid var(--dl-line);
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 11px;
+      color: var(--dl-muted);
+    }
+    .dl-filter-bar.show {
+      display: flex;
+    }
+    .dl-filter-item {
+      background: #F1F5F9;
+      padding: 3px 8px;
+      border-radius: 4px;
+      color: var(--dl-ink);
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .dl-tab-selector {
+      display: flex;
+      background: #E2E8F0;
+      border-radius: 6px;
+      padding: 2px;
+      width: fit-content;
+      font-size: 11.5px;
+      font-weight: 500;
+    }
+    .dl-tab-btn {
+      padding: 4px 14px;
+      border-radius: 4px;
+      color: #64748B;
+      cursor: pointer;
+    }
+    .dl-tab-btn.active {
+      background: #fff;
+      color: var(--dl-ink);
+      font-weight: 600;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    /* 1. Empty State */
+    .dl-empty-state-card {
+      background: #fff;
+      border: 1px solid var(--dl-line);
+      border-radius: 8px;
+      height: 380px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 8px;
+      padding: 20px;
+    }
+    .dl-empty-state-card.hidden {
+      display: none;
+    }
+    .dl-empty-state-card h3 {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--dl-ink);
+    }
+    .dl-empty-state-card p {
+      font-size: 12px;
+      color: var(--dl-muted);
+      max-width: 440px;
+      line-height: 1.5;
+    }
+
+    /* 2. Populated State: Overview Tab */
+    .dl-populated-overview {
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .dl-populated-overview.show {
+      display: flex;
+    }
+
+    .dl-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .dl-kpi-card {
+      background: #fff;
+      border: 1px solid var(--dl-line);
+      border-radius: 6px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .dl-kpi-title {
+      font-size: 9.5px;
+      font-family: var(--font-mono);
+      font-weight: 600;
+      color: var(--dl-muted);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .dl-kpi-number {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--dl-ink);
+      font-family: var(--font-sans);
+    }
+    .dl-kpi-sub {
+      font-size: 10px;
+      color: var(--dl-muted);
+      font-family: var(--font-mono);
+    }
+
+    .dl-chart-findings-split {
+      display: grid;
+      grid-template-columns: 1.25fr 1fr;
+      gap: 10px;
+    }
+    .dl-chart-card {
+      background: #fff;
+      border: 1px solid var(--dl-line);
+      border-radius: 6px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .dl-findings-card {
+      background: #fff;
+      border: 1px solid var(--dl-line);
+      border-radius: 6px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .findings-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 10px;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: var(--dl-muted);
+      text-transform: uppercase;
+    }
+    .findings-list {
+      font-size: 11.5px;
+      color: #334155;
+      line-height: 1.5;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    /* 3. Populated State: Compare Tab */
+    .dl-populated-compare {
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .dl-populated-compare.show {
+      display: flex;
+    }
+    .compare-top-split {
+      display: grid;
+      grid-template-columns: 1fr 1.25fr;
+      gap: 10px;
+    }
+    .compare-bar-card, .compare-heatmap-card {
+      background: #fff;
+      border: 1px solid var(--dl-line);
+      border-radius: 6px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .heatmap-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 2px;
+      font-size: 10.5px;
+      text-align: center;
+    }
+    .heatmap-table th {
+      font-size: 9.5px;
+      font-family: var(--font-mono);
+      color: var(--dl-muted);
+      padding: 4px;
+    }
+    .heatmap-cell {
+      padding: 6px;
+      border-radius: 3px;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    /* Virtual Cursor */
+    #virtual-cursor {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 24px;
+      height: 24px;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate3d(500px, 300px, 0);
+      transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+    .cursor-svg {
+      filter: drop-shadow(0 3px 6px rgba(0,0,0,0.6));
+    }
+    .cursor-ripple {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 2px solid var(--claude-peach);
+      transform: translate(-30%, -30%) scale(0.2);
+      opacity: 0;
+      pointer-events: none;
+    }
+    .cursor-ripple.active {
+      animation: rippleEffect 0.5s ease-out forwards;
+    }
+    @keyframes rippleEffect {
+      0% { opacity: 0.9; transform: translate(-30%, -30%) scale(0.3); }
+      100% { opacity: 0; transform: translate(-30%, -30%) scale(1.8); }
+    }
+    .cursor-callout {
+      position: absolute;
+      top: -34px;
+      left: 18px;
+      background: #1f1f1d;
+      border: 1px solid var(--claude-peach);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 500;
+      color: #fff;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(4px);
+      transition: opacity 0.2s, transform 0.2s;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+    }
+    .cursor-callout.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Toast Notification */
+    .toast-notification {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      background: #222220;
+      border: 1px solid var(--claude-border-strong);
+      border-radius: 8px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 12.5px;
+      color: #fff;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      z-index: 250;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: all 0.25s ease;
+      pointer-events: none;
+    }
+    .toast-notification.show {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    /* Bottom Scrubber Player */
+    .player-footer {
+      height: 52px;
+      background: #141413;
+      border-top: 1px solid var(--claude-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      gap: 16px;
+      z-index: 50;
+      flex-shrink: 0;
+    }
+    .footer-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .play-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--claude-peach);
+      border: none;
+      color: #fff;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+    }
+    .step-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      background: #20201d;
+      border: 1px solid var(--claude-border);
+      color: var(--claude-text-muted);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+    }
+    .timeline-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      cursor: pointer;
+    }
+    .timeline-track {
+      position: relative;
+      height: 6px;
+      background: #242422;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .timeline-progress {
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: 0%;
+      background: var(--claude-peach);
+      border-radius: 3px;
+      transition: width 0.1s linear;
+    }
+    .timeline-chapters {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: var(--claude-text-faint);
+    }
+    .chapter-label.active {
+      color: var(--claude-peach);
+      font-weight: 600;
+    }
+    .footer-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 11.5px;
+      color: var(--claude-text-muted);
+    }
+    .speed-btn {
+      background: #20201d;
+      border: 1px solid var(--claude-border);
+      border-radius: 4px;
+      padding: 3px 8px;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      color: var(--claude-text);
+      cursor: pointer;
+    }
+
+    /* Modal Backdrop & Dialogs */
+    .modal-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+    .modal-backdrop.open {
+      display: flex;
+      opacity: 1;
+    }
+    .settings-modal-dialog {
+      width: 900px;
+      height: 590px;
+      background: var(--claude-modal-bg);
+      border: 1px solid var(--claude-border-strong);
+      border-radius: 14px;
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.75);
+      display: grid;
+      grid-template-columns: 210px 1fr;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .modal-nav {
+      background: #151514;
+      border-right: 1px solid var(--claude-border);
+      padding: 14px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      overflow-y: auto;
+    }
+    .modal-body {
+      position: relative;
+      background: var(--claude-modal-bg);
+      display: flex;
+      flex-direction: column;
+      padding: 22px 28px;
+      overflow-y: auto;
+    }
+
+    /* Custom connector dialog (Images 1, 2) */
+    .custom-connector-dialog {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 480px;
+      background: #1f1f1d;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+      padding: 22px 24px;
+      display: none;
+      flex-direction: column;
+      gap: 14px;
+      z-index: 150;
+    }
+    .custom-connector-dialog.open {
+      display: flex;
+    }
+
+    /* Auth Step Dialog (Image 3) */
+    .auth-step-dialog {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 480px;
+      background: #1f1f1d;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+      padding: 22px 24px;
+      display: none;
+      flex-direction: column;
+      gap: 14px;
+      z-index: 155;
+    }
+    .auth-step-dialog.open {
+      display: flex;
+    }
+
+    .auth-warning-banner {
+      background: rgba(180, 83, 9, 0.16);
+      border: 1px solid rgba(180, 83, 9, 0.4);
+      border-radius: 6px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11.5px;
+      color: #FBBF24;
+    }
+
+    .view-connector-detail {
+      display: none;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .dashlint-triad-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: #221a17;
+      border: 1px solid #4a281e;
+      display: grid;
+      place-items: center;
+    }
+
+    .approval-selector-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #242422;
+      border: 1px solid var(--claude-border);
+      border-radius: 6px;
+      padding: 5px 10px;
+      font-size: 12px;
+      color: var(--claude-text);
+      cursor: pointer;
+      position: relative;
+    }
+    .approval-options-menu {
+      position: absolute;
+      top: calc(100% + 4px);
+      right: 0;
+      width: 170px;
+      background: #1f1f1d;
+      border: 1px solid var(--claude-border-strong);
+      border-radius: 8px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+      padding: 4px;
+      display: none;
+      flex-direction: column;
+      z-index: 80;
+    }
+    .approval-options-menu.open {
+      display: flex;
+    }
+    .perm-option-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 10px;
+      font-size: 12.5px;
+      color: var(--claude-text);
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .perm-option-item:hover, .perm-option-item.highlighted {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    /* 3-Way Segmented Control for Tool Permissions (Matches Claude Desktop) */
+    .tool-seg-control {
+      display: inline-flex;
+      align-items: center;
+      background: #141413;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      padding: 2px;
+      gap: 2px;
+    }
+    .seg-btn {
+      background: transparent;
+      border: none;
+      width: 28px;
+      height: 24px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #6e6d66;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      padding: 0;
+    }
+    .seg-btn:hover {
+      color: #b5b3aa;
+    }
+    .seg-btn.active {
+      background: #2b2b27;
+      color: #f0efe8;
+    }
+    .seg-btn.seg-allow.active {
+      background: #1c2b20;
+      color: #34d399;
+    }
+    .seg-btn.seg-needs.active {
+      background: #2b2b27;
+      color: #d4d4cb;
+    }
+    .seg-btn.seg-blocked.active {
+      background: #2b1d1d;
+      color: #f87171;
+    }
+    .tool-perm-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 5px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    }
+    .tool-perm-row:last-child {
+      border-bottom: none;
+    }
+
+    @keyframes spinSunburst {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .spinning-sunburst {
+      display: inline-block;
+      animation: spinSunburst 2s linear infinite;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="viewport-wrapper" id="stage-wrapper">
+    
+    <!-- Top Player Header -->
+    <div class="player-header">
+      <div class="window-controls">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+
+      <div class="player-title">
+        <span>DashLint MCP Walkthrough - Complete Creation Journey</span>
+        <div class="badge-live">
+          <span class="pulse-dot"></span>
+          Auto-Demo
+        </div>
+      </div>
+
+      <div style="font-size: 11px; color: #8e8d86;">
+        Resolution: 1920 × 1080 (HD)
+      </div>
+    </div>
+
+    <!-- Screen Stage -->
+    <div class="screen-stage" id="screen-stage">
+      
+      <!-- Virtual Animated Cursor -->
+      <div id="virtual-cursor">
+        <div class="cursor-ripple" id="cursor-ripple"></div>
+        <div class="cursor-callout" id="cursor-callout">Ready</div>
+        <svg class="cursor-svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <path d="M4 3L11 20L14 13L21 10L4 3Z" fill="#D97746" stroke="#FFFFFF" stroke-width="1.5" stroke-linejoin="round"/>
+        </svg>
+      </div>
+
+      <!-- Toast Notification -->
+      <div class="toast-notification" id="toast-notification">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        <span>Connected to Dashlint.</span>
+        <svg style="margin-left: 8px; cursor: pointer;" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6E6D66" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </div>
+
+      <!-- Main Layout -->
+      <div class="claude-layout" id="claude-layout">
+        
+        <!-- Sidebar -->
+        <aside class="claude-sidebar" id="claude-sidebar">
+          <div class="sidebar-brand">
+            <svg class="claude-star-icon" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2C12.5523 2 13 2.44772 13 3V7.05L16.5 4.5C16.95 4.18 17.57 4.3 17.89 4.75C18.21 5.2 18.09 5.82 17.64 6.14L14.2 8.6L18.25 7.75C18.79 7.63 19.33 7.97 19.45 8.5C19.57 9.04 19.23 9.58 18.7 9.7L14.65 10.55L19.5 12C20.05 12.17 20.35 12.75 20.18 13.3C20.01 13.85 19.43 14.15 18.88 13.98L14.2 12.55L17.65 15.05C18.1 15.37 18.21 15.99 17.9 16.44C17.58 16.89 16.96 17 16.51 16.69L13 14.15V19C13 19.55 12.55 20 12 20C11.45 20 11 19.55 11 19V14.15L7.5 16.69C7.05 17 6.43 16.89 6.11 16.44C5.79 15.99 5.91 15.37 6.36 15.05L9.8 12.55L5.12 13.98C4.57 14.15 3.99 13.85 3.82 13.3C3.65 12.75 3.95 12.17 4.5 12L9.35 10.55L5.3 9.7C4.77 9.58 4.43 9.04 4.55 8.5C4.67 7.97 5.21 7.63 5.75 7.75L9.8 8.6L6.36 6.14C5.91 5.82 5.79 5.2 6.11 4.75C6.43 4.3 7.05 4.18 7.5 4.5L11 7.05V3C11 2.44772 11.4477 2 12 2Z"/>
+            </svg>
+            <span>Claude</span>
+          </div>
+
+          <button class="new-chat-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5V19M5 12H19"/></svg>
+            <span>New</span>
+          </button>
+
+          <nav class="nav-list">
+            <div class="nav-item">
+              <div class="nav-item-left">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V17C3 18.1 3.9 19 5 19H19C20.1 19 21 18.1 21 17V7M3 7L12 13L21 7M3 7C3 5.9 3.9 5 5 5H19C20.1 5 21 5.9 21 7"/></svg>
+                <span>Projects</span>
+              </div>
+            </div>
+            <div class="nav-item">
+              <div class="nav-item-left">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15L16 10L5 21"/></svg>
+                <span>Artifacts</span>
+              </div>
+            </div>
+            <div class="nav-item">
+              <div class="nav-item-left">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                <span>Code</span>
+              </div>
+              <span class="upgrade-pill">Upgrade</span>
+            </div>
+            <div class="nav-item">
+              <div class="nav-item-left">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                <span>Customize</span>
+              </div>
+            </div>
+          </nav>
+
+          <div class="sidebar-section-title">
+            <span>Chats and tasks</span>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+          </div>
+
+          <div class="active-chat-item" id="sidebar-active-chat">
+            <span class="chat-dot"></span>
+            <span>Interactive dashboard with DashLin...</span>
+          </div>
+
+          <div class="sidebar-spacer"></div>
+
+          <!-- Bottom Profile Anchor -->
+          <div class="user-profile-anchor">
+            <div class="profile-popover" id="profile-popover">
+              <div class="popover-email">thescammasters@gmail.com</div>
+              <div class="popover-item" id="popover-settings-btn">
+                <div class="popover-item-left">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                  <span>Settings</span>
+                </div>
+                <span class="popover-shortcut">Ctrl+Shift+,</span>
+              </div>
+              <div class="popover-item"><div class="popover-item-left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1 4-10z"/></svg><span>Language</span></div></div>
+              <div class="popover-item"><div class="popover-item-left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="16 12 12 8 8 12"/><line x1="12" y1="16" x2="12" y2="8"/></svg><span>Upgrade plan</span></div></div>
+              <div class="popover-item"><div class="popover-item-left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg><span>Log out</span></div></div>
+            </div>
+
+            <div class="user-profile-btn" id="user-profile-btn">
+              <div class="user-info">
+                <div class="user-avatar">A</div>
+                <div class="user-name">Ashu <span style="color: var(--claude-text-faint);">· Free</span></div>
+              </div>
+              <div class="profile-actions">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        <!-- Main Content Area: Split Container -->
+        <main class="claude-main-split">
+          
+          <!-- LEFT PANE: Chat View -->
+          <div class="claude-chat-pane" id="claude-chat-pane">
+            <div class="main-top-bar" id="main-top-bar">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <div class="sidebar-toggle-btn" id="btn-toggle-sidebar" title="Toggle Sidebar">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                    <line x1="9" y1="3" x2="9" y2="21"/>
+                  </svg>
+                </div>
+                <div class="top-chat-title" id="top-chat-title">
+                  <span>Interactive dashboard with DashLint MCP workflow</span>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+              </div>
+              <div style="font-size:12px; color:var(--claude-text-muted);">Free plan · <span style="color:#38BDF8;">Upgrade</span></div>
+            </div>
+
+            <!-- Empty Hero State -->
+            <div class="chat-view-container" id="chat-empty-view">
+              <div class="hero-greeting">
+                <svg class="hero-star" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2C12.5523 2 13 2.44772 13 3V7.05L16.5 4.5C16.95 4.18 17.57 4.3 17.89 4.75C18.21 5.2 18.09 5.82 17.64 6.14L14.2 8.6L18.25 7.75C18.79 7.63 19.33 7.97 19.45 8.5C19.57 9.04 19.23 9.58 18.7 9.7L14.65 10.55L19.5 12C20.05 12.17 20.35 12.75 20.18 13.3C20.01 13.85 19.43 14.15 18.88 13.98L14.2 12.55L17.65 15.05C18.1 15.37 18.21 15.99 17.9 16.44C17.58 16.89 16.96 17 16.51 16.69L13 14.15V19C13 19.55 12.55 20 12 20C11.45 20 11 19.55 11 19V14.15L7.5 16.69C7.05 17 6.43 16.89 6.11 16.44C5.79 15.99 5.91 15.37 6.36 15.05L9.8 12.55L5.12 13.98C4.57 14.15 3.99 13.85 3.82 13.3C3.65 12.75 3.95 12.17 4.5 12L9.35 10.55L5.3 9.7C4.77 9.58 4.43 9.04 4.55 8.5C4.67 7.97 5.21 7.63 5.75 7.75L9.8 8.6L6.36 6.14C5.91 5.82 5.79 5.2 6.11 4.75C6.43 4.3 7.05 4.18 7.5 4.5L11 7.05V3C11 2.44772 11.4477 2 12 2Z"/>
+                </svg>
+                <h1>Hello, night owl</h1>
+              </div>
+
+              <div class="excel-promo-banner">
+                <span>Claude works directly in Excel</span>
+                <button class="excel-promo-btn">Upgrade</button>
+              </div>
+
+              <div class="chat-input-box">
+                <div class="file-attachment-badge" id="input-file-badge">
+                  <span class="file-name-label">polar_resear..._dataset.csv</span>
+                  <span class="file-ext-tag">CSV</span>
+                </div>
+                <div class="input-textarea-fake placeholder" id="fake-input-text">
+                  How can I help you today?
+                </div>
+                <div class="chat-input-controls">
+                  <div class="controls-left">
+                    <div class="mode-toggle">
+                      <div class="mode-toggle-btn active">Chat</div>
+                      <div class="mode-toggle-btn">Cowork</div>
+                    </div>
+                  </div>
+                  <div class="controls-right">
+                    <div class="model-selector">Sonnet 5.5 <span>Medium</span></div>
+                    <div class="send-submit-btn" id="send-submit-btn">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Active Conversation Thread -->
+            <div class="conversation-thread" id="conversation-thread">
+              <div class="user-msg-container">
+                <div class="file-attachment-badge show" style="align-self:flex-end;">
+                  <span class="file-name-label">polar_resear..._dataset.csv</span>
+                  <span class="file-ext-tag">CSV</span>
+                </div>
+                <div class="msg-user">
+                  Inspect the attached data and build an interactive dashboard following the DashLint MCP workflow. Call the MCP tools step-by-step — do not skip any playbooks or the completion checklist. Keep all raw data rows on my machine.
+                </div>
+              </div>
+
+              <!-- Claude Streaming & Responses -->
+              <div class="claude-streaming-area">
+                <div class="mcp-live-step-row" id="live-step-row">
+                  <span style="letter-spacing: 2px;">...</span>
+                  <span class="dashlint-step-icon">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                      <polygon points="12 3 21 19 3 19" fill="none" stroke="#D97746" stroke-width="2"/>
+                      <circle cx="12" cy="4" r="2.5" fill="#D97746"/>
+                      <circle cx="4" cy="18" r="2.5" fill="#D97746"/>
+                      <circle cx="20" cy="18" r="2.5" fill="#D97746"/>
+                    </svg>
+                  </span>
+                  <span id="live-step-text">Get dashboard creation workflow 6s</span>
+                  <span style="color:#6E6D66;">></span>
+                </div>
+
+                <div class="tool-summary-pill" id="tool-summary-pill">
+                  <span>Used Dashlint integration, ran 2 commands, loaded tools</span>
+                  <span style="color:#6E6D66;">></span>
+                </div>
+
+                <div class="claude-response-text" id="claude-response-text">
+                  All the playbooks and the shell spec are loaded. I'll build the dashboard as a single self-contained HTML file with no data embedded. It opens empty and parses uploads in the browser.
+                </div>
+
+                <div class="mcp-live-step-row" id="fixing-step-row" style="display:none;">
+                  <span style="letter-spacing: 2px;">...</span>
+                  <span>Fixing invalid nested buttons in filter dropdown markup 2m 37s</span>
+                  <span style="color:#6E6D66;">></span>
+                </div>
+
+                <!-- HTML Artifact Reference Card -->
+                <div class="chat-artifact-card" id="chat-artifact-card">
+                  <div class="card-left">
+                    <div class="card-icon-box">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1 4-10z"/></svg>
+                    </div>
+                    <div>
+                      <div style="font-size:13px; font-weight:600; color:#fff;">Polar station dashboard</div>
+                      <div style="font-size:11px; color:#888;">Code · HTML</div>
+                    </div>
+                  </div>
+                  <button class="btn-download-artifact">Download</button>
+                </div>
+              </div>
+            </div>
+
+            <div id="bottom-chat-input-bar" style="display:none; flex-direction:column; gap:8px; width:100%; max-width:760px; margin:0 auto; padding-bottom:12px;">
+              <div style="display:flex; align-items:center; justify-content:space-between; background:#262624; border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:12px 16px;">
+                <div style="display:flex; align-items:center; gap:12px; color:#9C9A93; font-size:14px;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  <span>Write a message...</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:12px; color:#9C9A93;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center; font-size:11.5px; color:#6E6D66; padding:0 4px;">
+                <span>Claude is AI and can make mistakes. Please double-check responses.</span>
+                <span><b style="color:#E2E1DA; font-weight:500;">Sonnet 5.5</b> Medium</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT PANE: ARTIFACT VIEWER -->
+          <div class="artifact-viewer-pane" id="artifact-viewer-pane">
+            <div class="artifact-topbar">
+              <div class="artifact-top-left">
+                <div class="sidebar-toggle-btn" id="btn-artifact-sidebar-toggle" title="Toggle Sidebar">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                    <line x1="9" y1="3" x2="9" y2="21"/>
+                  </svg>
+                </div>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                <span id="artifact-top-name">Polar station dashboard · HTML</span>
+              </div>
+              <div class="artifact-top-right">
+                <button class="artifact-btn-sm">Copy ⌵</button>
+                <button class="artifact-btn-sm" id="btn-expand-artifact" title="Expand Full Canvas">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+                </button>
+                <svg id="btn-close-artifact" style="cursor:pointer;" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </div>
+            </div>
+
+            <!-- DashLint App Engine -->
+            <div class="artifact-content-canvas">
+              
+              <!-- DashLint Dark Left Rail -->
+              <div class="dashlint-rail">
+                <div class="rail-logo-group">
+                  <div class="rail-badge" id="rail-badge-text">PSP</div>
+                  <div>
+                    <div class="rail-title" id="rail-title-text">Polar Station Pulse</div>
+                    <div class="rail-sub" id="rail-sub-text">research ops dashboard</div>
+                  </div>
+                </div>
+
+                <div class="rail-status-pill" id="rail-status-pill">
+                  <span style="font-size:12px;">●</span>
+                  <span id="rail-status-text">AWAITING LOCAL FILE</span>
+                </div>
+
+                <div class="rail-section-heading">DATASET SNAPSHOT</div>
+                <div class="rail-metric-row">
+                  <span>Rows</span>
+                  <span class="rail-metric-val" id="metric-rows">-</span>
+                </div>
+                <div class="rail-metric-row">
+                  <span>Period</span>
+                  <span class="rail-metric-val" id="metric-period">-</span>
+                </div>
+                <div class="rail-metric-row" id="metric-row-extra1" style="display:none;">
+                  <span>Hospitals</span>
+                  <span class="rail-metric-val">6</span>
+                </div>
+                <div class="rail-metric-row" id="metric-row-extra2" style="display:none;">
+                  <span>Departments</span>
+                  <span class="rail-metric-val">6</span>
+                </div>
+                <div class="rail-metric-row" id="metric-row-extra3" style="display:none;">
+                  <span>Avg satisfaction</span>
+                  <span class="rail-metric-val">4.1 /5</span>
+                </div>
+                <div class="rail-metric-row" id="metric-row-extra4" style="display:none;">
+                  <span>Load check</span>
+                  <span class="rail-metric-val" style="color:#10B981;">clean</span>
+                </div>
+
+                <div class="rail-footer">
+                  <div>built by</div>
+                  <div style="font-weight:600;"><span style="color:#fff;">Tanmay </span><span style="color:#E11D48;">Kalbande</span></div>
+                </div>
+              </div>
+
+              <!-- DashLint Main Viewport -->
+              <div class="dashlint-main-viewport">
+                
+                <div class="dl-header-card">
+                  <div class="dl-title-box">
+                    <h2 id="main-view-title">Polar research station observations</h2>
+                    <p id="main-view-desc">Upload a CSV or Excel file to begin. Parsing and every calculation happen in your browser.</p>
+                  </div>
+
+                  <!-- Dropzone / Replace file box -->
+                  <div class="dl-dropzone-box" id="dl-dropzone-box">
+                    <div>
+                      <div class="dz-tag" id="dz-tag-text">LOCAL FILE · NEVER UPLOADED</div>
+                      <div class="dz-main-text" id="dz-main-text">Drop CSV / Excel here</div>
+                      <div class="dz-sub-text" id="dz-sub-text">No file loaded</div>
+                    </div>
+                    <button class="btn-choose-file" id="btn-choose-file">Choose file</button>
+                  </div>
+                </div>
+
+                <!-- Filter Bar -->
+                <div class="dl-filter-bar" id="dl-filter-bar">
+                  <span>Hospital: <b class="dl-filter-item">All ⌵</b></span>
+                  <span>Department: <b class="dl-filter-item">All ⌵</b></span>
+                  <span>Shift: <b class="dl-filter-item">All ⌵</b></span>
+                  <span>Patient Severity: <b class="dl-filter-item">All ⌵</b></span>
+                  <span>Payment Type: <b class="dl-filter-item">All ⌵</b></span>
+                  <span>METRIC <b class="dl-filter-item" style="color:#0284C7;">Wait time ⌵</b></span>
+                </div>
+
+                <!-- Tab Selectors -->
+                <div class="dl-tab-selector">
+                  <div class="dl-tab-btn active" id="tab-btn-overview">Overview</div>
+                  <div class="dl-tab-btn" id="tab-btn-compare">Compare</div>
+                  <div class="dl-tab-btn">Records</div>
+                </div>
+
+                <!-- 1. Empty State -->
+                <div class="dl-empty-state-card" id="dl-empty-state-card">
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  <h3>Upload data to begin</h3>
+                  <p>Drop a CSV or Excel workbook on the dashed box above.<br>Rows stay in this browser tab. Nothing is sent anywhere and no data is stored in this file.</p>
+                </div>
+
+                <!-- 2. Populated State: Overview Tab -->
+                <div class="dl-populated-overview" id="dl-populated-overview">
+                  <div class="dl-kpi-grid">
+                    <div class="dl-kpi-card">
+                      <div class="dl-kpi-title">TOTAL PATIENTS ADMITTED</div>
+                      <div class="dl-kpi-number">64,044</div>
+                      <div class="dl-kpi-sub">n=280</div>
+                    </div>
+                    <div class="dl-kpi-card">
+                      <div class="dl-kpi-title">MEDIAN WAIT TIME</div>
+                      <div class="dl-kpi-number">54</div>
+                      <div class="dl-kpi-sub">n=280 · min</div>
+                    </div>
+                    <div class="dl-kpi-card">
+                      <div class="dl-kpi-title">AVG BED OCCUPANCY</div>
+                      <div class="dl-kpi-number" style="color:#0284C7;">72.7%</div>
+                      <div class="dl-kpi-sub">n=280</div>
+                    </div>
+                    <div class="dl-kpi-card">
+                      <div class="dl-kpi-title">AVG STAFF UTILIZATION</div>
+                      <div class="dl-kpi-number">76.7%</div>
+                      <div class="dl-kpi-sub">n=280</div>
+                    </div>
+                    <div class="dl-kpi-card">
+                      <div class="dl-kpi-title">AVG READMISSION RATE</div>
+                      <div class="dl-kpi-number">8.3%</div>
+                      <div class="dl-kpi-sub">n=280</div>
+                    </div>
+                    <div class="dl-kpi-card">
+                      <div class="dl-kpi-title">TOTAL EMERGENCY ALERTS</div>
+                      <div class="dl-kpi-number" style="color:#E11D48;">1,670</div>
+                      <div class="dl-kpi-sub">n=280</div>
+                    </div>
+                  </div>
+
+                  <!-- Chart & Findings Split -->
+                  <div class="dl-chart-findings-split">
+                    <div class="dl-chart-card">
+                      <div style="display:flex; justify-content:space-between; font-size:11px; font-family:var(--font-mono); font-weight:600; color:var(--dl-muted);">
+                        <span>MEDIAN WAIT TIME BY MONTH</span>
+                        <span>10 months · min</span>
+                      </div>
+                      <svg style="width:100%; height:130px;" viewBox="0 0 340 130">
+                        <defs>
+                          <linearGradient id="curve-fill" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="#38BDF8" stop-opacity="0.3"/>
+                            <stop offset="100%" stop-color="#38BDF8" stop-opacity="0.02"/>
+                          </linearGradient>
+                        </defs>
+                        <path d="M 10 75 Q 50 45 90 60 T 170 55 T 240 85 T 330 110 L 330 125 L 10 125 Z" fill="url(#curve-fill)"/>
+                        <path d="M 10 75 Q 50 45 90 60 T 170 55 T 240 85 T 330 110" fill="none" stroke="#181C24" stroke-width="2.5"/>
+                        <circle cx="10" cy="75" r="3.5" fill="#181C24"/>
+                        <circle cx="90" cy="60" r="3.5" fill="#181C24"/>
+                        <circle cx="170" cy="55" r="3.5" fill="#181C24"/>
+                        <circle cx="240" cy="85" r="3.5" fill="#181C24"/>
+                        <circle cx="330" cy="110" r="3.5" fill="#181C24"/>
+                        <text x="10" y="125" font-size="9" fill="#94A3B8" font-family="'IBM Plex Mono'">26-01</text>
+                        <text x="160" y="125" font-size="9" fill="#94A3B8" font-family="'IBM Plex Mono'">26-06</text>
+                        <text x="310" y="125" font-size="9" fill="#94A3B8" font-family="'IBM Plex Mono'">26-10</text>
+                      </svg>
+                    </div>
+
+                    <div class="dl-findings-card">
+                      <div class="findings-header">
+                        <span>GENERATED FINDINGS</span>
+                        <span style="color:#10B981; background:#DCFCE7; padding:1px 6px; border-radius:3px;">from loaded file</span>
+                      </div>
+                      <div class="findings-list">
+                        <div>• Scope: 280 records.</div>
+                        <div>• LifePoint has the highest median wait time (60.7 min vs 35.9 MetroCare).</div>
+                        <div>• Emergency department averages highest occupancy: 76.5%.</div>
+                        <div>• Morning shifts account for 78.1% staff utilization.</div>
+                        <div>• Morning logs the most emergency alerts per record.</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 3. Populated State: Compare Tab -->
+                <div class="dl-populated-compare" id="dl-populated-compare">
+                  <div class="compare-top-split">
+                    <div class="compare-bar-card">
+                      <div style="display:flex; justify-content:space-between; font-size:11px; font-family:var(--font-mono); font-weight:600; color:var(--dl-muted);">
+                        <span>MEDIAN WAIT TIME BY</span>
+                        <span style="color:var(--dl-ink);">Hospital ⌵</span>
+                      </div>
+                      <div style="display:flex; flex-direction:column; gap:6px; font-size:11px; font-family:var(--font-mono); margin-top:4px;">
+                        <div style="display:flex; align-items:center; justify-content:space-between;">
+                          <span>LifePoint</span>
+                          <div style="flex:1; margin:0 8px; height:8px; background:#E2E8F0; border-radius:4px; overflow:hidden;"><div style="width:90%; height:100%; background:#94A3B8;"></div></div>
+                          <b>60.7</b>
+                        </div>
+                        <div style="display:flex; align-items:center; justify-content:space-between;">
+                          <span>Apollo Ridge</span>
+                          <div style="flex:1; margin:0 8px; height:8px; background:#E2E8F0; border-radius:4px; overflow:hidden;"><div style="width:82%; height:100%; background:#94A3B8;"></div></div>
+                          <b>57.0</b>
+                        </div>
+                        <div style="display:flex; align-items:center; justify-content:space-between;">
+                          <span>Zenith Med</span>
+                          <div style="flex:1; margin:0 8px; height:8px; background:#E2E8F0; border-radius:4px; overflow:hidden;"><div style="width:78%; height:100%; background:#94A3B8;"></div></div>
+                          <b>56.5</b>
+                        </div>
+                        <div style="display:flex; align-items:center; justify-content:space-between;">
+                          <span>Nova Health</span>
+                          <div style="flex:1; margin:0 8px; height:8px; background:#E2E8F0; border-radius:4px; overflow:hidden;"><div style="width:65%; height:100%; background:#94A3B8;"></div></div>
+                          <b>47.6</b>
+                        </div>
+                        <div style="display:flex; align-items:center; justify-content:space-between;">
+                          <span>CityMed</span>
+                          <div style="flex:1; margin:0 8px; height:8px; background:#E2E8F0; border-radius:4px; overflow:hidden;"><div style="width:58%; height:100%; background:#94A3B8;"></div></div>
+                          <b>41.8</b>
+                        </div>
+                        <div style="display:flex; align-items:center; justify-content:space-between;">
+                          <span>MetroCare</span>
+                          <div style="flex:1; margin:0 8px; height:8px; background:#E2E8F0; border-radius:4px; overflow:hidden;"><div style="width:48%; height:100%; background:#94A3B8;"></div></div>
+                          <b>35.9</b>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Heatmap Matrix -->
+                    <div class="compare-heatmap-card">
+                      <div style="display:flex; justify-content:space-between; font-size:11px; font-family:var(--font-mono); font-weight:600; color:var(--dl-muted);">
+                        <span>HEATMAP</span>
+                        <span style="color:var(--dl-ink);">Department × Shift</span>
+                      </div>
+
+                      <table class="heatmap-table">
+                        <thead>
+                          <tr><th></th><th>EVENING</th><th>MORNING</th><th>NIGHT</th></tr>
+                        </thead>
+                        <tbody>
+                          <tr><td style="text-align:left; font-size:9px; font-family:var(--font-mono);">CARDIOLOGY</td><td class="heatmap-cell" style="background:#2563EB;">66.3</td><td class="heatmap-cell" style="background:#60A5FA;">51.2</td><td class="heatmap-cell" style="background:#1D4ED8;">74.8</td></tr>
+                          <tr><td style="text-align:left; font-size:9px; font-family:var(--font-mono);">EMERGENCY</td><td class="heatmap-cell" style="background:#93C5FD; color:#1e293b;">30.1</td><td class="heatmap-cell" style="background:#60A5FA;">55.5</td><td class="heatmap-cell" style="background:#3B82F6;">57.7</td></tr>
+                          <tr><td style="text-align:left; font-size:9px; font-family:var(--font-mono);">GEN MED</td><td class="heatmap-cell" style="background:#60A5FA;">54.2</td><td class="heatmap-cell" style="background:#3B82F6;">57.2</td><td class="heatmap-cell" style="background:#2563EB;">71.9</td></tr>
+                          <tr><td style="text-align:left; font-size:9px; font-family:var(--font-mono);">NEUROLOGY</td><td class="heatmap-cell" style="background:#93C5FD; color:#1e293b;">47.3</td><td class="heatmap-cell" style="background:#60A5FA;">51.0</td><td class="heatmap-cell" style="background:#93C5FD; color:#1e293b;">39.6</td></tr>
+                          <tr><td style="text-align:left; font-size:9px; font-family:var(--font-mono);">ORTHOPEDIC</td><td class="heatmap-cell" style="background:#1D4ED8;">73.1</td><td class="heatmap-cell" style="background:#93C5FD; color:#1e293b;">46.8</td><td class="heatmap-cell" style="background:#93C5FD; color:#1e293b;">44.9</td></tr>
+                          <tr><td style="text-align:left; font-size:9px; font-family:var(--font-mono);">PEDIATRICS</td><td class="heatmap-cell" style="background:#BFDBFE; color:#1e293b;">33.2</td><td class="heatmap-cell" style="background:#93C5FD; color:#1e293b;">47.6</td><td class="heatmap-cell" style="background:#3B82F6;">59.3</td></tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  <!-- Distribution Histogram -->
+                  <div style="background:#fff; border:1px solid var(--dl-line); border-radius:6px; padding:10px;">
+                    <div style="font-size:10px; font-family:var(--font-mono); font-weight:700; color:var(--dl-muted); margin-bottom:6px;">
+                      DISTRIBUTION OF WAIT TIME (ROW VALUES, MIN)
+                    </div>
+                    <div style="display:flex; align-items:flex-end; gap:6px; height:50px;">
+                      <div style="flex:1; height:85%; background:#0D9488; border-radius:3px 3px 0 0; text-align:center; color:#fff; font-size:9px; font-family:var(--font-mono); padding-top:2px;">32</div>
+                      <div style="flex:1; height:65%; background:#0D9488; border-radius:3px 3px 0 0; text-align:center; color:#fff; font-size:9px; font-family:var(--font-mono); padding-top:2px;">27</div>
+                      <div style="flex:1; height:75%; background:#0D9488; border-radius:3px 3px 0 0; text-align:center; color:#fff; font-size:9px; font-family:var(--font-mono); padding-top:2px;">29</div>
+                      <div style="flex:1; height:65%; background:#0D9488; border-radius:3px 3px 0 0; text-align:center; color:#fff; font-size:9px; font-family:var(--font-mono); padding-top:2px;">27</div>
+                      <div style="flex:1; height:45%; background:#0D9488; border-radius:3px 3px 0 0; text-align:center; color:#fff; font-size:9px; font-family:var(--font-mono); padding-top:2px;">20</div>
+                      <div style="flex:1; height:60%; background:#0D9488; border-radius:3px 3px 0 0; text-align:center; color:#fff; font-size:9px; font-family:var(--font-mono); padding-top:2px;">26</div>
+                      <div style="flex:1; height:60%; background:#0D9488; border-radius:3px 3px 0 0; text-align:center; color:#fff; font-size:9px; font-family:var(--font-mono); padding-top:2px;">26</div>
+                      <div style="flex:1; height:70%; background:#0D9488; border-radius:3px 3px 0 0; text-align:center; color:#fff; font-size:9px; font-family:var(--font-mono); padding-top:2px;">28</div>
+                      <div style="flex:1; height:85%; background:#0D9488; border-radius:3px 3px 0 0; text-align:center; color:#fff; font-size:9px; font-family:var(--font-mono); padding-top:2px;">32</div>
+                      <div style="flex:1; height:95%; background:#0D9488; border-radius:3px 3px 0 0; text-align:center; color:#fff; font-size:9px; font-family:var(--font-mono); padding-top:2px;">33</div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+          </div>
+
+        </main>
+      </div>
+
+      <!-- Settings Modal & Full Sub-Dialogs -->
+      <div class="modal-backdrop" id="settings-modal-backdrop">
+        <div class="settings-modal-dialog">
+          
+          <div class="modal-nav">
+            <div style="position:relative; margin-bottom:10px;">
+              <input type="text" placeholder="Search" readonly style="width:100%; background:#20201e; border:1px solid #333; border-radius:6px; padding:6px 10px 6px 26px; font-size:12px; color:#fff;">
+              <svg style="position:absolute; left:8px; top:50%; transform:translateY(-50%); width:12px; height:12px; color:#888;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </div>
+
+            <div style="font-size:11px; color:#888; padding:4px;">Settings</div>
+            <div class="nav-item" id="modal-nav-general" style="padding:6px 8px; border-radius:6px;"><div class="nav-item-left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>General</span></div></div>
+
+            <div style="font-size:11px; color:#888; padding:4px; margin-top:8px;">Customize</div>
+            <div class="nav-item active" id="modal-nav-connectors" style="padding:6px 8px; border-radius:6px; background:#242422; color:#fff;"><div class="nav-item-left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="8" height="8" rx="2"/><rect x="14" y="2" width="8" height="8" rx="2"/><rect x="8" y="14" width="8" height="8" rx="2"/></svg><span>Connectors</span></div></div>
+          </div>
+
+          <div class="modal-body">
+            <button id="modal-close-btn" style="position:absolute; top:16px; right:18px; background:none; border:none; color:#888; font-size:16px; cursor:pointer;">✕</button>
+
+            <!-- 1. Connectors List View -->
+            <div id="modal-connectors-list-view" style="display:flex; flex-direction:column; gap:14px;">
+              <div style="font-size:11.5px; color:#888;">← Your connectors</div>
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="font-size:18px; font-weight:600; color:#fff;">Connectors</h3>
+                <div style="display:flex; gap:8px; align-items:center;">
+                  <button class="btn-choose-file" id="btn-modal-add-connector" style="background:#fff; color:#111; font-weight:600; padding:6px 14px; border-radius:6px; font-size:12.5px;">+ Add ⌵</button>
+                  
+                  <!-- Dropdown Menu -->
+                  <div class="approval-options-menu" id="add-connector-dropdown-menu" style="top:38px; right:0; width:190px;">
+                    <div class="perm-option-item" id="opt-add-custom-connector">
+                      <div style="display:flex; gap:8px; align-items:center;">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        <span>Add custom connector</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Table -->
+              <table style="width:100%; border-collapse:collapse; margin-top:8px; font-size:13px;">
+                <thead>
+                  <tr style="border-bottom:1px solid #333; color:#888; font-size:11px; text-align:left;">
+                    <th style="padding:8px 4px;">Connector</th><th>Type</th><th style="text-align:right;">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style="border-bottom:1px solid #282828;">
+                    <td style="padding:12px 4px; display:flex; align-items:center; gap:8px;">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+                      <span>GitHub Integration</span>
+                    </td>
+                    <td style="color:#888;">Web</td>
+                    <td style="text-align:right;"><button class="btn-choose-file" style="padding:4px 10px;">Connect</button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- 2. Connector Details & Permissions View (Screens 4 & 5) -->
+            <div class="view-connector-detail" id="view-connector-detail">
+              <div style="font-size:11.5px; color:#888;">← Your connectors</div>
+              
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div style="display:flex; gap:12px; align-items:center;">
+                  <div class="dashlint-triad-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                      <polygon points="12 3 21 19 3 19" fill="none" stroke="#D97746" stroke-width="2"/>
+                      <circle cx="12" cy="4" r="3" fill="#D97746"/>
+                      <circle cx="4" cy="18" r="3" fill="#D97746"/>
+                      <circle cx="20" cy="18" r="3" fill="#D97746"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <div style="font-size:15px; font-weight:600; color:#fff;">Dashlint</div>
+                    <div style="font-size:11.5px; font-family:var(--font-mono); color:var(--claude-text-muted);">https://dashlint.tanmaysk.in/mcp</div>
+                  </div>
+                </div>
+                <button style="background:#262623; border:1px solid var(--claude-border); border-radius:6px; padding:5px 12px; font-size:12px; color:#fff;">Disconnect</button>
+              </div>
+
+              <div style="margin-top:10px;">
+                <div style="font-size:13.5px; font-weight:600; color:#fff;">Tool permissions</div>
+                <div style="font-size:12px; color:var(--claude-text-faint); margin-bottom:10px;">Choose when Claude is allowed to use these tools.</div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--claude-border); padding-bottom:8px;">
+                  <div style="font-size:13px; font-weight:500;">Other tools <span style="background:#262624; padding:2px 6px; border-radius:4px; font-size:11px;">7</span></div>
+                  
+                  <div class="approval-selector-btn" id="approval-selector-btn">
+                    <span id="current-perm-icon">✋</span>
+                    <span id="current-perm-label">Needs approval</span>
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+
+                    <div class="approval-options-menu" id="approval-options-menu">
+                      <div class="perm-option-item" id="perm-opt-always">
+                        <div style="display:flex; gap:8px; align-items:center;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg><span>Always allow</span></div>
+                        <span id="always-allow-check" style="display:none; color:#38BDF8; font-weight:700;">✓</span>
+                      </div>
+                      <div class="perm-option-item" id="perm-opt-needs">
+                        <div style="display:flex; gap:8px; align-items:center;"><span>✋</span><span>Needs approval</span></div>
+                        <span id="needs-approval-check" style="color:#38BDF8; font-weight:700;">✓</span>
+                      </div>
+                      <div class="perm-option-item"><div style="display:flex; gap:8px; align-items:center;"><span>🚫</span><span>Blocked</span></div></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 7 Tools List with Real Claude 3-Way Segmented Control -->
+                <div class="tools-permissions-table" style="display:flex; flex-direction:column; gap:2px; margin-top:8px;">
+                  <div class="tool-perm-row">
+                    <span style="font-size:12.5px; color:#e2e1da;">Build dashboard blueprint</span>
+                    <div class="tool-seg-control" data-tool="blueprint">
+                      <button class="seg-btn seg-allow" title="Always allow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-6"/></svg></button>
+                      <button class="seg-btn seg-needs active" title="Needs approval"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8a7 7 0 0 0 7 7h2a7 7 0 0 0 7-7v-3a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2"/></svg></button>
+                      <button class="seg-btn seg-blocked" title="Blocked"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg></button>
+                    </div>
+                  </div>
+                  <div class="tool-perm-row">
+                    <span style="font-size:12.5px; color:#e2e1da;">Get dashboard completion checklist</span>
+                    <div class="tool-seg-control" data-tool="checklist">
+                      <button class="seg-btn seg-allow" title="Always allow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-6"/></svg></button>
+                      <button class="seg-btn seg-needs active" title="Needs approval"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8a7 7 0 0 0 7 7h2a7 7 0 0 0 7-7v-3a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2"/></svg></button>
+                      <button class="seg-btn seg-blocked" title="Blocked"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg></button>
+                    </div>
+                  </div>
+                  <div class="tool-perm-row">
+                    <span style="font-size:12.5px; color:#e2e1da;">Get dashboard composition playbook</span>
+                    <div class="tool-seg-control" data-tool="composition">
+                      <button class="seg-btn seg-allow" title="Always allow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-6"/></svg></button>
+                      <button class="seg-btn seg-needs active" title="Needs approval"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8a7 7 0 0 0 7 7h2a7 7 0 0 0 7-7v-3a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2"/></svg></button>
+                      <button class="seg-btn seg-blocked" title="Blocked"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg></button>
+                    </div>
+                  </div>
+                  <div class="tool-perm-row">
+                    <span style="font-size:12.5px; color:#e2e1da;">Get dashboard creation workflow</span>
+                    <div class="tool-seg-control" data-tool="workflow">
+                      <button class="seg-btn seg-allow" title="Always allow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-6"/></svg></button>
+                      <button class="seg-btn seg-needs active" title="Needs approval"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8a7 7 0 0 0 7 7h2a7 7 0 0 0 7-7v-3a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2"/></svg></button>
+                      <button class="seg-btn seg-blocked" title="Blocked"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg></button>
+                    </div>
+                  </div>
+                  <div class="tool-perm-row">
+                    <span style="font-size:12.5px; color:#e2e1da;">Get dashboard interaction playbook</span>
+                    <div class="tool-seg-control" data-tool="interaction">
+                      <button class="seg-btn seg-allow" title="Always allow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-6"/></svg></button>
+                      <button class="seg-btn seg-needs active" title="Needs approval"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8a7 7 0 0 0 7 7h2a7 7 0 0 0 7-7v-3a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2"/></svg></button>
+                      <button class="seg-btn seg-blocked" title="Blocked"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg></button>
+                    </div>
+                  </div>
+                  <div class="tool-perm-row">
+                    <span style="font-size:12.5px; color:#e2e1da;">Get data insight playbook</span>
+                    <div class="tool-seg-control" data-tool="insight">
+                      <button class="seg-btn seg-allow" title="Always allow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-6"/></svg></button>
+                      <button class="seg-btn seg-needs active" title="Needs approval"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8a7 7 0 0 0 7 7h2a7 7 0 0 0 7-7v-3a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2"/></svg></button>
+                      <button class="seg-btn seg-blocked" title="Blocked"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg></button>
+                    </div>
+                  </div>
+                  <div class="tool-perm-row">
+                    <span style="font-size:12.5px; color:#e2e1da;">Get shell preservation spec</span>
+                    <div class="tool-seg-control" data-tool="spec">
+                      <button class="seg-btn seg-allow" title="Always allow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-6"/></svg></button>
+                      <button class="seg-btn seg-needs active" title="Needs approval"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8a7 7 0 0 0 7 7h2a7 7 0 0 0 7-7v-3a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2"/></svg></button>
+                      <button class="seg-btn seg-blocked" title="Blocked"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg></button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Dialog 1: Add Custom Connector (Screens 1 & 2) -->
+            <div class="custom-connector-dialog" id="custom-connector-dialog">
+              <span style="font-size:16px; font-weight:600; color:#F0EFEA;">Add custom connector</span>
+              <div style="font-size:12.5px; color:#9C9A93; line-height:1.45;">Connect Claude to your data and tools.</div>
+              
+              <div style="display:flex; flex-direction:column; gap:4px;">
+                <input class="dialog-input" id="dlg-name-input" type="text" placeholder="Name" readonly style="background:#141413; border:1px solid #333; border-radius:6px; padding:8px 12px; color:#fff; font-size:13px;">
+                <span style="font-size:11px; color:#6E6D66;">Shown in the connectors list.</span>
+              </div>
+
+              <div style="display:flex; flex-direction:column; gap:4px;">
+                <input class="dialog-input" id="dlg-url-input" type="text" placeholder="MCP server URL" readonly style="background:#141413; border:1px solid #333; border-radius:6px; padding:8px 12px; color:#fff; font-size:13px;">
+                <span style="font-size:11px; color:#6E6D66;">The HTTPS address where the server accepts MCP requests.</span>
+              </div>
+
+              <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:8px;">
+                <button class="btn-dialog-continue" id="btn-dlg-continue" style="background:#444; color:#888; border:none; border-radius:6px; padding:6px 16px; font-size:12.5px; font-weight:600;">Continue</button>
+              </div>
+            </div>
+
+            <!-- Dialog 2: Authentication (Screen 3) -->
+            <div class="auth-step-dialog" id="auth-step-dialog">
+              <div style="font-size:15px; font-weight:600; color:#fff;">Dashlint</div>
+              <div style="font-size:12px; font-family:var(--font-mono); color:#9C9A93;">https://dashlint.tanmaysk.in/mcp</div>
+              
+              <div style="display:flex; flex-direction:column; gap:8px; margin:8px 0;">
+                <div style="display:flex; gap:8px; align-items:center;">
+                  <div class="auth-radio-circle checked" style="width:14px; height:14px; border-radius:50%; background:#38BDF8; display:grid; place-items:center;"><div style="width:5px; height:5px; border-radius:50%; background:#111;"></div></div>
+                  <span style="font-weight:600; font-size:13px;">No sign-in</span>
+                  <span style="background:#2b2b28; padding:1px 6px; border-radius:4px; font-size:10px; color:#888;">Detected</span>
+                </div>
+                <div style="font-size:11.5px; color:#888;">Pick this for servers with open access, or servers that use an API key.</div>
+              </div>
+
+              <div class="auth-warning-banner">
+                <span>Without sign-in, anyone with the server URL can use this connector.</span>
+              </div>
+
+              <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:8px;">
+                <button class="btn-dialog-continue active" id="btn-auth-add" style="background:#ffffff; color:#111; border:none; border-radius:6px; padding:6px 16px; font-size:12.5px; font-weight:600; cursor:pointer;">Add</button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Bottom Scrubber Player -->
+    <div class="player-footer">
+      <div class="footer-left">
+        <button class="play-btn" id="play-pause-btn" title="Play/Pause">
+          <svg id="play-icon" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          <svg id="pause-icon" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="display:none;"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+        </button>
+        <button class="step-btn" id="step-prev-btn" title="Previous Step">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="2.5"/></svg>
+        </button>
+        <button class="step-btn" id="step-next-btn" title="Next Step">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2.5"/></svg>
+        </button>
+        <button class="step-btn" id="replay-btn" title="Replay Walkthrough">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+        </button>
+      </div>
+
+      <div class="timeline-container" id="timeline-scrubber">
+        <div class="timeline-track">
+          <div class="timeline-progress" id="timeline-progress"></div>
+        </div>
+        <div class="timeline-chapters">
+          <span class="chapter-label" id="chap-0">1. Home</span>
+          <span class="chapter-label" id="chap-1">2. Settings</span>
+          <span class="chapter-label" id="chap-2">3. Add MCP URL</span>
+          <span class="chapter-label" id="chap-3">4. Auth & Add</span>
+          <span class="chapter-label" id="chap-4">5. Always Allow</span>
+          <span class="chapter-label" id="chap-5">6. Attach & Prompt</span>
+          <span class="chapter-label" id="chap-6">7. MCP Creation Flow</span>
+          <span class="chapter-label" id="chap-7">8. Artifact Split</span>
+          <span class="chapter-label" id="chap-8">9. Collapse Sidebar</span>
+          <span class="chapter-label" id="chap-9">10. Parse Dataset</span>
+          <span class="chapter-label" id="chap-10">11. Overview KPIs</span>
+          <span class="chapter-label" id="chap-11">12. Compare Matrix</span>
+        </div>
+      </div>
+
+      <div class="footer-right">
+        <span id="timestamp-display" style="font-family:var(--font-mono); font-size:11px;">00:00 / 01:15</span>
+        <button class="speed-btn" id="speed-btn">1.0x</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- =========================================
+       ANIMATION ENGINE WITH FULL SCRIPTED TIMELINE
+       ========================================= -->
+  <script>
+    (function() {
+      const stage = document.getElementById('screen-stage');
+      const cursor = document.getElementById('virtual-cursor');
+      const ripple = document.getElementById('cursor-ripple');
+      const callout = document.getElementById('cursor-callout');
+      const toast = document.getElementById('toast-notification');
+
+      const claudeLayout = document.getElementById('claude-layout');
+      const claudeChatPane = document.getElementById('claude-chat-pane');
+      const artifactViewerPane = document.getElementById('artifact-viewer-pane');
+      const btnToggleSidebar = document.getElementById('btn-toggle-sidebar');
+      const btnArtifactSidebarToggle = document.getElementById('btn-artifact-sidebar-toggle');
+
+      const userProfileBtn = document.getElementById('user-profile-btn');
+      const profilePopover = document.getElementById('profile-popover');
+      const popoverSettingsBtn = document.getElementById('popover-settings-btn');
+      
+      const settingsModal = document.getElementById('settings-modal-backdrop');
+      const modalCloseBtn = document.getElementById('modal-close-btn');
+      const modalNavConnectors = document.getElementById('modal-nav-connectors');
+      const modalConnectorsListView = document.getElementById('modal-connectors-list-view');
+      const btnModalAddConnector = document.getElementById('btn-modal-add-connector');
+      const addConnectorDropdownMenu = document.getElementById('add-connector-dropdown-menu');
+      const optAddCustomConnector = document.getElementById('opt-add-custom-connector');
+
+      const customConnectorDialog = document.getElementById('custom-connector-dialog');
+      const dlgNameInput = document.getElementById('dlg-name-input');
+      const dlgUrlInput = document.getElementById('dlg-url-input');
+      const btnDlgContinue = document.getElementById('btn-dlg-continue');
+
+      const authStepDialog = document.getElementById('auth-step-dialog');
+      const btnAuthAdd = document.getElementById('btn-auth-add');
+
+      const viewConnectorDetail = document.getElementById('view-connector-detail');
+      const approvalSelectorBtn = document.getElementById('approval-selector-btn');
+      const approvalOptionsMenu = document.getElementById('approval-options-menu');
+      const permOptAlways = document.getElementById('perm-opt-always');
+      const currentPermLabel = document.getElementById('current-perm-label');
+      const currentPermIcon = document.getElementById('current-perm-icon');
+      const alwaysAllowCheck = document.getElementById('always-allow-check');
+      const needsApprovalCheck = document.getElementById('needs-approval-check');
+
+      const mainTopBar = document.getElementById('main-top-bar');
+      const topChatTitle = document.getElementById('top-chat-title');
+      const sidebarActiveChat = document.getElementById('sidebar-active-chat');
+
+      const chatEmptyView = document.getElementById('chat-empty-view');
+      const inputFileBadge = document.getElementById('input-file-badge');
+      const fakeInputText = document.getElementById('fake-input-text');
+      const sendSubmitBtn = document.getElementById('send-submit-btn');
+
+      const conversationThread = document.getElementById('conversation-thread');
+      const liveStepRow = document.getElementById('live-step-row');
+      const liveStepText = document.getElementById('live-step-text');
+      const toolSummaryPill = document.getElementById('tool-summary-pill');
+      const claudeResponseText = document.getElementById('claude-response-text');
+      const fixingStepRow = document.getElementById('fixing-step-row');
+      const chatArtifactCard = document.getElementById('chat-artifact-card');
+      const bottomChatInputBar = document.getElementById('bottom-chat-input-bar');
+
+      // Artifact components
+      const dlEmptyStateCard = document.getElementById('dl-empty-state-card');
+      const dlPopulatedOverview = document.getElementById('dl-populated-overview');
+      const dlPopulatedCompare = document.getElementById('dl-populated-compare');
+      const dlFilterBar = document.getElementById('dl-filter-bar');
+      const tabBtnOverview = document.getElementById('tab-btn-overview');
+      const tabBtnCompare = document.getElementById('tab-btn-compare');
+      const btnChooseFile = document.getElementById('btn-choose-file');
+      const btnExpandArtifact = document.getElementById('btn-expand-artifact');
+
+      const railBadgeText = document.getElementById('rail-badge-text');
+      const railTitleText = document.getElementById('rail-title-text');
+      const railSubText = document.getElementById('rail-sub-text');
+      const railStatusPill = document.getElementById('rail-status-pill');
+      const railStatusText = document.getElementById('rail-status-text');
+      const metricRows = document.getElementById('metric-rows');
+      const metricPeriod = document.getElementById('metric-period');
+      const metricRowExtra1 = document.getElementById('metric-row-extra1');
+      const metricRowExtra2 = document.getElementById('metric-row-extra2');
+      const metricRowExtra3 = document.getElementById('metric-row-extra3');
+      const metricRowExtra4 = document.getElementById('metric-row-extra4');
+
+      const dzTagText = document.getElementById('dz-tag-text');
+      const dzMainText = document.getElementById('dz-main-text');
+      const dzSubText = document.getElementById('dz-sub-text');
+      const mainViewTitle = document.getElementById('main-view-title');
+      const mainViewDesc = document.getElementById('main-view-desc');
+
+      // Player Controls
+      const playPauseBtn = document.getElementById('play-pause-btn');
+      const playIcon = document.getElementById('play-icon');
+      const pauseIcon = document.getElementById('pause-icon');
+      const timelineProgress = document.getElementById('timeline-progress');
+      const timestampDisplay = document.getElementById('timestamp-display');
+      const speedBtn = document.getElementById('speed-btn');
+      const replayBtn = document.getElementById('replay-btn');
+      const stepNextBtn = document.getElementById('step-next-btn');
+      const stepPrevBtn = document.getElementById('step-prev-btn');
+
+      let isPlaying = false;
+      let currentStepIndex = 0;
+      let playbackSpeed = 1.0;
+      const speeds = [0.75, 1.0, 1.5, 2.0];
+      let speedIdx = 1;
+
+      function getElementCoords(elem) {
+        const stageRect = stage.getBoundingClientRect();
+        const elemRect = elem.getBoundingClientRect();
+        return {
+          x: elemRect.left - stageRect.left + elemRect.width / 2,
+          y: elemRect.top - stageRect.top + elemRect.height / 2
+        };
+      }
+
+      function moveCursorTo(x, y, duration = 600, label = null) {
+        return new Promise(resolve => {
+          cursor.style.transition = `transform ${duration / playbackSpeed}ms cubic-bezier(0.22, 1, 0.36, 1)`;
+          cursor.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+
+          if (label) {
+            callout.textContent = label;
+            callout.classList.add('show');
+          } else {
+            callout.classList.remove('show');
+          }
+          setTimeout(resolve, duration / playbackSpeed);
+        });
+      }
+
+      function moveCursorToElement(elem, duration = 600, label = null) {
+        const coords = getElementCoords(elem);
+        return moveCursorTo(coords.x, coords.y, duration, label);
+      }
+
+      function triggerClick() {
+        return new Promise(resolve => {
+          ripple.classList.remove('active');
+          void ripple.offsetWidth;
+          ripple.classList.add('active');
+          setTimeout(resolve, 240 / playbackSpeed);
+        });
+      }
+
+      let currentRunToken = 0;
+
+      function sleep(ms, token = null) {
+        return new Promise((resolve, reject) => {
+          setTimeout(() => {
+            if (token !== null && token !== currentRunToken) {
+              reject(new Error('cancelled'));
+            } else {
+              resolve();
+            }
+          }, ms / playbackSpeed);
+        });
+      }
+
+      function prepareState(stepIdx) {
+        // Reset interactive popovers and modals
+        profilePopover.classList.remove('open');
+        userProfileBtn.classList.remove('active-popover');
+        settingsModal.classList.remove('open');
+        customConnectorDialog.classList.remove('open');
+        authStepDialog.classList.remove('open');
+        addConnectorDropdownMenu.classList.remove('open');
+        approvalOptionsMenu.classList.remove('open');
+        toast.classList.remove('show');
+        callout.classList.remove('show');
+
+        if (stepIdx === 0) {
+          // 1. Home
+          claudeLayout.classList.remove('sidebar-collapsed');
+          claudeChatPane.classList.remove('split-active', 'chat-hidden');
+          artifactViewerPane.classList.remove('show', 'full-canvas');
+          topChatTitle.classList.remove('show');
+          sidebarActiveChat.classList.remove('show');
+          chatEmptyView.classList.remove('hidden');
+          inputFileBadge.classList.remove('show');
+          conversationThread.classList.remove('visible');
+          bottomChatInputBar.style.display = 'none';
+          fakeInputText.textContent = "How can I help you today?";
+          fakeInputText.classList.add('placeholder');
+          sendSubmitBtn.classList.remove('ready');
+          liveStepRow.style.display = 'flex';
+          toolSummaryPill.classList.remove('show');
+          claudeResponseText.classList.remove('show');
+          fixingStepRow.style.display = 'none';
+          chatArtifactCard.classList.remove('show');
+        } else if (stepIdx >= 1 && stepIdx <= 4) {
+          // Settings and MCP Setup
+          claudeLayout.classList.remove('sidebar-collapsed');
+          claudeChatPane.classList.remove('split-active', 'chat-hidden');
+          artifactViewerPane.classList.remove('show', 'full-canvas');
+          chatEmptyView.classList.remove('hidden');
+          conversationThread.classList.remove('visible');
+          bottomChatInputBar.style.display = 'none';
+          settingsModal.classList.add('open');
+
+          if (stepIdx === 1) {
+            modalConnectorsListView.style.display = 'flex';
+            viewConnectorDetail.style.display = 'none';
+          } else if (stepIdx === 2) {
+            modalConnectorsListView.style.display = 'flex';
+            viewConnectorDetail.style.display = 'none';
+            customConnectorDialog.classList.add('open');
+            dlgNameInput.value = "Dashlint";
+            dlgUrlInput.value = "https://dashlint.tanmaysk.in/mcp";
+            btnDlgContinue.style.background = "#ffffff";
+            btnDlgContinue.style.color = "#111110";
+          } else if (stepIdx === 3) {
+            modalConnectorsListView.style.display = 'flex';
+            viewConnectorDetail.style.display = 'none';
+            authStepDialog.classList.add('open');
+          } else if (stepIdx === 4) {
+            modalConnectorsListView.style.display = 'none';
+            viewConnectorDetail.style.display = 'flex';
+            document.querySelectorAll('.tool-seg-control').forEach(ctrl => {
+              ctrl.querySelectorAll('.seg-btn').forEach(b => b.classList.remove('active'));
+              const allowBtn = ctrl.querySelector('.seg-allow');
+              if (allowBtn) allowBtn.classList.add('active');
+            });
+            currentPermLabel.textContent = "Always allow";
+            currentPermIcon.textContent = "✓";
+            alwaysAllowCheck.style.display = "inline";
+            needsApprovalCheck.style.display = "none";
+          }
+        } else if (stepIdx === 5) {
+          // Attach & Prompt
+          claudeLayout.classList.remove('sidebar-collapsed');
+          claudeChatPane.classList.remove('split-active', 'chat-hidden');
+          artifactViewerPane.classList.remove('show', 'full-canvas');
+          chatEmptyView.classList.remove('hidden');
+          conversationThread.classList.remove('visible');
+          bottomChatInputBar.style.display = 'none';
+          fakeInputText.classList.remove('placeholder');
+          inputFileBadge.classList.add('show');
+          fakeInputText.textContent = "Inspect the attached data and build an interactive dashboard following the DashLint MCP workflow. Call the MCP tools step-by-step — do not skip any playbooks or the completion checklist. Keep all raw data rows on my machine.";
+          sendSubmitBtn.classList.add('ready');
+        } else if (stepIdx === 6) {
+          // MCP Creation Flow
+          claudeLayout.classList.remove('sidebar-collapsed');
+          claudeChatPane.classList.remove('split-active', 'chat-hidden');
+          artifactViewerPane.classList.remove('show', 'full-canvas');
+          chatEmptyView.classList.add('hidden');
+          conversationThread.classList.add('visible');
+          mainTopBar.classList.add('has-border');
+          topChatTitle.classList.add('show');
+          sidebarActiveChat.classList.add('show');
+          bottomChatInputBar.style.display = 'flex';
+          liveStepRow.style.display = 'flex';
+          toolSummaryPill.classList.remove('show');
+          claudeResponseText.classList.remove('show');
+          fixingStepRow.style.display = 'none';
+          chatArtifactCard.classList.remove('show');
+        } else if (stepIdx === 7) {
+          // Artifact Split View
+          claudeLayout.classList.remove('sidebar-collapsed');
+          claudeChatPane.classList.add('split-active');
+          claudeChatPane.classList.remove('chat-hidden');
+          artifactViewerPane.classList.add('show');
+          artifactViewerPane.classList.remove('full-canvas');
+          chatEmptyView.classList.add('hidden');
+          conversationThread.classList.add('visible');
+          mainTopBar.classList.add('has-border');
+          topChatTitle.classList.add('show');
+          sidebarActiveChat.classList.add('show');
+          bottomChatInputBar.style.display = 'flex';
+          liveStepRow.style.display = 'none';
+          toolSummaryPill.classList.add('show');
+          claudeResponseText.classList.add('show');
+          fixingStepRow.style.display = 'none';
+          chatArtifactCard.classList.add('show');
+
+          // Empty state DashLint
+          dlEmptyStateCard.classList.remove('hidden');
+          dlPopulatedOverview.classList.remove('show');
+          dlPopulatedCompare.classList.remove('show');
+          dlFilterBar.classList.remove('show');
+          railBadgeText.textContent = "PSP";
+          railTitleText.textContent = "Polar Station Pulse";
+          railSubText.textContent = "research ops dashboard";
+          railStatusPill.classList.remove('connected');
+          railStatusText.textContent = "AWAITING LOCAL FILE";
+          metricRows.textContent = "-";
+          metricPeriod.textContent = "-";
+          metricRowExtra1.style.display = "none";
+          metricRowExtra2.style.display = "none";
+          metricRowExtra3.style.display = "none";
+          metricRowExtra4.style.display = "none";
+          dzTagText.textContent = "LOCAL FILE · NEVER UPLOADED";
+          dzMainText.textContent = "Drop CSV / Excel here";
+          dzSubText.textContent = "No file loaded";
+          mainViewTitle.textContent = "Polar research station observations";
+          mainViewDesc.textContent = "Upload a CSV or Excel file to begin. Parsing and every calculation happen in your browser.";
+        } else if (stepIdx >= 8) {
+          // Collapsed Sidebar & Full Canvas
+          claudeLayout.classList.add('sidebar-collapsed');
+          claudeChatPane.classList.add('chat-hidden', 'split-active');
+          artifactViewerPane.classList.add('show', 'full-canvas');
+          chatEmptyView.classList.add('hidden');
+          conversationThread.classList.add('visible');
+          mainTopBar.classList.add('has-border');
+          topChatTitle.classList.add('show');
+          sidebarActiveChat.classList.add('show');
+          bottomChatInputBar.style.display = 'flex';
+          toolSummaryPill.classList.add('show');
+          claudeResponseText.classList.add('show');
+          chatArtifactCard.classList.add('show');
+
+          if (stepIdx === 8) {
+            dlEmptyStateCard.classList.remove('hidden');
+            dlPopulatedOverview.classList.remove('show');
+            dlPopulatedCompare.classList.remove('show');
+            dlFilterBar.classList.remove('show');
+            railBadgeText.textContent = "PSP";
+            railTitleText.textContent = "Polar Station Pulse";
+            railSubText.textContent = "research ops dashboard";
+            railStatusPill.classList.remove('connected');
+            railStatusText.textContent = "AWAITING LOCAL FILE";
+            metricRows.textContent = "-";
+            metricPeriod.textContent = "-";
+            metricRowExtra1.style.display = "none";
+            metricRowExtra2.style.display = "none";
+            metricRowExtra3.style.display = "none";
+            metricRowExtra4.style.display = "none";
+            dzTagText.textContent = "LOCAL FILE · NEVER UPLOADED";
+            dzMainText.textContent = "Drop CSV / Excel here";
+            dzSubText.textContent = "No file loaded";
+            mainViewTitle.textContent = "Polar research station observations";
+            mainViewDesc.textContent = "Upload a CSV or Excel file to begin. Parsing and every calculation happen in your browser.";
+          } else {
+            // Populated Dashboard
+            dlEmptyStateCard.classList.add('hidden');
+            dlFilterBar.classList.add('show');
+            railBadgeText.textContent = "WPL";
+            railTitleText.textContent = "Ward Pulse";
+            railSubText.textContent = "hospital operations";
+            railStatusPill.classList.add('connected');
+            railStatusText.textContent = "all rows · 280 of 280";
+            metricRows.textContent = "280";
+            metricPeriod.textContent = "26-01-01 → 26-10-01";
+            metricRowExtra1.style.display = "flex";
+            metricRowExtra2.style.display = "flex";
+            metricRowExtra3.style.display = "flex";
+            metricRowExtra4.style.display = "flex";
+            dzTagText.textContent = "LOCAL FILE · STAYS IN BROWSER";
+            dzMainText.textContent = "Replace file";
+            dzSubText.textContent = "smart_hospital_operations_dataset..";
+            mainViewTitle.textContent = "Hospital operations overview";
+            mainViewDesc.textContent = "smart_hospital_operations_dataset(1).csv · 280 records";
+
+            if (stepIdx === 11) {
+              tabBtnOverview.classList.remove('active');
+              tabBtnCompare.classList.add('active');
+              dlPopulatedOverview.classList.remove('show');
+              dlPopulatedCompare.classList.add('show');
+            } else {
+              tabBtnOverview.classList.add('active');
+              tabBtnCompare.classList.remove('active');
+              dlPopulatedOverview.classList.add('show');
+              dlPopulatedCompare.classList.remove('show');
+            }
+          }
+        }
+      }
+
+      // SCRIPTED TIMELINE WITH FULL RESTORED FLOW
+      const STEPS = [
+        // 0: Initial Screen (Claude Home)
+        {
+          id: 0,
+          chapter: '1. Home',
+          title: 'Claude Desktop Home',
+          run: async (token) => {
+            prepareState(0);
+            await moveCursorTo(480, 280, 500, "Claude Desktop Ready");
+            await sleep(400, token);
+          }
+        },
+
+        // 1: Open Profile & Settings
+        {
+          id: 1,
+          chapter: '2. Settings',
+          title: 'Open Settings from Profile Popover',
+          run: async (token) => {
+            await moveCursorToElement(userProfileBtn, 650, "Ashu · Free");
+            userProfileBtn.classList.add('active-popover');
+            await triggerClick();
+            profilePopover.classList.add('open');
+            await sleep(350, token);
+
+            await moveCursorToElement(popoverSettingsBtn, 550, "Open Settings");
+            popoverSettingsBtn.classList.add('highlighted');
+            await sleep(200, token);
+            await triggerClick();
+            popoverSettingsBtn.classList.remove('highlighted');
+            profilePopover.classList.remove('open');
+            userProfileBtn.classList.remove('active-popover');
+
+            settingsModal.classList.add('open');
+            modalConnectorsListView.style.display = 'flex';
+            viewConnectorDetail.style.display = 'none';
+            await sleep(400, token);
+          }
+        },
+
+        // 2: Click + Add ⌵ -> Add Custom Connector -> Type URL (Images 1, 2)
+        {
+          id: 2,
+          chapter: '3. Add MCP URL',
+          title: 'Add Custom Connector & Enter Dashlint URL',
+          run: async (token) => {
+            await moveCursorToElement(btnModalAddConnector, 550, "+ Add ⌵");
+            await triggerClick();
+            addConnectorDropdownMenu.classList.add('open');
+            await sleep(300, token);
+
+            await moveCursorToElement(optAddCustomConnector, 450, "Add custom connector");
+            await triggerClick();
+            addConnectorDropdownMenu.classList.remove('open');
+
+            customConnectorDialog.classList.add('open');
+            dlgNameInput.value = "";
+            dlgUrlInput.value = "";
+            btnDlgContinue.style.background = "#444";
+            btnDlgContinue.style.color = "#888";
+            btnDlgContinue.style.cursor = "default";
+            await sleep(300, token);
+
+            // Focus Name & Type "Dashlint"
+            await moveCursorToElement(dlgNameInput, 450, "Type Name");
+            await triggerClick();
+            const nameStr = "Dashlint";
+            for (let i = 0; i <= nameStr.length; i++) {
+              dlgNameInput.value = nameStr.substring(0, i);
+              await sleep(30, token);
+            }
+            await sleep(200, token);
+
+            // Focus URL & Type "https://dashlint.tanmaysk.in/mcp"
+            await moveCursorToElement(dlgUrlInput, 450, "Type MCP Server URL");
+            await triggerClick();
+            const urlStr = "https://dashlint.tanmaysk.in/mcp";
+            for (let i = 0; i <= urlStr.length; i++) {
+              dlgUrlInput.value = urlStr.substring(0, i);
+              await sleep(20, token);
+            }
+            await sleep(200, token);
+
+            btnDlgContinue.style.background = "#ffffff";
+            btnDlgContinue.style.color = "#111110";
+            btnDlgContinue.style.cursor = "pointer";
+
+            await moveCursorToElement(btnDlgContinue, 450, "Continue");
+            await triggerClick();
+            customConnectorDialog.classList.remove('open');
+            await sleep(350, token);
+          }
+        },
+
+        // 3: Authentication Step: No Sign-in Detected -> Click Add (Image 3)
+        {
+          id: 3,
+          chapter: '4. Auth & Add',
+          title: 'Confirm No Sign-in & Add Connector',
+          run: async (token) => {
+            authStepDialog.classList.add('open');
+            await moveCursorTo(580, 320, 500, "No Sign-in Detected");
+            await sleep(500, token);
+
+            await moveCursorToElement(btnAuthAdd, 450, "Click Add");
+            await triggerClick();
+            authStepDialog.classList.remove('open');
+
+            // Shows Connected View & Toast
+            modalConnectorsListView.style.display = 'none';
+            viewConnectorDetail.style.display = 'flex';
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3500);
+            await sleep(600, token);
+          }
+        },
+
+        // 4: Configure Permissions: Always Allow (Images 4 & 5)
+        {
+          id: 4,
+          chapter: '5. Always Allow',
+          title: 'Switch Tool Permissions to Always Allow',
+          run: async (token) => {
+            modalConnectorsListView.style.display = 'none';
+            viewConnectorDetail.style.display = 'flex';
+
+            // Ensure initial segmented buttons show Needs approval
+            document.querySelectorAll('.tool-seg-control').forEach(ctrl => {
+              ctrl.querySelectorAll('.seg-btn').forEach(b => b.classList.remove('active'));
+              const needsBtn = ctrl.querySelector('.seg-needs');
+              if (needsBtn) needsBtn.classList.add('active');
+            });
+            currentPermLabel.textContent = "Needs approval";
+            currentPermIcon.textContent = "✋";
+            alwaysAllowCheck.style.display = "none";
+            needsApprovalCheck.style.display = "inline";
+
+            await moveCursorToElement(approvalSelectorBtn, 550, "Configure Permissions");
+            await triggerClick();
+            approvalOptionsMenu.classList.add('open');
+            await sleep(400, token);
+
+            await moveCursorToElement(permOptAlways, 450, "Always allow");
+            await triggerClick();
+
+            approvalOptionsMenu.classList.remove('open');
+            currentPermLabel.textContent = "Always allow";
+            currentPermIcon.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-6"/></svg>';
+            alwaysAllowCheck.style.display = "inline";
+            needsApprovalCheck.style.display = "none";
+
+            // Switch all 7 tool segmented controls to "Always allow" (seg-allow)
+            document.querySelectorAll('.tool-seg-control').forEach(ctrl => {
+              ctrl.querySelectorAll('.seg-btn').forEach(b => b.classList.remove('active'));
+              const allowBtn = ctrl.querySelector('.seg-allow');
+              if (allowBtn) allowBtn.classList.add('active');
+            });
+
+            await moveCursorTo(740, 240, 500, "All 7 Tools Allowed ✓");
+            await sleep(800, token);
+
+            await moveCursorToElement(modalCloseBtn, 500, "Close Settings");
+            await triggerClick();
+            settingsModal.classList.remove('open');
+            await sleep(400, token);
+          }
+        },
+
+        // 5: Attach CSV File & Type Exact Prompt (Image 1)
+        {
+          id: 5,
+          chapter: '6. Attach & Prompt',
+          title: 'Attach polar_research_dataset.csv & Submit',
+          run: async (token) => {
+            await moveCursorToElement(fakeInputText, 650, "Attach CSV & Type");
+            await triggerClick();
+
+            inputFileBadge.classList.add('show');
+            fakeInputText.classList.remove('placeholder');
+            fakeInputText.innerHTML = '<span class="typing-cursor"></span>';
+            await sleep(250, token);
+
+            const promptText = "Inspect the attached data and build an interactive dashboard following the DashLint MCP workflow. Call the MCP tools step-by-step — do not skip any playbooks or the completion checklist. Keep all raw data rows on my machine.";
+            let current = "";
+
+            for (let i = 0; i < promptText.length; i += 2) {
+              current = promptText.substring(0, i + 2);
+              fakeInputText.innerHTML = current + '<span class="typing-cursor"></span>';
+              await sleep(15, token);
+            }
+
+            fakeInputText.innerHTML = promptText;
+            sendSubmitBtn.classList.add('ready');
+            await sleep(250, token);
+
+            await moveCursorToElement(sendSubmitBtn, 450, "Send Prompt");
+            sendSubmitBtn.classList.add('clicked');
+            await triggerClick();
+            await sleep(150, token);
+            sendSubmitBtn.classList.remove('clicked');
+
+            chatEmptyView.classList.add('hidden');
+            conversationThread.classList.add('visible');
+            mainTopBar.classList.add('has-border');
+            topChatTitle.classList.add('show');
+            sidebarActiveChat.classList.add('show');
+            bottomChatInputBar.style.display = 'flex';
+            await sleep(400, token);
+          }
+        },
+
+        // 6: Realistic MCP Creation Flow (Images 2, 3, 4, 5)
+        {
+          id: 6,
+          chapter: '7. MCP Creation Flow',
+          title: 'Live MCP Workflow Execution (Takes Time)',
+          run: async (token) => {
+            liveStepRow.style.display = 'flex';
+            toolSummaryPill.classList.remove('show');
+            claudeResponseText.classList.remove('show');
+            fixingStepRow.style.display = 'none';
+            chatArtifactCard.classList.remove('show');
+
+            // Phase 1: creation workflow
+            liveStepText.innerHTML = '<span class="spinning-sunburst" style="color:#D97746; margin-right:4px;">✻</span> Get dashboard creation workflow <span style="color:#888; font-size:11.5px; margin-left:4px;">6s</span>';
+            await moveCursorToElement(liveStepRow, 500, "dashlint:creation_workflow");
+            await sleep(1800, token);
+
+            // Phase 2: blueprint call with metadata
+            liveStepText.innerHTML = '<span class="spinning-sunburst" style="color:#D97746; margin-right:4px;">✻</span> Preparing blueprint call with column metadata only <span style="color:#888; font-size:11.5px; margin-left:4px;">26s</span>';
+            await sleep(1900, token);
+
+            // Phase 3: laying out overview tab
+            liveStepText.innerHTML = '<span class="spinning-sunburst" style="color:#D97746; margin-right:4px;">✻</span> Laying out the overview tab\'s panels and grid structure <span style="color:#888; font-size:11.5px; margin-left:4px;">1m 36s</span>';
+            await sleep(2100, token);
+
+            // Phase 4: tool summary pill + response text + fixing step
+            liveStepRow.style.display = 'none';
+            toolSummaryPill.classList.add('show');
+            claudeResponseText.classList.add('show');
+            fixingStepRow.style.display = 'flex';
+            await moveCursorToElement(fixingStepRow, 500, "Self-healing & verification step");
+            await sleep(2200, token);
+
+            // Phase 5: finished artifact card ready
+            fixingStepRow.style.display = 'none';
+            chatArtifactCard.classList.add('show');
+            await moveCursorToElement(chatArtifactCard, 550, "Polar station dashboard ready");
+            await sleep(1000, token);
+          }
+        },
+
+        // 7: Artifact Split View Appears (Images 1 & 2)
+        {
+          id: 7,
+          chapter: '8. Artifact Split',
+          title: 'Split View: Claude Artifact Appears',
+          run: async (token) => {
+            prepareState(7);
+            await moveCursorToElement(artifactViewerPane, 650, "Artifact Viewer Open");
+            await sleep(800, token);
+          }
+        },
+
+        // 8: ANIMATED SIDEBAR COLLAPSE (Screens 3, 4, 5)
+        {
+          id: 8,
+          chapter: '9. Collapse Sidebar',
+          title: 'Collapse Claude Sidebar for Full View',
+          run: async (token) => {
+            // First: Collapse Claude left application sidebar
+            await moveCursorToElement(btnToggleSidebar, 550, "Collapse App Sidebar (◫)");
+            await triggerClick();
+
+            claudeLayout.classList.add('sidebar-collapsed');
+            await sleep(500, token);
+
+            // Second: Expand artifact to full canvas width
+            await moveCursorToElement(btnArtifactSidebarToggle, 500, "Expand to Full Canvas (◫)");
+            await triggerClick();
+            claudeChatPane.classList.add('chat-hidden');
+            artifactViewerPane.classList.add('full-canvas');
+
+            await moveCursorTo(640, 240, 500, "Full 100% Canvas Width");
+            await sleep(900, token);
+          }
+        },
+
+        // 9: Upload & In-Browser Client-Side Parse (Screen 4)
+        {
+          id: 9,
+          chapter: '10. Parse Dataset',
+          title: 'Upload Dataset & Client-Side Parse (No Data Leak)',
+          run: async (token) => {
+            await moveCursorToElement(btnChooseFile, 600, "Choose Local File");
+            await triggerClick();
+            btnChooseFile.textContent = "Parsing...";
+            await sleep(450, token);
+
+            btnChooseFile.textContent = "Choose file";
+            dlEmptyStateCard.classList.add('hidden');
+            dlPopulatedOverview.classList.add('show');
+            dlFilterBar.classList.add('show');
+
+            railBadgeText.textContent = "WPL";
+            railTitleText.textContent = "Ward Pulse";
+            railSubText.textContent = "hospital operations";
+            railStatusPill.classList.add('connected');
+            railStatusText.textContent = "all rows · 280 of 280";
+            metricRows.textContent = "280";
+            metricPeriod.textContent = "26-01-01 → 26-10-01";
+            metricRowExtra1.style.display = "flex";
+            metricRowExtra2.style.display = "flex";
+            metricRowExtra3.style.display = "flex";
+            metricRowExtra4.style.display = "flex";
+
+            dzTagText.textContent = "LOCAL FILE · STAYS IN BROWSER";
+            dzMainText.textContent = "Replace file";
+            dzSubText.textContent = "smart_hospital_operations_dataset..";
+            mainViewTitle.textContent = "Hospital operations overview";
+            mainViewDesc.textContent = "smart_hospital_operations_dataset(1).csv · 280 records";
+
+            await sleep(800, token);
+          }
+        },
+
+        // 10: Explore Overview Tab (Screen 4)
+        {
+          id: 10,
+          chapter: '11. Overview KPIs',
+          title: 'Overview: 6 KPIs, Trends & Generated Findings',
+          run: async (token) => {
+            tabBtnOverview.classList.add('active');
+            tabBtnCompare.classList.remove('active');
+            dlPopulatedOverview.classList.add('show');
+            dlPopulatedCompare.classList.remove('show');
+
+            await moveCursorTo(580, 270, 600, "64,044 Total Patients");
+            await sleep(600, token);
+
+            await moveCursorTo(780, 270, 500, "Median Wait: 54 min");
+            await sleep(550, token);
+
+            await moveCursorTo(1140, 390, 650, "Automated Findings Generated");
+            await sleep(800, token);
+          }
+        },
+
+        // 11: Switch to Compare Tab (Screen 5)
+        {
+          id: 11,
+          chapter: '12. Compare Matrix',
+          title: 'Compare: 2D Heatmap & Wait Time Distribution',
+          run: async (token) => {
+            await moveCursorToElement(tabBtnCompare, 550, "Click Compare Tab");
+            await triggerClick();
+
+            tabBtnOverview.classList.remove('active');
+            tabBtnCompare.classList.add('active');
+            dlPopulatedOverview.classList.remove('show');
+            dlPopulatedCompare.classList.add('show');
+
+            await moveCursorTo(560, 320, 600, "LifePoint Wait: 60.7 min");
+            await sleep(650, token);
+
+            await moveCursorTo(1050, 320, 600, "Dept × Shift Heatmap Grid");
+            await sleep(750, token);
+
+            await moveCursorTo(800, 510, 600, "Wait Time Histogram (min)");
+            await sleep(1500, token);
+            callout.classList.remove('show');
+          }
+        }
+      ];
+
+      function updateUIProgress() {
+        const progress = ((currentStepIndex + 1) / STEPS.length) * 100;
+        timelineProgress.style.width = `${progress}%`;
+
+        document.querySelectorAll('.chapter-label').forEach((el, idx) => {
+          if (idx === currentStepIndex) {
+            el.classList.add('active');
+          } else {
+            el.classList.remove('active');
+          }
+        });
+
+        const currentSec = Math.round((currentStepIndex / (STEPS.length - 1)) * 75);
+        const curStr = currentSec < 10 ? `00:0${currentSec}` : (currentSec < 60 ? `00:${currentSec}` : `01:${currentSec - 60 < 10 ? '0' + (currentSec - 60) : currentSec - 60}`);
+        timestampDisplay.textContent = `${curStr} / 01:15`;
+      }
+
+      async function runCurrentStep() {
+        if (currentStepIndex >= STEPS.length) {
+          pauseWalkthrough();
+          currentStepIndex = STEPS.length - 1;
+          return;
+        }
+
+        const runToken = ++currentRunToken;
+        prepareState(currentStepIndex);
+        updateUIProgress();
+        const step = STEPS[currentStepIndex];
+
+        try {
+          await step.run(runToken);
+        } catch (err) {
+          if (err && err.message === 'cancelled') {
+            return;
+          }
+          console.error(err);
+        }
+
+        if (isPlaying && runToken === currentRunToken) {
+          if (currentStepIndex < STEPS.length - 1) {
+            currentStepIndex++;
+            runCurrentStep();
+          } else {
+            pauseWalkthrough();
+          }
+        }
+      }
+
+      function jumpToStep(idx) {
+        pauseWalkthrough();
+        currentStepIndex = Math.max(0, Math.min(STEPS.length - 1, idx));
+        runCurrentStep();
+      }
+
+      function playWalkthrough() {
+        isPlaying = true;
+        playIcon.style.display = 'none';
+        pauseIcon.style.display = 'block';
+        runCurrentStep();
+      }
+
+      function pauseWalkthrough() {
+        isPlaying = false;
+        playIcon.style.display = 'block';
+        pauseIcon.style.display = 'none';
+      }
+
+      playPauseBtn.addEventListener('click', () => {
+        if (isPlaying) {
+          pauseWalkthrough();
+        } else {
+          if (currentStepIndex >= STEPS.length - 1) {
+            currentStepIndex = 0;
+          }
+          playWalkthrough();
+        }
+      });
+
+      replayBtn.addEventListener('click', () => {
+        jumpToStep(0);
+        playWalkthrough();
+      });
+
+      stepNextBtn.addEventListener('click', () => {
+        if (currentStepIndex < STEPS.length - 1) {
+          jumpToStep(currentStepIndex + 1);
+        }
+      });
+
+      stepPrevBtn.addEventListener('click', () => {
+        if (currentStepIndex > 0) {
+          jumpToStep(currentStepIndex - 1);
+        }
+      });
+
+      speedBtn.addEventListener('click', () => {
+        speedIdx = (speedIdx + 1) % speeds.length;
+        playbackSpeed = speeds[speedIdx];
+        speedBtn.textContent = `${playbackSpeed.toFixed(1)}x`;
+      });
+
+      const timelineScrubber = document.getElementById('timeline-scrubber');
+      timelineScrubber.addEventListener('click', (e) => {
+        const rect = timelineScrubber.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        const pct = Math.max(0, Math.min(1, clickX / rect.width));
+        const targetStep = Math.round(pct * (STEPS.length - 1));
+        jumpToStep(targetStep);
+      });
+
+      document.querySelectorAll('.chapter-label').forEach((el, idx) => {
+        el.addEventListener('click', (e) => {
+          e.stopPropagation();
+          jumpToStep(idx);
+        });
+      });
+
+      // Manual Toggles
+      btnToggleSidebar.addEventListener('click', () => {
+        claudeLayout.classList.toggle('sidebar-collapsed');
+      });
+      btnArtifactSidebarToggle.addEventListener('click', () => {
+        claudeChatPane.classList.toggle('chat-hidden');
+        artifactViewerPane.classList.toggle('full-canvas');
+      });
+
+      tabBtnOverview.addEventListener('click', () => {
+        tabBtnOverview.classList.add('active');
+        tabBtnCompare.classList.remove('active');
+        dlPopulatedOverview.classList.add('show');
+        dlPopulatedCompare.classList.remove('show');
+      });
+
+      tabBtnCompare.addEventListener('click', () => {
+        tabBtnOverview.classList.remove('active');
+        tabBtnCompare.classList.add('active');
+        dlPopulatedOverview.classList.remove('show');
+        dlPopulatedCompare.classList.add('show');
+      });
+
+      setTimeout(() => {
+        playWalkthrough();
+      }, 700);
+
+    })();
+  </script>
+</body>
+</html>
