@@ -8,6 +8,8 @@ import {
   getDashboardGenerationGuide,
 } from "@/lib/generation-guide";
 import { DASHBOARD_SHELL_CONTRACT } from "@/lib/shell-contract";
+import { getFullDashboardTemplate, JS_UTILITIES } from "@/lib/dashboard-template";
+import { getCompleteStylesheet, HTML_SNIPPETS, SECTION_LAYOUT_CSS, getComponentPatterns, getAvailableComponents } from "@/lib/shell-contract";
 import { incrementCounter } from "@/lib/counter";
 import { buildDashboardBlueprint } from "@/lib/blueprint";
 
@@ -113,6 +115,90 @@ const handler = createMcpHandler((server) => {
     async () => {
       await incrementCounter("get_dashboard_completion_checklist");
       return { content: [{ type: "text" as const, text: JSON.stringify(DASHBOARD_COMPLETION_CHECKLIST, null, 2) }] };
+    }
+  );
+
+  server.registerTool(
+    "get_full_dashboard_template",
+    {
+      description:
+        "Returns a lightweight HTML wireframe with ONLY the fixed application shell: design tokens CSS, viewport frame, dark sidebar (brand + metrics + animated credit), header with 56px dashed upload box, nav tabs container, empty dashboard body, and slide-drawer shell. Does NOT include component-specific CSS (KPI cards, charts, tables, bars, etc.) — call get_component_patterns for those. Does NOT include JavaScript — call get_js_utilities for pre-wired utilities. This is the recommended starting point for building any new dashboard.",
+      inputSchema: noInput,
+    },
+    async () => {
+      await incrementCounter("get_full_dashboard_template");
+      return {
+        content: [{
+          type: "text" as const,
+          text: JSON.stringify({
+            wireframe: getFullDashboardTemplate(),
+            availableComponents: getAvailableComponents(),
+            nextSteps: [
+              "1. Replace {{PLACEHOLDER}} markers with your brand/dataset values (title, logo letters, subtitle).",
+              "2. Profile your dataset and decide which components you need.",
+              "3. Call get_component_patterns with the component names you need (e.g. ['kpiCards', 'panels', 'horizontalBars', 'dataTables', 'findingCards']).",
+              "4. Call get_js_utilities for pre-wired CSV/Excel parser, animations, filter engine, drawer, and upload handler.",
+              "5. Paste the component CSS into the <style> block and the JS utilities into the <script> block.",
+              "6. Add your tab panels, KPI cards, charts, and tables using the HTML snippets from get_component_patterns.",
+              "7. Implement renderDashboard() with your dataset-specific calculations and data bindings.",
+            ],
+          }, null, 2),
+        }],
+      };
+    }
+  );
+
+  server.registerTool(
+    "get_component_patterns",
+    {
+      description:
+        "Returns CSS, HTML snippets, and usage notes for specific dashboard components. Call this AFTER get_full_dashboard_template to get only the components your dataset needs. Available components: kpiCards, panels, horizontalBars, dataTables, validation, badges, buttons, generatedOutput, multiSelectFilter, heatmap, overlays, drawers, findingCards, chartContainer, sectionLayouts, accessibility. Pass an array of component names to get targeted CSS+HTML for each.",
+      inputSchema: z.object({
+        components: z.array(z.string().trim().min(1).max(50)).min(1).max(18).describe("Array of component names to retrieve. Choose from: kpiCards, panels, horizontalBars, dataTables, validation, badges, buttons, generatedOutput, multiSelectFilter, heatmap, overlays, drawers, findingCards, chartContainer, sectionLayouts, accessibility"),
+      }).strict(),
+    },
+    async (input) => {
+      await incrementCounter("get_component_patterns");
+      const patterns = getComponentPatterns(input.components);
+      return {
+        content: [{
+          type: "text" as const,
+          text: JSON.stringify({
+            components: patterns,
+            integration: "Paste each component's CSS into the wireframe's <style> block. Use the HTML snippets as templates — replace {{PLACEHOLDER}} markers with actual values. Follow the usage notes for correct structure.",
+          }, null, 2),
+        }],
+      };
+    }
+  );
+
+  server.registerTool(
+    "get_js_utilities",
+    {
+      description:
+        "Returns pre-wired JavaScript utilities for dashboard interactivity. Includes: global state management, hand-written CSV parser (~50 lines), SheetJS Excel parser, countUp() animation (600ms easeOutCubic), typeText() typewriter effect (20-55ms per char), tab switching with ARIA, multi-select filter engine with dropdown UI, slide-drawer with focus management, file upload handler with drag-and-drop, copy button, .txt export, and mobile menu toggle. Paste into the wireframe's <script> block, then implement renderDashboard() with your dataset-specific logic.",
+      inputSchema: noInput,
+    },
+    async () => {
+      await incrementCounter("get_js_utilities");
+      return {
+        content: [{
+          type: "text" as const,
+          text: JSON.stringify({
+            utilities: JS_UTILITIES,
+            usage: [
+              "Paste the utilities code into the <script> block of the wireframe template.",
+              "The code provides a global state object S with raw[], filtered[], columns[], fileName, filters{}, activeTab, drawerOpen.",
+              "Implement renderDashboard() — it's called automatically on file upload and filter changes.",
+              "Use countUp(element, targetValue, {prefix, suffix, decimals, duration}) for animated KPI values.",
+              "Use typeText(element, text, callback) for streaming text in generated output panels.",
+              "Use buildFilterButton(columnName, containerElement) in loadData() for each filterable column.",
+              "Use openDrawer(title, htmlContent) and closeDrawer() for detail drill-downs.",
+              "All utilities respect prefers-reduced-motion automatically.",
+            ],
+          }, null, 2),
+        }],
+      };
     }
   );
 

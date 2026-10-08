@@ -581,8 +581,278 @@ button, input, textarea, select { font: inherit; }
     "Use the complete component patterns (header, upload, nav tabs, KPI cards, panels, tables, overlays, drawers, heatmaps, horizontal bars, badges, generated output, multi-select filters, validation chips, buttons) provided in componentPatterns as the baseline for every generated dashboard. These are copy-ready CSS blocks.",
     "Pure SVG charts are strongly preferred over third-party charting libraries. Render lines, bars, areas, heatmaps, and distributions using procedural SVG with the design token palette. This ensures the dashboard works as a standalone HTML file with zero external dependencies.",
     "Every chart SVG element must use vector-effect: non-scaling-stroke for crisp rendering at any viewport size.",
+    "When building a new dashboard, use the HTML_SNIPPETS templates to compose each section. Replace {{PLACEHOLDER}} markers with actual values. The snippets ensure correct HTML structure for each component pattern.",
+    "Call getCompleteStylesheet() to get all CSS in a single paste-ready block. This is the recommended approach for new dashboards instead of manually concatenating the separate CSS properties.",
+    "Use the section layout classes: .kpi-grid (3-column KPI row), .overview-split (asymmetric 2-column for findings + report), .seg-grid (auto-fit segment comparisons), .tab-panel/.tab-panel.active (tab panel visibility).",
   ],
 } as const;
+
+export const SECTION_LAYOUT_CSS = `/* ── Section Layouts ── */
+.kpi-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.overview-split { display: grid; grid-template-columns: minmax(400px, .9fr) minmax(360px, 1.1fr); gap: 12px; }
+.seg-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+.chart-container { min-height: 200px; }
+.chart-container svg { width: 100%; height: 100%; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+.empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 300px; color: var(--muted); font-family: var(--mono); font-size: 12px; text-align: center; gap: 8px; }
+.finding-card { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; border-left: 3px solid var(--accent); margin-bottom: 8px; }
+.finding-card.positive { border-left-color: var(--ok); }
+.finding-card.caution { border-left-color: var(--warn); }
+.finding-card.note { border-left-color: var(--chart-indigo); }
+.finding-title { font-size: 12px; font-weight: 600; color: var(--ink); margin: 0 0 4px; }
+.finding-body { font-size: 11px; color: var(--muted); margin: 0; line-height: 1.5; }
+.filter-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; position: relative; z-index: 20; }
+.filter-label { font-family: var(--mono); font-size: 9.5px; color: var(--muted); letter-spacing: .07em; text-transform: uppercase; font-weight: 700; }
+.store-search { height: 28px; padding: 0 10px; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); font-family: var(--mono); font-size: 11px; color: var(--ink); min-width: 180px; }
+.store-search:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-dim); }
+.menu-btn { display: none; width: 32px; height: 32px; border: 1px solid var(--line-strong); border-radius: 4px; background: var(--surface); cursor: pointer; font-size: 15px; flex: 0 0 auto; }
+@media (max-width: 960px) {
+  .app { grid-template-columns: 1fr; }
+  .rail { position: fixed; left: 12px; top: 12px; bottom: 12px; width: 268px; z-index: 150; transform: translate3d(-110%, 0, 0); transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+  .rail.open { transform: translate3d(0, 0, 0); }
+  .menu-btn { display: grid; place-items: center; }
+  .header { grid-template-columns: 1fr; }
+  .upload-box { margin-top: 8px; }
+  .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .overview-split { grid-template-columns: 1fr; }
+  .seg-grid { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}
+`;
+
+export const HTML_SNIPPETS = {
+  kpiCard: `<div class="kpi">
+  <span class="kpi-label">{{LABEL}}</span>
+  <span class="kpi-value" id="{{ID}}">—</span>
+  <span class="kpi-sub">{{CONTEXT}}</span>
+</div>`,
+  kpiCardClickable: `<div class="kpi clickable" tabindex="0" role="button" aria-label="{{LABEL}} – click to explore">
+  <span class="kpi-label">{{LABEL}}</span>
+  <span class="kpi-value" id="{{ID}}">—</span>
+  <span class="kpi-sub">{{CONTEXT}}</span>
+</div>`,
+  kpiGrid: `<div class="kpi-grid">
+  <!-- Repeat kpi cards here -->
+</div>`,
+  panel: `<div class="panel">
+  <div class="panel-head">
+    <h2 class="panel-title">{{TITLE}}</h2>
+  </div>
+  <!-- Panel content -->
+</div>`,
+  panelWithBadge: `<div class="panel">
+  <div class="panel-head">
+    <h2 class="panel-title">{{TITLE}}</h2>
+    <span class="badge">{{BADGE}}</span>
+  </div>
+  <!-- Panel content -->
+</div>`,
+  hbarRow: `<div class="hbar-row">
+  <span class="hbar-lbl">{{LABEL}}</span>
+  <div class="hbar-track"><div class="hbar-fill" style="width:{{PCT}}%;background:var(--chart-teal)"></div></div>
+  <span class="hbar-val">{{VALUE}}</span>
+</div>`,
+  hbarRowClickable: `<div class="hbar-row clickable" tabindex="0" role="button" data-key="{{KEY}}" data-value="{{LABEL}}">
+  <span class="hbar-lbl">{{LABEL}}</span>
+  <div class="hbar-track"><div class="hbar-fill" style="width:{{PCT}}%;background:var(--chart-teal)"></div></div>
+  <span class="hbar-val">{{VALUE}}</span>
+</div>`,
+  navTab: `<button class="nav-tab" role="tab" aria-selected="false" data-tab="{{TAB_ID}}">{{TAB_LABEL}}</button>`,
+  navTabActive: `<button class="nav-tab active" role="tab" aria-selected="true" data-tab="{{TAB_ID}}">{{TAB_LABEL}}</button>`,
+  validationCheck: `<div class="check {{STATUS}}">
+  <span>{{LABEL}}</span>
+  <strong>{{VALUE}}</strong>
+</div>`,
+  badge: `<span class="badge {{STATUS}}">{{TEXT}}</span>`,
+  findingCard: `<div class="finding-card {{TYPE}}">
+  <p class="finding-title">{{TITLE}}</p>
+  <p class="finding-body">{{BODY}}</p>
+</div>`,
+  genOutput: `<div class="gen-output">
+  <div class="panel-head">
+    <h2 class="panel-title">{{TITLE}}</h2>
+    <span class="badge">auto</span>
+  </div>
+  <div class="output-area" id="{{OUTPUT_ID}}">
+    Upload data to generate the report
+    <button class="copy-btn" id="{{COPY_ID}}">Copy</button>
+  </div>
+  <details class="calc-toggle">
+    <summary>CALCULATION RULES</summary>
+    <div class="rules-body" id="{{RULES_ID}}">{{CALC_RULES}}</div>
+  </details>
+  <div class="output-actions">
+    <button class="btn info" id="{{INSIGHTS_BTN}}">Insights</button>
+    <button class="btn secondary" id="{{EXPORT_BTN}}">.txt</button>
+  </div>
+</div>`,
+  dataTable: `<div style="overflow:auto">
+  <table class="data-table" id="{{TABLE_ID}}">
+    <thead><tr id="{{HEAD_ID}}"><!-- th cells --></tr></thead>
+    <tbody id="{{BODY_ID}}"><!-- tr rows --></tbody>
+  </table>
+</div>`,
+  drawer: `<div class="drawer-backdrop" id="drawerBackdrop"></div>
+<div class="slide-drawer" id="slideDrawer">
+  <div style="padding:16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line)">
+    <h2 style="margin:0;font-size:14px;font-weight:700" id="drawerTitle">Details</h2>
+    <button class="btn secondary" id="drawerClose" style="height:28px;padding:0 10px;font-size:11px">✕ Close</button>
+  </div>
+  <div style="padding:16px" id="drawerBody"></div>
+</div>`,
+  uploadBox: `<div class="upload-box" id="uploadBox">
+  <span class="upload-kicker">DATASET · STAYS ON THIS DEVICE</span>
+  <span class="upload-title">Drop a CSV or Excel file</span>
+  <span class="file-name" id="fileName">No file loaded · .csv .xlsx .xls</span>
+  <label class="file-btn" tabindex="0">Choose file<input type="file" id="fileInput" accept=".csv,.xlsx,.xls" hidden></label>
+</div>`,
+  filterButton: `<button class="scope-bar-btn" data-col="{{COLUMN}}">All {{COLUMN}}</button>`,
+  chartSvgContainer: `<div class="panel">
+  <div class="panel-head"><h2 class="panel-title">{{TITLE}}</h2></div>
+  <div class="chart-container" style="min-height:{{HEIGHT}}px">
+    <svg id="{{SVG_ID}}" viewBox="0 0 {{WIDTH}} {{HEIGHT}}" preserveAspectRatio="xMidYMid meet" style="width:100%;height:100%"></svg>
+  </div>
+</div>`,
+  overviewSplit: `<div class="overview-split">
+  <!-- Left column: findings or primary content -->
+  <!-- Right column: generated report -->
+</div>`,
+  segGrid: `<div class="seg-grid">
+  <!-- Segment comparison panels -->
+</div>`,
+} as const;
+
+export function getCompleteStylesheet(): string {
+  const shell = DASHBOARD_SHELL_CONTRACT;
+  return [
+    shell.designTokens,
+    shell.darkOverlayTokens,
+    shell.frameCode,
+    shell.sidebarCssTemplate,
+    ...Object.values(shell.componentPatterns),
+    SECTION_LAYOUT_CSS,
+  ].join('\n\n');
+}
+
+export function getComponentPatterns(componentNames: string[]): Record<string, { css: string; html: string; usage: string }> {
+  const allComponents: Record<string, { css: string; html: string; usage: string }> = {
+    kpiCards: {
+      css: DASHBOARD_SHELL_CONTRACT.componentPatterns.kpiCards,
+      html: HTML_SNIPPETS.kpiCard + '\n\n/* Clickable variant: */\n' + HTML_SNIPPETS.kpiCardClickable + '\n\n/* Grid container: */\n' + HTML_SNIPPETS.kpiGrid,
+      usage: "Use .kpi-grid for the container (3-column responsive grid). Each card uses .kpi with .kpi-label (9.5px mono uppercase), .kpi-value (clamp 20-30px mono, tabular-nums), and .kpi-sub (10px mono muted). Add .clickable for drill-down cards. Animate values with countUp() from JS utilities."
+    },
+    panels: {
+      css: DASHBOARD_SHELL_CONTRACT.componentPatterns.panels,
+      html: HTML_SNIPPETS.panel + '\n\n/* With badge: */\n' + HTML_SNIPPETS.panelWithBadge,
+      usage: "Wrap each chart, table, or content section in .panel. Use .panel-head with .panel-title (10.5px mono uppercase). Add .badge for count/status indicators in the header."
+    },
+    horizontalBars: {
+      css: DASHBOARD_SHELL_CONTRACT.componentPatterns.horizontalBars,
+      html: HTML_SNIPPETS.hbarRow + '\n\n/* Clickable variant for cross-filtering: */\n' + HTML_SNIPPETS.hbarRowClickable,
+      usage: "For categorical comparisons. Grid: 140px label, 1fr track (8px height, var(--surface-2)), 44px value. Fill uses var(--chart-teal) by default. Wrap multiple rows in .seg-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; } panels for segment comparison views."
+    },
+    dataTables: {
+      css: DASHBOARD_SHELL_CONTRACT.componentPatterns.dataTables,
+      html: HTML_SNIPPETS.dataTable,
+      usage: "Use .data-table inside a scrollable container. Sticky thead (position: sticky; top: 0; z-index: 5). Headers: 8.5px uppercase mono. Body: 11px mono. Row hover: rgba(24,28,36,0.04). Make rows clickable to open drawers. Add .store-search input in .panel-head for filtering."
+    },
+    validation: {
+      css: DASHBOARD_SHELL_CONTRACT.componentPatterns.validation,
+      html: HTML_SNIPPETS.validationCheck,
+      usage: "Place .validation strip below KPI grid. Contains .check cards with .ok or .err status classes. Each check shows a label and strong value."
+    },
+    badges: {
+      css: DASHBOARD_SHELL_CONTRACT.componentPatterns.badges,
+      html: HTML_SNIPPETS.badge,
+      usage: "Status indicators. Use .badge with .ok, .warn, or .err classes. Place in .panel-head or table cells."
+    },
+    buttons: {
+      css: DASHBOARD_SHELL_CONTRACT.componentPatterns.buttons,
+      html: '<button class="btn">Primary</button>\n<button class="btn info">Info Action</button>\n<button class="btn secondary">Secondary</button>\n<button class="btn ghost">Ghost</button>',
+      usage: "Action buttons. .btn = primary dark fill. .btn.info = info dark fill. .btn.secondary = outlined. .btn.ghost = minimal. Use in .output-actions rows."
+    },
+    generatedOutput: {
+      css: DASHBOARD_SHELL_CONTRACT.componentPatterns.generatedOutput,
+      html: HTML_SNIPPETS.genOutput,
+      usage: "For AI-generated text narrative panels. Place beside KPI summary in .overview-split { display: grid; grid-template-columns: minmax(400px, .9fr) minmax(360px, 1.1fr); gap: 12px; }. Contains .output-area with Copy button, collapsible .calc-toggle (<details>), and .output-actions buttons. Use typeText() from JS utilities for streaming effect."
+    },
+    multiSelectFilter: {
+      css: DASHBOARD_SHELL_CONTRACT.componentPatterns.multiSelectFilter,
+      html: HTML_SNIPPETS.filterButton,
+      usage: "Scope filter dropdowns. .scope-bar-btn (25px height, mono, #F8FAFC background). Active state inverts to --ink with white text. Opens .filter-drop dropdown with checkbox list, counts, and All/Clear actions. Use buildFilterButton() from JS utilities."
+    },
+    heatmap: {
+      css: DASHBOARD_SHELL_CONTRACT.componentPatterns.heatmap,
+      html: '<div class="heatmap-grid" id="{{HEATMAP_ID}}"><!-- Build grid cells with .hm-cell, color via volumeRamp function --></div>',
+      usage: "For date×hour or 2D intersection density. Grid: 54px label + repeat(N, minmax(0,1fr)), gap 2px. Cells: 22px height, 8.5px mono. Color ramp: rgba(255,255,255,0.04) → #1e3a8a → #2563eb → #38bdf8 → #bae6fd. Hover: scale(1.18) with ink outline. Peak: .hm-peak outline."
+    },
+    overlays: {
+      css: DASHBOARD_SHELL_CONTRACT.componentPatterns.overlays,
+      html: '<section class="analytics-overlay" id="{{OVERLAY_ID}}">\n  <div class="analytics-topbar">\n    <span style="font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)">{{OVERLAY_TITLE}}</span>\n    <button class="btn secondary" id="{{CLOSE_BTN}}">✕ Exit</button>\n  </div>\n  <div class="analytics-body" id="{{BODY_ID}}"><!-- overlay content --></div>\n</section>',
+      usage: "Full-screen deep-dive overlays using clip-path wipe animation. Sits over main content only (sidebar stays visible). Uses dark scoped tokens. Open: clip-path inset(0 0 0 0 round 8px). Close: clip-path inset(0 100% 0 0 round 8px). Content slides in with translateX animation."
+    },
+    drawers: {
+      css: DASHBOARD_SHELL_CONTRACT.componentPatterns.drawers,
+      html: HTML_SNIPPETS.drawer,
+      usage: "Right slide-over for drill-down details. Width min(520px, 92vw). Opens via translate3d(0,0,0) with 0.24s cubic-bezier(.16,1,.3,1). Backdrop blur 2px. Use openDrawer()/closeDrawer() from JS utilities. Focus management and Escape key built-in."
+    },
+    header: {
+      css: DASHBOARD_SHELL_CONTRACT.componentPatterns.header,
+      html: HTML_SNIPPETS.uploadBox,
+      usage: "Already included in wireframe. Only request this if you need the raw CSS for customization."
+    },
+    navTabs: {
+      css: DASHBOARD_SHELL_CONTRACT.componentPatterns.navTabs,
+      html: HTML_SNIPPETS.navTab + '\n\n/* Active variant: */\n' + HTML_SNIPPETS.navTabActive,
+      usage: "Already included in wireframe. Segmented track tabs. 28px height, 10.5px mono. Active = white with shadow lift. ARIA: role=tablist/tab, aria-selected."
+    },
+    findingCards: {
+      css: `.finding-card { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; border-left: 3px solid var(--accent); margin-bottom: 8px; }
+.finding-card.positive { border-left-color: var(--ok); }
+.finding-card.caution { border-left-color: var(--warn); }
+.finding-card.note { border-left-color: var(--chart-indigo); }
+.finding-title { font-size: 12px; font-weight: 600; color: var(--ink); margin: 0 0 4px; }
+.finding-body { font-size: 11px; color: var(--muted); margin: 0; line-height: 1.5; }`,
+      html: HTML_SNIPPETS.findingCard,
+      usage: "Insight/finding cards with colored left border. .positive = green (ok), .caution = amber (warn), .note = indigo. Title states the finding as a claim, body provides evidence."
+    },
+    chartContainer: {
+      css: `.chart-container { min-height: 200px; }\n.chart-container svg { width: 100%; height: 100%; }`,
+      html: HTML_SNIPPETS.chartSvgContainer,
+      usage: "Wrapper for SVG charts inside .panel. Set min-height. SVG uses viewBox with preserveAspectRatio=xMidYMid meet. Use --chart-* CSS variables for colors. Pure procedural SVG preferred (no Chart.js/D3)."
+    },
+    sectionLayouts: {
+      css: SECTION_LAYOUT_CSS,
+      html: HTML_SNIPPETS.overviewSplit + '\n\n' + HTML_SNIPPETS.segGrid + '\n\n' + HTML_SNIPPETS.kpiGrid,
+      usage: ".kpi-grid: 3-column responsive grid for KPI cards. .overview-split: asymmetric 2-column (findings+report). .seg-grid: auto-fit for segment comparison panels. .tab-panel/.tab-panel.active: tab visibility toggle. .empty-state: centered placeholder."
+    },
+    accessibility: {
+      css: DASHBOARD_SHELL_CONTRACT.componentPatterns.accessibility,
+      html: '<!-- Focus styles are applied automatically. Use role, aria-label, aria-selected, tabindex attributes. -->',
+      usage: "Focus ring (--focus-ring: #38BDF8, 2px offset). Applied to interactive elements on :focus-visible. Use semantic roles (tablist, tab, dialog). Support Escape key for drawers/overlays."
+    },
+  };
+
+  const result: Record<string, { css: string; html: string; usage: string }> = {};
+  for (const name of componentNames) {
+    if (allComponents[name]) {
+      result[name] = allComponents[name];
+    }
+  }
+  return result;
+}
+
+export function getAvailableComponents(): string[] {
+  return [
+    'kpiCards', 'panels', 'horizontalBars', 'dataTables', 'validation',
+    'badges', 'buttons', 'generatedOutput', 'multiSelectFilter', 'heatmap',
+    'overlays', 'drawers', 'header', 'navTabs', 'findingCards',
+    'chartContainer', 'sectionLayouts', 'accessibility'
+  ];
+}
 
 export function getDashboardShellContract(): string {
   return JSON.stringify(DASHBOARD_SHELL_CONTRACT, null, 2);
