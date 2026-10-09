@@ -53,6 +53,7 @@ export const DATA_INSIGHT_PLAYBOOK = {
     "Prioritize by decision relevance, magnitude, confidence, and coverage. Separate observed finding, possible explanation, and suggested next question.",
     "Include a compact data-quality or limitations note when missingness, low volume, partial periods, or ambiguous field meanings could change the interpretation.",
     "Do not fabricate targets, business meaning, units, causality, anomaly labels, forecasts, or confidence. If the data cannot support a useful conclusion, state that plainly.",
+    "For the Generated Output textarea (Executive Briefing): Write in a crisp, objective, operational tone. Do not use filler words like 'Here is the report'. Use bullet points for readability. Always include: 1) A clear opening summary sentence. 2) Key metrics (Volume, SLA, MTTR, etc.) with their deltas or current state. 3) The primary driver or bottleneck (e.g., 'The highest volume was seen in X', or 'SLA misses were driven by Y'). 4) A clear conclusion or recommended next focus area.",
   ],
 };
 
