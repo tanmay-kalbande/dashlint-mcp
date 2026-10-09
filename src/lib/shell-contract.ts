@@ -376,32 +376,66 @@ button, input, textarea, select { font: inherit; }
 .data-table tr.clickable { cursor: pointer; transition: background .12s; }
 .data-table tr.clickable:hover { background: rgba(24, 28, 36, 0.04); }`,
 
-    overlays: `/* ── Clip-Path Overlay Expansion ── */
+    overlays: `/* ── Clip-Path Overlay Expansion (Incident Pulse & SLA-Pulse Canonical) ── */
 .analytics-overlay {
   position: fixed;
   left: calc(268px + 24px); right: 12px; top: 12px; bottom: 12px;
   z-index: 90;
   background: var(--rail-bg); border: 1px solid var(--rail-border); border-radius: 8px;
-  padding: 12px; display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 12px;
+  padding: 14px; display: flex; flex-direction: column; gap: 8px;
   overflow: hidden;
   opacity: 0; pointer-events: none;
   clip-path: inset(0 100% 0 0 round 8px);
   transform: translateZ(0);
-  transition: opacity .18s ease, clip-path .62s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity .18s ease, clip-path .55s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .analytics-overlay.open {
   opacity: 1; pointer-events: auto;
   clip-path: inset(0 0 0 0 round 8px);
+}
+.analytics-topbar {
+  background: transparent; border: 1px solid rgba(255,255,255,.22);
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 0 16px; height: 50px; min-height: 50px; flex-shrink: 0; border-radius: 8px;
+}
+.analytics-topbar h2 { margin: 0; font-size: 14px; font-weight: 700; color: #fff; font-family: var(--mono); }
+.analytics-close {
+  height: 32px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.10);
+  border-radius: 4px; color: #ccc; font-size: 11px; font-weight: 600; cursor: pointer;
+  font-family: var(--mono); padding: 0 14px; transition: background .14s, color .14s;
+}
+.analytics-close:hover { background: rgba(255,255,255,.14); color: #fff; }
+.analytics-tabs {
+  background: rgba(255,255,255,.035); border-bottom: 1px solid rgba(255,255,255,.14);
+  display: flex; gap: 4px; padding: 0 8px; flex-shrink: 0; border-radius: 6px 6px 0 0; overflow-x: auto;
+}
+.a-tab {
+  height: 38px; border: 0; background: transparent; color: #8D96A3; font-size: 11.5px;
+  font-weight: 600; cursor: pointer; font-family: var(--mono); padding: 0 14px;
+  border-bottom: 2px solid transparent; transition: color .14s, border-bottom-color .14s;
+  letter-spacing: .02em; white-space: nowrap;
+}
+.a-tab:hover { color: #F4F6F8; }
+.a-tab.active { color: #F8FAFC; border-bottom-color: #F8FAFC; }
+.analytics-body {
+  min-height: 0; flex: 1; overflow-y: auto; padding: 16px 20px;
+  background: transparent; border: 1px solid rgba(255,255,255,.22); border-radius: 8px;
+}
+.a-tab-pane { display: none; }
+.a-tab-pane.active { display: block; animation: fadeInTab .24s cubic-bezier(0.16, 1, 0.3, 1) both; }
+@keyframes fadeInTab { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+@media (max-width: 960px) {
+  .analytics-overlay { left: 0; right: 0; top: 0; bottom: 0; border-radius: 0; z-index: 170; }
 }`,
 
     drawers: `/* ── Slide-Over Drawers ── */
-.drawer-backdrop {
+.drawer-backdrop, .drawer-overlay {
   position: fixed; inset: 0; z-index: 199;
   background: rgba(15, 23, 42, 0.45); backdrop-filter: blur(2px);
   opacity: 0; pointer-events: none;
   transition: opacity .2s ease;
 }
-.drawer-backdrop.open { opacity: 1; pointer-events: auto; }
+.drawer-backdrop.open, .drawer-overlay.open { opacity: 1; pointer-events: auto; }
 .slide-drawer {
   position: fixed; top: 0; right: 0; bottom: 0;
   width: min(520px, 92vw); z-index: 200;
@@ -412,6 +446,112 @@ button, input, textarea, select { font: inherit; }
   overflow-y: auto;
 }
 .slide-drawer.open { transform: translate3d(0, 0, 0); }`,
+
+    healthBar: `/* ── Operational Health Bar Gauge (SLA-Pulse Canonical) ── */
+.health-bar-wrap { margin-top: 6px; padding: 8px 10px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 6px; }
+.health-bar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.health-bar-label { font-size: 8.5px; font-weight: 700; font-family: var(--mono); letter-spacing: .07em; text-transform: uppercase; color: var(--muted); }
+.health-bar-score { font-size: 11px; font-weight: 700; font-family: var(--mono); color: var(--ink); }
+.health-bar-track { height: 7px; background: rgba(0,0,0,0.06); border: 1px solid var(--line); border-radius: 4px; overflow: hidden; margin-bottom: 6px; }
+.health-bar-fill { height: 100%; border-radius: 3px; background: var(--ok); transition: width 0.6s cubic-bezier(.16, 1, .3, 1), background 0.3s ease; }
+.health-bar-breakdown { display: flex; gap: 8px; flex-wrap: wrap; font-size: 9px; font-family: var(--mono); color: var(--muted); }
+.health-bar-item { display: inline-flex; align-items: center; gap: 4px; }
+.health-bar-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }`,
+
+    dayDrawer: `/* ── Day Drilldown Drawer (Intraday Progression & Root Cause) ── */
+.agent-drawer, .day-drawer {
+  position: fixed; top: 0; right: 0; height: 100%; width: min(720px, 50vw);
+  background: var(--surface); z-index: 200; display: flex; flex-direction: column;
+  transform: translateX(100%); box-shadow: -8px 0 32px rgba(0,0,0,.15);
+  transition: transform .32s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@media (max-width: 1180px) { .agent-drawer, .day-drawer { width: min(720px, calc(100vw - 32px)); } }
+@media (max-width: 520px) { .agent-drawer, .day-drawer { width: 100vw; } }
+.day-drawer.open, .agent-drawer.open { transform: translateX(0); }
+.drawer-header {
+  background: var(--rail-bg); padding: 18px 20px 14px; flex-shrink: 0;
+  position: relative; border-left: 1px solid var(--rail-border);
+}
+.drawer-back {
+  background: rgba(255,255,255,.08); border: 1.5px solid rgba(255,255,255,.12);
+  border-radius: 4px; color: #e8e8e8; font-size: 10px; font-weight: 600;
+  padding: 4px 8px; cursor: pointer; font-family: var(--mono);
+  display: inline-flex; align-items: center; transition: background .15s, transform .12s;
+  letter-spacing: .03em; text-transform: uppercase; margin-bottom: 8px;
+}
+.drawer-back:hover { background: rgba(255,255,255,.16); transform: translateX(-2px); }
+.drawer-close {
+  position: absolute; top: 14px; right: 14px; background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.08); border-radius: 4px; color: #aaa;
+  font-size: 16px; width: 28px; height: 28px; cursor: pointer; display: grid; place-items: center;
+  line-height: 1; transition: background .15s, color .15s, transform .12s;
+}
+.drawer-close:hover { background: rgba(255,255,255,.12); color: #fff; transform: scale(1.05); }
+.drawer-title-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-right: 28px; }
+.drawer-agent-name { font-size: 16px; font-weight: 700; color: #fff; font-family: var(--mono); margin-bottom: 2px; }
+.drawer-agent-sub { font-size: 10px; color: #888; font-family: var(--mono); }
+.drawer-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 10px; }
+@media (max-width: 520px) { .drawer-kpis { grid-template-columns: repeat(2, 1fr) !important; } }
+.drawer-kpi { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.07); border-radius: 5px; padding: 7px 9px; }
+.drawer-kpi:hover { background: rgba(255,255,255,.07); border-color: rgba(255,255,255,.14); }
+.drawer-kpi-label { font-size: 8.5px; color: #888; font-family: var(--mono); font-weight: 600; letter-spacing: .07em; text-transform: uppercase; }
+.drawer-kpi-value { font-size: 14px; font-weight: 700; color: #e8e8e8; font-family: var(--mono); margin-top: 2px; }
+.drawer-kpi-sub { font-size: 8.5px; color: #666; font-family: var(--mono); margin-top: 1px; }
+.drawer-body { flex: 1; overflow-y: auto; padding: 14px 18px; border-left: 1px solid var(--line); }
+.drawer-section { margin-bottom: 16px; }
+.drawer-section h4 { font-size: 9.5px; font-weight: 700; color: var(--muted); font-family: var(--mono); letter-spacing: .07em; text-transform: uppercase; margin: 0 0 8px; padding-bottom: 4px; border-bottom: 1px solid var(--line); }
+.rc-card { background: var(--surface-2); border: 1px solid var(--line); border-radius: 6px; padding: 12px; margin-bottom: 14px; }
+.rc-title { font-size: 10px; font-weight: 700; color: var(--muted); font-family: var(--mono); letter-spacing: .07em; text-transform: uppercase; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+.rc-meter-track { height: 16px; background: rgba(0,0,0,0.06); border: 1px solid var(--line); border-radius: 4px; overflow: hidden; display: flex; margin-bottom: 8px; }
+.rc-meter-fill { height: 100%; transition: width 0.6s cubic-bezier(.16, 1, .3, 1); }
+.rc-legend { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-family: var(--mono); font-size: 10.5px; }
+.rc-legend-item { display: flex; align-items: center; gap: 6px; background: var(--surface); padding: 5px 8px; border-radius: 4px; border: 1px solid var(--line); }
+.rc-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+.rc-val { margin-left: auto; font-weight: 700; color: var(--ink); }
+.rc-takeaway { margin-top: 8px; font-size: 11px; font-family: var(--mono); line-height: 1.45; background: var(--surface); padding: 8px 10px; border-radius: 4px; border: 1px solid var(--line); }
+.clickable-agent-pill { cursor: pointer; background: var(--surface); transition: all .16s cubic-bezier(0.16, 1, 0.3, 1); display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border: 1px solid var(--line); border-radius: 4px; font: 11px var(--mono); }
+.clickable-agent-pill:hover { background: var(--surface-2) !important; border-color: var(--line-strong) !important; box-shadow: 0 3px 8px rgba(0,0,0,.08); transform: translateY(-1.5px); }
+.hourly-gos-chart, .hourly-miss-chart { display: flex; align-items: flex-end; gap: 3px; height: 110px; padding: 20px 8px 6px; margin-bottom: 6px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
+.h-gos-col, .h-miss-col { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end; position: relative; min-width: 0; cursor: pointer; }
+.h-gos-col:hover .h-gos-bar, .h-miss-col:hover .h-miss-stack { opacity: .85; transform: scaleY(1.04); transform-origin: bottom; }
+.h-gos-col.active .h-gos-bar, .h-miss-col.active .h-miss-stack { box-shadow: 0 0 0 2px var(--ink); }
+.h-gos-bar { width: 100%; max-width: 18px; border-radius: 3px 3px 0 0; min-height: 4px; transition: height 0.5s cubic-bezier(.16, 1, .3, 1), opacity .15s; }
+.h-miss-stack { width: 100%; max-width: 18px; display: flex; flex-direction: column-reverse; border-radius: 3px 3px 0 0; overflow: hidden; }
+.h-miss-seg { width: 100%; transition: height 0.5s cubic-bezier(.16, 1, .3, 1); }
+.h-gos-val, .h-miss-val { position: absolute; top: -16px; font-size: 8px; font-family: var(--mono); font-weight: 600; color: var(--ink); white-space: nowrap; }
+.h-gos-lbl { font-size: 8.5px; font-family: var(--mono); color: var(--muted); margin-top: 4px; }
+.cum-gos-wrap { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 10px; margin-bottom: 8px; }
+.cum-gos-svg { width: 100%; display: block; }
+.cum-gos-dot { transition: r .15s ease, stroke-width .15s ease; }
+circle.cum-gos-dot:hover { r: 6px; stroke-width: 2.5px; }
+.hour-detail { background: var(--surface-2); border: 1px solid var(--line); border-radius: 6px; padding: 0; margin-bottom: 12px; overflow: hidden; max-height: 0; opacity: 0; transition: max-height .3s ease, opacity .25s ease, padding .25s ease; }
+.hour-detail.open { max-height: 500px; opacity: 1; padding: 12px; }
+.hour-detail-title { font-size: 11.5px; font-weight: 700; color: var(--ink); font-family: var(--mono); margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; }
+.hour-detail-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 8px; }
+.hd-stat { background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 6px 8px; text-align: center; }
+.hd-stat-label { font-size: 8px; color: var(--muted); font-family: var(--mono); font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
+.hd-stat-value { font-size: 14px; font-weight: 700; color: var(--ink); font-family: var(--mono); margin-top: 2px; }
+.hd-stat-sub { font-size: 8.5px; color: var(--muted); font-family: var(--mono); margin-top: 1px; }
+.hd-narrative { font-size: 10.5px; font-family: var(--mono); line-height: 1.5; color: var(--ink); background: var(--surface); padding: 8px 10px; border-radius: 4px; border: 1px solid var(--line); }`,
+
+    dayComparator: `/* ── Day Comparator (Side-by-side Day Comparison) ── */
+.comparator-controls { display: flex; align-items: flex-end; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+.comp-select-group { display: flex; flex-direction: column; gap: 3px; }
+.comp-select-group label { font-size: 8.5px; font-weight: 700; color: var(--muted); font-family: var(--mono); letter-spacing: .07em; text-transform: uppercase; }
+.comp-select { height: 28px; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); font: 10.5px var(--mono); padding: 0 8px; color: var(--ink); }
+.comp-delta { display: inline-flex; align-items: center; gap: 4px; font: 600 10.5px var(--mono); padding: 2px 6px; border-radius: 3px; }
+.comp-delta.improved { color: var(--ok); background: var(--ok-dim); }
+.comp-delta.declined { color: var(--err); background: var(--err-dim); }
+.comp-delta.neutral { color: var(--muted); background: var(--surface-2); }`,
+
+    chartTooltip: `/* ── Floating Chart Tooltip ── */
+#chartTooltip {
+  position: fixed; display: none; background: rgba(22, 25, 31, 0.94);
+  backdrop-filter: blur(4px); border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #e4e6eb; padding: 8px 12px; border-radius: 6px; font-family: var(--mono);
+  font-size: 11px; z-index: 99999; pointer-events: none;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5); line-height: 1.4;
+}`,
 
     validation: `/* ── Validation Checks ── */
 .validation { margin-top: 4px; border-top: 1px solid var(--line); padding-top: 8px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
@@ -797,6 +937,20 @@ export const HTML_SNIPPETS = {
     <div class="kpis" id="execKpis">
       <!-- 6 KPI cards in 2x3 grid (repeats .kpi or .kpi.clickable) -->
     </div>
+    <div class="health-bar-wrap" id="execHealthBar">
+      <div class="health-bar-header">
+        <span class="health-bar-label">Operational Health</span>
+        <span class="health-bar-score" id="healthScoreValue">100/100</span>
+      </div>
+      <div class="health-bar-track">
+        <div class="health-bar-fill" id="healthBarFill" style="width:100%;background:var(--ok)"></div>
+      </div>
+      <div class="health-bar-breakdown" id="healthBarBreakdown">
+        <span class="health-bar-item"><span class="health-bar-dot" style="background:var(--ok)"></span> Primary Target (≥80%)</span>
+        <span class="health-bar-item"><span class="health-bar-dot" style="background:var(--warn)"></span> Exceptions (≤5%)</span>
+        <span class="health-bar-item"><span class="health-bar-dot" style="background:var(--chart-indigo)"></span> Turnaround</span>
+      </div>
+    </div>
     <div class="validation" id="execValidation">
       <!-- 3 Validation check cards (.check) -->
     </div>
@@ -828,6 +982,99 @@ export const HTML_SNIPPETS = {
   segGrid: `<div class="seg-grid">
   <!-- Segment comparison panels -->
 </div>`,
+  healthBar: `<div class="health-bar-wrap" id="{{HEALTH_ID}}">
+  <div class="health-bar-header">
+    <span class="health-bar-label">Operational Health</span>
+    <span class="health-bar-score" id="{{SCORE_ID}}">100/100</span>
+  </div>
+  <div class="health-bar-track">
+    <div class="health-bar-fill" id="{{FILL_ID}}" style="width:100%;background:var(--ok)"></div>
+  </div>
+  <div class="health-bar-breakdown">
+    <span class="health-bar-item"><span class="health-bar-dot" style="background:var(--ok)"></span> Target (≥80%)</span>
+    <span class="health-bar-item"><span class="health-bar-dot" style="background:var(--warn)"></span> Drops (≤5%)</span>
+    <span class="health-bar-item"><span class="health-bar-dot" style="background:var(--chart-indigo)"></span> Performance</span>
+  </div>
+</div>`,
+  dayDrawer: `<div class="drawer-overlay" id="dayDrawerOverlay"></div>
+<aside class="agent-drawer day-drawer" id="dayDrawer" aria-label="Day Performance Detail">
+  <div class="drawer-header">
+    <button class="drawer-close" id="dayDrawerClose" aria-label="Close day detail">✕</button>
+    <button class="drawer-back" id="dayDrawerBack">← Back to Daily List</button>
+    <div class="drawer-title-row">
+      <div class="drawer-agent-name" id="dayDrawerTitle">Date Detail</div>
+      <button class="btn secondary" id="dlDayCsv" style="height:26px;padding:0 8px;font-size:10px">CSV</button>
+    </div>
+    <div class="drawer-agent-sub" id="dayDrawerSub">Intraday progression &amp; root cause breakdown</div>
+    <div class="drawer-kpis" id="dayDrawerKpis">
+      <div class="drawer-kpi"><div class="drawer-kpi-label">Volume</div><div class="drawer-kpi-value" id="ddVol">—</div><div class="drawer-kpi-sub">Total records</div></div>
+      <div class="drawer-kpi"><div class="drawer-kpi-label">Completed</div><div class="drawer-kpi-value" id="ddHandled">—</div><div class="drawer-kpi-sub">Handled</div></div>
+      <div class="drawer-kpi"><div class="drawer-kpi-label">Compliance</div><div class="drawer-kpi-value" id="ddCompliance" style="color:var(--ok)">—</div><div class="drawer-kpi-sub">Within SLA/target</div></div>
+      <div class="drawer-kpi"><div class="drawer-kpi-label">Breaches / Drops</div><div class="drawer-kpi-value" id="ddBreaches" style="color:var(--err)">—</div><div class="drawer-kpi-sub">Out of SLA</div></div>
+    </div>
+  </div>
+  <div class="drawer-body" id="dayDrawerBody">
+    <div class="rc-card" id="dayRCA">
+      <div class="rc-title"><span>Root Cause Breakdown</span><span class="badge" id="dayStatusBadge">Analyzing</span></div>
+      <div class="rc-meter-track">
+        <div class="rc-meter-fill" id="rcSegA" style="width:60%;background:var(--chart-amber)"></div>
+        <div class="rc-meter-fill" id="rcSegB" style="width:40%;background:var(--chart-red)"></div>
+      </div>
+      <div class="rc-legend">
+        <div class="rc-legend-item"><div class="rc-dot" style="background:var(--chart-amber)"></div><span>Primary Delay</span><span class="rc-val" id="rcValA">—</span></div>
+        <div class="rc-legend-item"><div class="rc-dot" style="background:var(--chart-red)"></div><span>Secondary / Drop</span><span class="rc-val" id="rcValB">—</span></div>
+      </div>
+      <div class="rc-takeaway" id="dayTakeaway">Operational takeaway summary</div>
+    </div>
+    <div class="drawer-section">
+      <h4>Intraday Metric Progression</h4>
+      <div class="cum-gos-wrap"><svg id="dayProgressionSvg" class="cum-gos-svg" viewBox="0 0 500 130" preserveAspectRatio="xMidYMid meet"></svg></div>
+    </div>
+    <div class="drawer-section">
+      <h4>Hourly Breakdown — Click bar for detail</h4>
+      <div class="hourly-gos-chart" id="dayHourlyBars"></div>
+    </div>
+    <div class="hour-detail" id="hourDetailPanel">
+      <div class="hour-detail-title"><span id="hdTitle">Hour Detail</span><span class="badge" id="hdBadge">Selected</span></div>
+      <div class="hour-detail-grid" id="hdGrid"></div>
+      <div class="hd-narrative" id="hdNarrative">Select an hourly column above to inspect operational drivers.</div>
+    </div>
+  </div>
+</aside>`,
+  dayComparator: `<div class="panel">
+  <div class="panel-head">
+    <h3 class="panel-title">DAY-OVER-DAY COMPARATOR</h3>
+    <span class="badge" id="compBadge">Comparison</span>
+  </div>
+  <div class="comparator-controls">
+    <div class="comp-select-group"><label>Base Day (A)</label><select class="comp-select" id="compSelectA"></select></div>
+    <div class="comp-select-group"><label>Comparison Day (B)</label><select class="comp-select" id="compSelectB"></select></div>
+    <div style="margin-left:auto"><span class="comp-delta neutral" id="compDeltaSummary">Select two dates to compare</span></div>
+  </div>
+  <div id="compResultsGrid" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:10px;"></div>
+</div>`,
+  analyticsOverlay: `<section class="analytics-overlay" id="analyticsOverlay" role="dialog" aria-modal="true">
+  <div class="analytics-topbar">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <h2>Analytics &amp; Operational Insights</h2>
+      <span class="badge">DEEP DIVE</span>
+    </div>
+    <div class="date-filter-strip" id="overlayFilterStrip">
+      <span class="scope-bar-label"><span class="period-pulse-dot"></span> LIVE DATASET</span>
+    </div>
+    <button class="analytics-close" id="analyticsClose">✕ Back to Dashboard</button>
+  </div>
+  <nav class="analytics-tabs" id="overlayTabs" aria-label="Analytics sections">
+    <button class="a-tab active" data-otab="insights">Top Insights</button>
+    <button class="a-tab" data-otab="daily">Daily Breakdown</button>
+    <button class="a-tab" data-otab="distribution">Distribution &amp; Segments</button>
+  </nav>
+  <div class="analytics-body" id="overlayBody">
+    <div class="a-tab-pane active" id="pane-overlay-insights"></div>
+    <div class="a-tab-pane" id="pane-overlay-daily"></div>
+    <div class="a-tab-pane" id="pane-overlay-distribution"></div>
+  </div>
+</section>`,
 } as const;
 
 export function getCompleteStylesheet(): string {
@@ -939,6 +1186,26 @@ export function getComponentPatterns(componentNames: string[]): Record<string, {
       html: '<!-- Focus styles are applied automatically. Use role, aria-label, aria-selected, tabindex attributes. -->',
       usage: "Focus ring: --focus-ring:#38BDF8, 2px solid, 1px offset. Applied on :focus-visible to .kpi.clickable, .btn, tr.clickable, .nav-tab, .hbar-row.clickable, .scope-bar-btn. Reduced motion: @media (prefers-reduced-motion:reduce) forces all animation/transition durations to 0.01ms. Semantic roles: tablist/tab with aria-selected for nav, role=button + tabindex=0 for clickable KPI/bar elements, role=dialog for overlays/drawers. Keyboard: Escape closes drawers/overlays/dropdowns, Enter/Space activates buttons/clickable elements. Reference: ShortcutOverlay displays kbd keys with border+background styling resembling physical keys, full-screen blurred backdrop. FlowNetwork supports keyboard zoom/pan controls. AgentDrawer/IncidentDrawer trap focus when open. StoreRankList implements roving tabindex for list navigation. FilterStrip multi-select dropdowns support keyboard navigation with highlighted index. Always test tab order flows through the page logically."
     },
+    healthBar: {
+      css: DASHBOARD_SHELL_CONTRACT.componentPatterns.healthBar,
+      html: HTML_SNIPPETS.healthBar,
+      usage: "Operational Health Score gauge. Place inside .kpi-panel between the KPI card grid and the .validation check strip. Displays overall health score (e.g. 84/100), animated meter bar (.health-bar-fill), and dot breakdown tags for key dimensions (SLA Target ≥80%, Attrition/Drops ≤5%, Turnaround). Dynamically update with setHealthScore(score, breakdown) or data binding."
+    },
+    dayDrawer: {
+      css: DASHBOARD_SHELL_CONTRACT.componentPatterns.dayDrawer,
+      html: HTML_SNIPPETS.dayDrawer,
+      usage: "Intraday deep-dive slide drawer (min(720px, 50vw)) modeled after SLA-Pulse. Triggered by clicking any date row in a daily table or date bar in a trend chart. Structure: 1. Header with '← Back to Daily List' (.drawer-back) + 4-7 KPI metrics (.drawer-kpis) + CSV export. 2. Root Cause Breakdown card (.rc-card) with dual-color meter track (.rc-meter-track) and operational takeaway callout. 3. Running metric progression SVG chart (.cum-gos-wrap) with threshold guidelines (80% / 60%), hover dots with floating tooltip (#chartTooltip), and ▼ drop badges. 4. 24-Hour column bar chart (.hourly-gos-chart) where clicking any hourly column opens the interactive Hour Detail panel (.hour-detail.open) displaying that hour's statistics and human narrative explanation."
+    },
+    dayComparator: {
+      css: DASHBOARD_SHELL_CONTRACT.componentPatterns.dayComparator,
+      html: HTML_SNIPPETS.dayComparator,
+      usage: "Side-by-side day-over-day comparator panel. Provides two <select> dropdowns (Base Day A and Comparison Day B) and computes delta indicators (.comp-delta.improved / .declined / .neutral) with percentage changes across volume, compliance, and resolution turnaround."
+    },
+    chartTooltip: {
+      css: DASHBOARD_SHELL_CONTRACT.componentPatterns.chartTooltip,
+      html: '<div id="chartTooltip"></div>',
+      usage: "Dark floating tooltip container with backdrop blur for procedural SVG charts, hourly bars, and heatmap matrices. Track mousemove over dots/bars and position at (e.clientX + 12, e.clientY - 10). Automatically hides on mouseleave."
+    },
   };
 
   const result: Record<string, { css: string; html: string; usage: string }> = {};
@@ -952,10 +1219,10 @@ export function getComponentPatterns(componentNames: string[]): Record<string, {
 
 export function getAvailableComponents(): string[] {
   return [
-    'kpiCards', 'panels', 'horizontalBars', 'dataTables', 'validation',
+    'kpiCards', 'healthBar', 'panels', 'horizontalBars', 'dataTables', 'validation',
     'badges', 'buttons', 'generatedOutput', 'multiSelectFilter', 'heatmap',
-    'overlays', 'drawers', 'header', 'navTabs', 'findingCards',
-    'chartContainer', 'sectionLayouts', 'accessibility'
+    'overlays', 'drawers', 'dayDrawer', 'dayComparator', 'header', 'navTabs',
+    'findingCards', 'chartContainer', 'chartTooltip', 'sectionLayouts', 'accessibility'
   ];
 }
 

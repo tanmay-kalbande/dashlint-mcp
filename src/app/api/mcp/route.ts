@@ -152,9 +152,9 @@ const handler = createMcpHandler((server) => {
     "get_component_patterns",
     {
       description:
-        "Returns CSS, HTML snippets, and usage notes for specific dashboard components. Call this AFTER get_full_dashboard_template to get only the components your dataset needs. Available components: kpiCards, panels, horizontalBars, dataTables, validation, badges, buttons, generatedOutput, multiSelectFilter, heatmap, overlays, drawers, findingCards, chartContainer, sectionLayouts, accessibility. Pass an array of component names to get targeted CSS+HTML for each.",
+        "Returns CSS, HTML snippets, and usage notes for specific dashboard components. Call this AFTER get_full_dashboard_template to get only the components your dataset needs. Available components: kpiCards, panels, horizontalBars, dataTables, validation, badges, buttons, generatedOutput, multiSelectFilter, heatmap, overlays, drawers, findingCards, chartContainer, sectionLayouts, accessibility, healthBar, dayDrawer, dayComparator, chartTooltip. Pass an array of component names to get targeted CSS+HTML for each.",
       inputSchema: z.object({
-        components: z.array(z.string().trim().min(1).max(50)).min(1).max(18).describe("Array of component names to retrieve. Choose from: kpiCards, panels, horizontalBars, dataTables, validation, badges, buttons, generatedOutput, multiSelectFilter, heatmap, overlays, drawers, findingCards, chartContainer, sectionLayouts, accessibility"),
+        components: z.array(z.string().trim().min(1).max(50)).min(1).max(25).describe("Array of component names to retrieve. Choose from: kpiCards, panels, horizontalBars, dataTables, validation, badges, buttons, generatedOutput, multiSelectFilter, heatmap, overlays, drawers, findingCards, chartContainer, sectionLayouts, accessibility, healthBar, dayDrawer, dayComparator, chartTooltip"),
       }).strict(),
     },
     async (input) => {
@@ -176,7 +176,7 @@ const handler = createMcpHandler((server) => {
     "get_js_utilities",
     {
       description:
-        "Returns pre-wired JavaScript utilities for dashboard interactivity. Includes: global state management, hand-written CSV parser (~50 lines), SheetJS Excel parser, countUp() animation (600ms easeOutCubic), typeText() typewriter effect (20-55ms per char), tab switching with ARIA, multi-select filter engine with dropdown UI, slide-drawer with focus management, file upload handler with drag-and-drop, copy button, .txt export, and mobile menu toggle. Paste into the wireframe's <script> block, then implement renderDashboard() with your dataset-specific logic.",
+        "Returns pre-wired JavaScript utilities for dashboard interactivity. Includes: global state management, hand-written CSV parser (~50 lines), SheetJS Excel parser, countUp() animation (600ms easeOutCubic), typeText() typewriter effect (20-55ms per char), tab switching with ARIA, multi-select filter engine with dropdown UI, slide-drawer and day-drawer with focus management, analytics overlay controls with sub-tabs, chart tooltip probe, file upload handler with drag-and-drop, copy button, .txt export, and mobile menu toggle. Paste into the wireframe's <script> block, then implement renderDashboard() with your dataset-specific logic.",
       inputSchema: noInput,
     },
     async () => {
@@ -194,6 +194,9 @@ const handler = createMcpHandler((server) => {
               "Use typeText(element, text, callback) for streaming text in generated output panels.",
               "Use buildFilterButton(columnName, containerElement) in loadData() for each filterable column.",
               "Use openDrawer(title, htmlContent) and closeDrawer() for detail drill-downs.",
+              "Use openDayDrawer(dayTitle, stats) and closeDayDrawer() for intraday laboratory and root-cause breakdown.",
+              "Use openAnalyticsOverlay(subtabId), closeAnalyticsOverlay(), and switchOverlayTab(tabId) for analytics layers.",
+              "Use showChartTooltip(x, y, html) and hideChartTooltip() for interactive chart hover probes.",
               "All utilities respect prefers-reduced-motion automatically.",
             ],
           }, null, 2),

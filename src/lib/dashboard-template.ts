@@ -41,7 +41,7 @@ export const SECTION_TEMPLATES = {
 .kpi-sub { color: var(--muted); font-size: 10px; font-family: var(--mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }`,
   },
   overviewSplit: {
-    description: "The canonical Incident/SLA balanced workspace: 2x3 KPI grid + validation checks on the left, fixed-height Generated Output textarea with 4 overlay action buttons on the right. Fits 100% of screen height without vertical scrolling.",
+    description: "The canonical Incident/SLA balanced workspace: 2x3 KPI grid + Operational Health Bar + validation checks on the left, fixed-height Generated Output textarea with 4 overlay action buttons on the right. Fits 100% of screen height without vertical scrolling.",
     html: `        <div class="workspace overview-split">
           <div class="panel kpi-panel" id="execLeftPanel">
             <div class="panel-head">
@@ -52,6 +52,20 @@ export const SECTION_TEMPLATES = {
             </div>
             <div class="kpis" id="execKpis">
               <!-- 6 KPI cards in 2x3 grid -->
+            </div>
+            <div class="health-bar-wrap" id="execHealthBar">
+              <div class="health-bar-header">
+                <span class="health-bar-label">Operational Health Score</span>
+                <span class="health-bar-score" id="healthScoreVal">88/100</span>
+              </div>
+              <div class="health-bar-track">
+                <div class="health-bar-fill" id="healthScoreFill" style="width: 88%;"></div>
+              </div>
+              <div class="health-bar-breakdown">
+                <span class="health-bar-item"><span class="health-bar-dot" style="background:var(--ok)"></span> SLA Compliant</span>
+                <span class="health-bar-item"><span class="health-bar-dot" style="background:var(--warn)"></span> At Risk</span>
+                <span class="health-bar-item"><span class="health-bar-dot" style="background:var(--err)"></span> Breached</span>
+              </div>
             </div>
             <div class="validation" id="execValidation">
               <!-- 3 Validation checks -->
@@ -80,8 +94,17 @@ export const SECTION_TEMPLATES = {
           </div>
         </div>`,
     css: `.workspace, .overview-split { min-height: 0; height: 100%; flex: 1; display: grid; grid-template-columns: minmax(400px, .9fr) minmax(460px, 1.1fr); gap: 12px; overflow: hidden; }
-.kpi-panel { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 8px; height: 100%; min-height: 0; overflow: hidden; }
+.kpi-panel { display: grid; grid-template-rows: auto minmax(0, 1fr) auto auto; gap: 8px; height: 100%; min-height: 0; overflow: hidden; }
 .kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(3, minmax(0, 1fr)); gap: 8px; min-height: 0; flex: 1; overflow: hidden; }
+.health-bar-wrap { margin-top: 6px; padding: 8px 10px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 6px; }
+.health-bar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.health-bar-label { font-size: 8.5px; font-weight: 700; font-family: var(--mono); letter-spacing: .07em; text-transform: uppercase; color: var(--muted); }
+.health-bar-score { font-size: 11px; font-weight: 700; font-family: var(--mono); color: var(--ink); }
+.health-bar-track { height: 7px; background: rgba(0,0,0,0.06); border: 1px solid var(--line); border-radius: 4px; overflow: hidden; margin-bottom: 6px; }
+.health-bar-fill { height: 100%; border-radius: 3px; background: var(--ok); transition: width 0.6s cubic-bezier(.16, 1, .3, 1), background 0.3s ease; }
+.health-bar-breakdown { display: flex; gap: 8px; flex-wrap: wrap; font-size: 9px; font-family: var(--mono); color: var(--muted); }
+.health-bar-item { display: inline-flex; align-items: center; gap: 4px; }
+.health-bar-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
 .message-panel, .gen-output { display: grid; grid-template-rows: auto minmax(0, 1fr) auto auto; gap: 8px; height: 100%; min-height: 0; overflow: hidden; }
 .summary-textarea, textarea.summary-textarea, .output-area { width: 100%; height: 100%; min-height: 0; flex: 1; border: 1px solid var(--line); border-radius: 6px; background: var(--surface-2); color: var(--ink); padding: 12px 14px; font: 11.5px/1.55 var(--mono); resize: none; outline: none; white-space: pre-wrap; overflow-y: auto; box-sizing: border-box; }
 .rules, .calc-toggle { margin-top: 4px; border: 1px solid var(--line); border-radius: 5px; background: var(--surface-2); padding: 6px 10px; color: var(--muted); font-size: 10px; font-family: var(--mono); }
@@ -278,7 +301,7 @@ document.addEventListener('click', e => {
   }
 });
 
-// ── Drawer ──
+// ── Drawers & Day Breakdown Drawer ──
 function openDrawer(title, html) {
   S.lastOpener = document.activeElement;
   document.getElementById('drawerTitle').textContent = title;
@@ -289,14 +312,73 @@ function openDrawer(title, html) {
   document.getElementById('drawerClose').focus();
 }
 function closeDrawer() {
-  document.getElementById('drawerBackdrop').classList.remove('open');
-  document.getElementById('slideDrawer').classList.remove('open');
+  document.getElementById('drawerBackdrop')?.classList.remove('open');
+  document.getElementById('slideDrawer')?.classList.remove('open');
   S.drawerOpen = false;
   if (S.lastOpener) S.lastOpener.focus();
 }
-document.getElementById('drawerBackdrop').addEventListener('click', closeDrawer);
-document.getElementById('drawerClose').addEventListener('click', closeDrawer);
-document.addEventListener('keydown', e => { if (e.key === 'Escape' && S.drawerOpen) closeDrawer(); });
+document.getElementById('drawerBackdrop')?.addEventListener('click', closeDrawer);
+document.getElementById('drawerClose')?.addEventListener('click', closeDrawer);
+
+function openDayDrawer(dayTitle, stats = {}) {
+  const drawer = document.getElementById('dayDrawer') || document.querySelector('.day-drawer') || document.getElementById('slideDrawer');
+  const backdrop = document.getElementById('dayDrawerOverlay') || document.querySelector('.drawer-backdrop');
+  if (!drawer) return;
+
+  const titleEl = document.getElementById('dayDrawerTitle') || drawer.querySelector('.drawer-agent-name');
+  if (titleEl && dayTitle) titleEl.textContent = dayTitle;
+
+  const subEl = document.getElementById('dayDrawerSub') || drawer.querySelector('.drawer-agent-sub');
+  if (subEl && stats.sub) subEl.textContent = stats.sub;
+
+  if (stats.kpis) {
+    Object.entries(stats.kpis).forEach(([key, val]) => {
+      const el = document.getElementById('dd-kpi-' + key);
+      if (el) el.textContent = val;
+    });
+  }
+
+  if (backdrop) backdrop.classList.add('open');
+  drawer.classList.add('open');
+  S.drawerOpen = true;
+}
+
+function closeDayDrawer() {
+  const drawer = document.getElementById('dayDrawer') || document.querySelector('.day-drawer');
+  const backdrop = document.getElementById('dayDrawerOverlay') || document.querySelector('.drawer-backdrop');
+  if (drawer) drawer.classList.remove('open');
+  if (backdrop) backdrop.classList.remove('open');
+  S.drawerOpen = false;
+}
+
+document.getElementById('dayDrawerClose')?.addEventListener('click', closeDayDrawer);
+document.getElementById('dayDrawerBack')?.addEventListener('click', closeDayDrawer);
+document.getElementById('dayDrawerOverlay')?.addEventListener('click', closeDayDrawer);
+
+// ── Floating Chart Tooltip ──
+function showChartTooltip(x, y, html) {
+  let tt = document.getElementById('chartTooltip');
+  if (!tt) {
+    tt = document.createElement('div');
+    tt.id = 'chartTooltip';
+    document.body.appendChild(tt);
+  }
+  tt.innerHTML = html;
+  tt.style.display = 'block';
+  const pad = 12;
+  const w = tt.offsetWidth;
+  const h = tt.offsetHeight;
+  let posX = x + pad;
+  let posY = y - h - pad;
+  if (posX + w > window.innerWidth) posX = x - w - pad;
+  if (posY < 10) posY = y + pad;
+  tt.style.left = posX + 'px';
+  tt.style.top = posY + 'px';
+}
+function hideChartTooltip() {
+  const tt = document.getElementById('chartTooltip');
+  if (tt) tt.style.display = 'none';
+}
 
 // ── File Upload Handler ──
 function handleFile(file) {
@@ -385,17 +467,43 @@ if (exportBtn) {
   });
 }
 
-// ── Overlay Toggles (Insights / Locations / Deep Dive) ──
-document.getElementById('insightsBtn')?.addEventListener('click', () => {
+// ── Analytics Overlay & Sub-tab Switching ──
+function openAnalyticsOverlay(subtabId) {
   const ov = document.getElementById('analyticsOverlay') || document.getElementById('insightsOverlay') || document.querySelector('.analytics-overlay');
-  if (ov) ov.classList.add('open');
-});
-document.getElementById('overlayBtn')?.addEventListener('click', () => {
-  const ov = document.getElementById('locationOverlay') || document.getElementById('labOverlay') || document.querySelector('.analytics-overlay');
-  if (ov) ov.classList.add('open');
-});
-document.getElementById('closeOverlayBtn')?.addEventListener('click', () => {
+  if (ov) {
+    ov.classList.add('open');
+    if (subtabId) switchOverlayTab(subtabId);
+  }
+}
+function closeAnalyticsOverlay() {
   document.querySelectorAll('.analytics-overlay, .location-overlay').forEach(o => o.classList.remove('open'));
+}
+function switchOverlayTab(tabId) {
+  document.querySelectorAll('#overlayTabs .a-tab, .analytics-tabs .a-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.atab === tabId);
+  });
+  document.querySelectorAll('.a-tab-pane').forEach(p => {
+    p.classList.toggle('active', p.id === 'atab-' + tabId);
+  });
+}
+
+document.getElementById('insightsBtn')?.addEventListener('click', () => openAnalyticsOverlay('trends'));
+document.getElementById('overlayBtn')?.addEventListener('click', () => openAnalyticsOverlay());
+document.querySelectorAll('.analytics-close, #closeOverlayBtn').forEach(btn => {
+  btn.addEventListener('click', closeAnalyticsOverlay);
+});
+document.getElementById('overlayTabs')?.addEventListener('click', e => {
+  const tab = e.target.closest('.a-tab');
+  if (tab && tab.dataset.atab) switchOverlayTab(tab.dataset.atab);
+});
+
+// Escape key closes drawers, overlays, and tooltip
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    if (S.drawerOpen) { closeDrawer(); closeDayDrawer(); }
+    closeAnalyticsOverlay();
+    hideChartTooltip();
+  }
 });
 
 // ═══════════════════════════════════════════════════════
@@ -680,14 +788,14 @@ button, input, textarea, select { font: inherit; }
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.07), 0 1px 1px rgba(0, 0, 0, 0.04);
 }
 
-/* ── Slide-Over Drawers ── */
-.drawer-backdrop {
+/* ── Slide-Over Drawers & Backdrops ── */
+.drawer-backdrop, .drawer-overlay {
   position: fixed; inset: 0; z-index: 199;
   background: rgba(15, 23, 42, 0.45); backdrop-filter: blur(2px);
   opacity: 0; pointer-events: none;
   transition: opacity .2s ease;
 }
-.drawer-backdrop.open { opacity: 1; pointer-events: auto; }
+.drawer-backdrop.open, .drawer-overlay.open { opacity: 1; pointer-events: auto; }
 .slide-drawer {
   position: fixed; top: 0; right: 0; bottom: 0;
   width: min(520px, 92vw); z-index: 200;
@@ -698,6 +806,155 @@ button, input, textarea, select { font: inherit; }
   overflow-y: auto;
 }
 .slide-drawer.open { transform: translate3d(0, 0, 0); }
+
+/* ── Analytics Overlay Layer (Clip-path wipe) ── */
+.analytics-overlay {
+  position: fixed;
+  left: calc(268px + 24px); right: 12px; top: 12px; bottom: 12px;
+  z-index: 90;
+  background: var(--rail-bg); border: 1px solid var(--rail-border); border-radius: 8px;
+  padding: 14px; display: flex; flex-direction: column; gap: 8px;
+  overflow: hidden;
+  opacity: 0; pointer-events: none;
+  clip-path: inset(0 100% 0 0 round 8px);
+  transform: translateZ(0);
+  transition: opacity .18s ease, clip-path .55s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.analytics-overlay.open {
+  opacity: 1; pointer-events: auto;
+  clip-path: inset(0 0 0 0 round 8px);
+}
+.analytics-topbar {
+  background: transparent; border: 1px solid rgba(255,255,255,.22);
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 0 16px; height: 50px; min-height: 50px; flex-shrink: 0; border-radius: 8px;
+}
+.analytics-topbar h2 { margin: 0; font-size: 14px; font-weight: 700; color: #fff; font-family: var(--mono); }
+.analytics-close {
+  height: 32px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.10);
+  border-radius: 4px; color: #ccc; font-size: 11px; font-weight: 600; cursor: pointer;
+  font-family: var(--mono); padding: 0 14px; transition: background .14s, color .14s;
+}
+.analytics-close:hover { background: rgba(255,255,255,.14); color: #fff; }
+.analytics-tabs {
+  background: rgba(255,255,255,.035); border-bottom: 1px solid rgba(255,255,255,.14);
+  display: flex; gap: 4px; padding: 0 8px; flex-shrink: 0; border-radius: 6px 6px 0 0; overflow-x: auto;
+}
+.a-tab {
+  height: 38px; border: 0; background: transparent; color: #8D96A3; font-size: 11.5px;
+  font-weight: 600; cursor: pointer; font-family: var(--mono); padding: 0 14px;
+  border-bottom: 2px solid transparent; transition: color .14s, border-bottom-color .14s;
+  letter-spacing: .02em; white-space: nowrap;
+}
+.a-tab:hover { color: #F4F6F8; }
+.a-tab.active { color: #F8FAFC; border-bottom-color: #F8FAFC; }
+.analytics-body {
+  min-height: 0; flex: 1; overflow-y: auto; padding: 16px 20px;
+  background: transparent; border: 1px solid rgba(255,255,255,.22); border-radius: 8px;
+}
+.a-tab-pane { display: none; }
+.a-tab-pane.active { display: block; animation: fadeInTab .24s cubic-bezier(0.16, 1, 0.3, 1) both; }
+@keyframes fadeInTab { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ── Day Drilldown Drawer (Intraday Progression & Root Cause) ── */
+.agent-drawer, .day-drawer {
+  position: fixed; top: 0; right: 0; height: 100%; width: min(720px, 50vw);
+  background: var(--surface); z-index: 200; display: flex; flex-direction: column;
+  transform: translateX(100%); box-shadow: -8px 0 32px rgba(0,0,0,.15);
+  transition: transform .32s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@media (max-width: 1180px) { .agent-drawer, .day-drawer { width: min(720px, calc(100vw - 32px)); } }
+@media (max-width: 520px) { .agent-drawer, .day-drawer { width: 100vw; } }
+.day-drawer.open, .agent-drawer.open { transform: translateX(0); }
+.drawer-header {
+  background: var(--rail-bg); padding: 18px 20px 14px; flex-shrink: 0;
+  position: relative; border-left: 1px solid var(--rail-border);
+}
+.drawer-back {
+  background: rgba(255,255,255,.08); border: 1.5px solid rgba(255,255,255,.12);
+  border-radius: 4px; color: #e8e8e8; font-size: 10px; font-weight: 600;
+  padding: 4px 8px; cursor: pointer; font-family: var(--mono);
+  display: inline-flex; align-items: center; transition: background .15s, transform .12s;
+  letter-spacing: .03em; text-transform: uppercase; margin-bottom: 8px;
+}
+.drawer-back:hover { background: rgba(255,255,255,.16); transform: translateX(-2px); }
+.drawer-close {
+  position: absolute; top: 14px; right: 14px; background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.08); border-radius: 4px; color: #aaa;
+  font-size: 16px; width: 28px; height: 28px; cursor: pointer; display: grid; place-items: center;
+  line-height: 1; transition: background .15s, color .15s, transform .12s;
+}
+.drawer-close:hover { background: rgba(255,255,255,.12); color: #fff; transform: scale(1.05); }
+.drawer-title-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-right: 28px; }
+.drawer-agent-name { font-size: 16px; font-weight: 700; color: #fff; font-family: var(--mono); margin-bottom: 2px; }
+.drawer-agent-sub { font-size: 10px; color: #888; font-family: var(--mono); }
+.drawer-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 10px; }
+@media (max-width: 520px) { .drawer-kpis { grid-template-columns: repeat(2, 1fr) !important; } }
+.drawer-kpi { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.07); border-radius: 5px; padding: 7px 9px; }
+.drawer-kpi:hover { background: rgba(255,255,255,.07); border-color: rgba(255,255,255,.14); }
+.drawer-kpi-label { font-size: 8.5px; color: #888; font-family: var(--mono); font-weight: 600; letter-spacing: .07em; text-transform: uppercase; }
+.drawer-kpi-value { font-size: 14px; font-weight: 700; color: #e8e8e8; font-family: var(--mono); margin-top: 2px; }
+.drawer-kpi-sub { font-size: 8.5px; color: #666; font-family: var(--mono); margin-top: 1px; }
+.drawer-body { flex: 1; overflow-y: auto; padding: 14px 18px; border-left: 1px solid var(--line); }
+.drawer-section { margin-bottom: 16px; }
+.drawer-section h4 { font-size: 9.5px; font-weight: 700; color: var(--muted); font-family: var(--mono); letter-spacing: .07em; text-transform: uppercase; margin: 0 0 8px; padding-bottom: 4px; border-bottom: 1px solid var(--line); }
+.rc-card { background: var(--surface-2); border: 1px solid var(--line); border-radius: 6px; padding: 12px; margin-bottom: 14px; }
+.rc-title { font-size: 10px; font-weight: 700; color: var(--muted); font-family: var(--mono); letter-spacing: .07em; text-transform: uppercase; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+.rc-meter-track { height: 16px; background: rgba(0,0,0,0.06); border: 1px solid var(--line); border-radius: 4px; overflow: hidden; display: flex; margin-bottom: 8px; }
+.rc-meter-fill { height: 100%; transition: width 0.6s cubic-bezier(.16, 1, .3, 1); }
+.rc-legend { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-family: var(--mono); font-size: 10.5px; }
+.rc-legend-item { display: flex; align-items: center; gap: 6px; background: var(--surface); padding: 5px 8px; border-radius: 4px; border: 1px solid var(--line); }
+.rc-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+.rc-val { margin-left: auto; font-weight: 700; color: var(--ink); }
+.rc-takeaway { margin-top: 8px; font-size: 11px; font-family: var(--mono); line-height: 1.45; background: var(--surface); padding: 8px 10px; border-radius: 4px; border: 1px solid var(--line); }
+.hourly-gos-chart { display: flex; align-items: flex-end; gap: 3px; height: 110px; padding: 20px 8px 6px; margin-bottom: 6px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
+.h-gos-col { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end; position: relative; min-width: 0; cursor: pointer; }
+.h-gos-col:hover .h-gos-bar { opacity: .85; transform: scaleY(1.04); transform-origin: bottom; }
+.h-gos-col.active .h-gos-bar { box-shadow: 0 0 0 2px var(--ink); }
+.h-gos-bar { width: 100%; max-width: 18px; border-radius: 3px 3px 0 0; min-height: 4px; transition: height 0.5s cubic-bezier(.16, 1, .3, 1), opacity .15s; }
+.h-gos-val { position: absolute; top: -16px; font-size: 8px; font-family: var(--mono); font-weight: 600; color: var(--ink); white-space: nowrap; }
+.h-gos-lbl { font-size: 8.5px; font-family: var(--mono); color: var(--muted); margin-top: 4px; }
+.cum-gos-wrap { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 10px; margin-bottom: 8px; }
+.cum-gos-svg { width: 100%; display: block; }
+.hour-detail { background: var(--surface-2); border: 1px solid var(--line); border-radius: 6px; padding: 0; margin-bottom: 12px; overflow: hidden; max-height: 0; opacity: 0; transition: max-height .3s ease, opacity .25s ease, padding .25s ease; }
+.hour-detail.open { max-height: 500px; opacity: 1; padding: 12px; }
+.hour-detail-title { font-size: 11.5px; font-weight: 700; color: var(--ink); font-family: var(--mono); margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; }
+.hour-detail-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 8px; }
+.hd-stat { background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 6px 8px; text-align: center; }
+.hd-stat-label { font-size: 8px; color: var(--muted); font-family: var(--mono); font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
+.hd-stat-value { font-size: 14px; font-weight: 700; color: var(--ink); font-family: var(--mono); margin-top: 2px; }
+.hd-stat-sub { font-size: 8.5px; color: var(--muted); font-family: var(--mono); margin-top: 1px; }
+.hd-narrative { font-size: 10.5px; font-family: var(--mono); line-height: 1.5; color: var(--ink); background: var(--surface); padding: 8px 10px; border-radius: 4px; border: 1px solid var(--line); }
+
+/* ── Operational Health Bar Gauge ── */
+.health-bar-wrap { margin-top: 6px; padding: 8px 10px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 6px; }
+.health-bar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.health-bar-label { font-size: 8.5px; font-weight: 700; font-family: var(--mono); letter-spacing: .07em; text-transform: uppercase; color: var(--muted); }
+.health-bar-score { font-size: 11px; font-weight: 700; font-family: var(--mono); color: var(--ink); }
+.health-bar-track { height: 7px; background: rgba(0,0,0,0.06); border: 1px solid var(--line); border-radius: 4px; overflow: hidden; margin-bottom: 6px; }
+.health-bar-fill { height: 100%; border-radius: 3px; background: var(--ok); transition: width 0.6s cubic-bezier(.16, 1, .3, 1), background 0.3s ease; }
+.health-bar-breakdown { display: flex; gap: 8px; flex-wrap: wrap; font-size: 9px; font-family: var(--mono); color: var(--muted); }
+.health-bar-item { display: inline-flex; align-items: center; gap: 4px; }
+.health-bar-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+
+/* ── Day Comparator ── */
+.comparator-controls { display: flex; align-items: flex-end; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+.comp-select-group { display: flex; flex-direction: column; gap: 3px; }
+.comp-select-group label { font-size: 8.5px; font-weight: 700; color: var(--muted); font-family: var(--mono); letter-spacing: .07em; text-transform: uppercase; }
+.comp-select { height: 28px; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); font: 10.5px var(--mono); padding: 0 8px; color: var(--ink); }
+.comp-delta { display: inline-flex; align-items: center; gap: 4px; font: 600 10.5px var(--mono); padding: 2px 6px; border-radius: 3px; }
+.comp-delta.improved { color: var(--ok); background: var(--ok-dim); }
+.comp-delta.declined { color: var(--err); background: var(--err-dim); }
+.comp-delta.neutral { color: var(--muted); background: var(--surface-2); }
+
+/* ── Floating Chart Tooltip ── */
+#chartTooltip {
+  position: fixed; display: none; background: rgba(22, 25, 31, 0.94);
+  backdrop-filter: blur(4px); border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #e4e6eb; padding: 8px 12px; border-radius: 6px; font-family: var(--mono);
+  font-size: 11px; z-index: 99999; pointer-events: none;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5); line-height: 1.4;
+}
 
 /* Basic structural CSS & 1-Screen Viewport Fitting (Incident/SLA Canonical) */
 .dashboard-body, .tab-content-area { min-height: 0; flex: 1; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; height: 100%; }
@@ -793,7 +1050,7 @@ button, input, textarea, select { font: inherit; }
   </main>
 </div>
 
-<!-- Drawer -->
+<!-- Standard Record Detail Drawer -->
 <div class="drawer-backdrop" id="drawerBackdrop"></div>
 <div class="slide-drawer" id="slideDrawer">
   <div style="padding:16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line)">
@@ -802,6 +1059,80 @@ button, input, textarea, select { font: inherit; }
   </div>
   <div style="padding:16px" id="drawerBody"></div>
 </div>
+
+<!-- Day Breakdown Drawer (Intraday Progression & Root Cause Laboratory) -->
+<div class="drawer-overlay" id="dayDrawerOverlay"></div>
+<aside class="agent-drawer day-drawer" id="dayDrawer" aria-label="Day Performance Detail">
+  <div class="drawer-header">
+    <button class="drawer-close" id="dayDrawerClose" aria-label="Close day detail">✕</button>
+    <button class="drawer-back" id="dayDrawerBack">← Back to Daily List</button>
+    <div class="drawer-title-row">
+      <div class="drawer-agent-name" id="dayDrawerTitle">Date Detail</div>
+      <button class="btn secondary" id="dlDayCsv" style="height:26px;padding:0 8px;font-size:10px">CSV</button>
+    </div>
+    <div class="drawer-agent-sub" id="dayDrawerSub">Intraday progression &amp; root cause breakdown</div>
+    <div class="drawer-kpis" id="dayDrawerKpis">
+      <div class="drawer-kpi"><div class="drawer-kpi-label">Volume</div><div class="drawer-kpi-value" id="ddVol">—</div><div class="drawer-kpi-sub">Total records</div></div>
+      <div class="drawer-kpi"><div class="drawer-kpi-label">Completed</div><div class="drawer-kpi-value" id="ddHandled">—</div><div class="drawer-kpi-sub">Handled</div></div>
+      <div class="drawer-kpi"><div class="drawer-kpi-label">Compliance</div><div class="drawer-kpi-value" id="ddCompliance" style="color:var(--ok)">—</div><div class="drawer-kpi-sub">Within SLA/target</div></div>
+      <div class="drawer-kpi"><div class="drawer-kpi-label">Breaches / Drops</div><div class="drawer-kpi-value" id="ddBreaches" style="color:var(--err)">—</div><div class="drawer-kpi-sub">Out of SLA</div></div>
+    </div>
+  </div>
+  <div class="drawer-body" id="dayDrawerBody">
+    <div class="rc-card" id="dayRCA">
+      <div class="rc-title"><span>Root Cause Breakdown</span><span class="badge" id="dayStatusBadge">Analyzing</span></div>
+      <div class="rc-meter-track">
+        <div class="rc-meter-fill" id="rcSegA" style="width:60%;background:var(--chart-amber)"></div>
+        <div class="rc-meter-fill" id="rcSegB" style="width:40%;background:var(--chart-red)"></div>
+      </div>
+      <div class="rc-legend">
+        <div class="rc-legend-item"><div class="rc-dot" style="background:var(--chart-amber)"></div><span>Primary Delay</span><span class="rc-val" id="rcValA">—</span></div>
+        <div class="rc-legend-item"><div class="rc-dot" style="background:var(--chart-red)"></div><span>Secondary / Drop</span><span class="rc-val" id="rcValB">—</span></div>
+      </div>
+      <div class="rc-takeaway" id="dayTakeaway">Operational takeaway summary</div>
+    </div>
+    <div class="drawer-section">
+      <h4>Intraday Metric Progression</h4>
+      <div class="cum-gos-wrap"><svg id="dayProgressionSvg" class="cum-gos-svg" viewBox="0 0 500 130" preserveAspectRatio="xMidYMid meet"></svg></div>
+    </div>
+    <div class="drawer-section">
+      <h4>Hourly Breakdown — Click bar for detail</h4>
+      <div class="hourly-gos-chart" id="dayHourlyBars"></div>
+    </div>
+    <div class="hour-detail" id="hourDetailPanel">
+      <div class="hour-detail-title"><span id="hdTitle">Hour Detail</span><span class="badge" id="hdBadge">Selected</span></div>
+      <div class="hour-detail-grid" id="hdGrid"></div>
+      <div class="hd-narrative" id="hdNarrative">Select an hourly column above to inspect operational drivers.</div>
+    </div>
+  </div>
+</aside>
+
+<!-- Analytics Deep-Dive Overlay (Clip-Path Wipe) -->
+<section class="analytics-overlay" id="analyticsOverlay" role="dialog" aria-modal="true">
+  <div class="analytics-topbar">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <h2>Analytics &amp; Operational Insights</h2>
+      <span class="badge">DEEP DIVE</span>
+    </div>
+    <div class="date-filter-strip" id="overlayFilterStrip">
+      <span class="scope-bar-label"><span class="period-pulse-dot"></span> LIVE DATASET</span>
+    </div>
+    <button class="analytics-close" id="analyticsClose">✕ Back to Dashboard</button>
+  </div>
+  <nav class="analytics-tabs" id="overlayTabs" aria-label="Analytics sections">
+    <button class="a-tab active" data-atab="trends">Top Trends</button>
+    <button class="a-tab" data-atab="breakdown">Daily Breakdown</button>
+    <button class="a-tab" data-atab="details">Distribution &amp; Segments</button>
+  </nav>
+  <div class="analytics-body" id="overlayBody">
+    <div class="a-tab-pane active" id="atab-trends"></div>
+    <div class="a-tab-pane" id="atab-breakdown"></div>
+    <div class="a-tab-pane" id="atab-details"></div>
+  </div>
+</section>
+
+<!-- Floating Chart Tooltip -->
+<div id="chartTooltip"></div>
 
 <script>
 // ══════════════════════════════════════════════════════════

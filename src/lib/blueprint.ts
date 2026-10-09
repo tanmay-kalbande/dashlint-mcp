@@ -188,9 +188,9 @@ export function buildDashboardBlueprint(input: {
   if (classified.some((field) => field.confirmMeaning)) warnings.push("Some field roles are uncertain. Resolve the flagged mappings from local inspection or user confirmation before asserting business meaning.");
   if (!input.businessQuestion) warnings.push("No business question supplied; infer a focused question from the dataset, in any domain, and state the chosen scope in the dashboard.");
 
-  const recommendedComponents: string[] = ["kpiCards", "panels", "validation", "generatedOutput", "buttons", "sectionLayouts"];
+  const recommendedComponents: string[] = ["kpiCards", "healthBar", "panels", "validation", "generatedOutput", "buttons", "sectionLayouts", "overlays"];
   if (categories.length) recommendedComponents.push("horizontalBars", "multiSelectFilter");
-  if (timeFields.length) recommendedComponents.push("chartContainer");
+  if (timeFields.length) recommendedComponents.push("chartContainer", "dayDrawer", "dayComparator", "chartTooltip");
   if (ids.length || categories.length) recommendedComponents.push("dataTables", "drawers");
   if (timeFields.length && categories.length) recommendedComponents.push("heatmap");
   recommendedComponents.push("findingCards", "badges", "accessibility");
@@ -203,9 +203,9 @@ export function buildDashboardBlueprint(input: {
     privacy: "Only column metadata was provided to this tool. The AI must read rows and calculate values locally; never send file contents to DashLint.",
     recommendedComponents,
     layoutArchitecture: {
-      tab1: "Executive Overview: 1-screen balanced workspace (.workspace / .overview-split). Left column: .kpi-panel with 2x3 .kpis grid and .validation checks. Right column: .message-panel with textarea.summary-textarea, .rules, and 4-button .actions strip ('Copy msg', 'Insights', '.txt', 'Deep Dive/Locations'). Crucial: Tab 1 must NOT scroll on desktop — both panels must match 100% height.",
-      tab2: timeFields.length ? "Trends & Analysis: Stacked SVG trend charts (.chart-container) and segment distributions (.seg-grid)." : "Distribution & Rankings: Horizontal progress bars (.hbar-row) and category scorecards.",
-      tab3: ids.length ? "Record Explorer: Searchable, sortable data table (.data-table) with row-click detail drawer (.slide-drawer)." : "Deep Dive: Detailed breakdown matrices and category tables.",
+      tab1: "Executive Overview: 1-screen balanced workspace (.workspace / .overview-split). Left column: .kpi-panel with 2x3 .kpis grid, Operational Health Bar gauge (.health-bar-wrap), and .validation checks. Right column: .message-panel with textarea.summary-textarea, .rules, and 4-button .actions strip ('Copy msg', 'Insights', '.txt', 'Deep Dive/Locations'). Clicking 'Insights' wipes open the full .analytics-overlay with sub-tabs. Crucial: Tab 1 must NOT scroll on desktop — both panels must match 100% height.",
+      tab2: timeFields.length ? "Trends & Analysis: Stacked SVG trend charts (.chart-container) with interactive probe (#chartTooltip), day breakdown table with row click to .day-drawer, and segment distributions (.seg-grid)." : "Distribution & Rankings: Horizontal progress bars (.hbar-row) and category scorecards.",
+      tab3: ids.length ? "Record Explorer: Searchable, sortable data table (.data-table) with row-click detail drawer (.slide-drawer) or day comparator (.comparator-controls)." : "Deep Dive: Detailed breakdown matrices and category tables.",
     },
     fieldMappings: classified,
     metricRecipes,
