@@ -110,8 +110,9 @@ button, input, textarea, select { font: inherit; }
   overflow: hidden;
 }
 
-/* Keep overflow in designated content panes; never make the document scroll. */
-.rail, .main, .dashboard-body { min-width: 0; min-height: 0; overflow: hidden; }
+/* Keep overflow in designated content panes; rail width is strictly preserved. */
+.main, .dashboard-body { min-width: 0; min-height: 0; overflow: hidden; }
+.rail { width: 268px; min-width: 268px; max-width: 268px; flex-shrink: 0; min-height: 0; overflow: hidden; box-sizing: border-box; }
 .dashboard-body { overflow: auto; overscroll-behavior: contain; }
 
 /* ── UNIVERSAL SLEEK SCROLLBAR SYSTEM ── */
@@ -166,12 +167,13 @@ button, input, textarea, select { font: inherit; }
      ══════════════════════════════════════════════════════════════ */
   sidebarCssTemplate: `/* ── SIDEBAR / LEFT RAIL (Incident Pulse canonical) ── */
 .rail {
-  min-width: 0; min-height: 0;
+  width: 268px; min-width: 268px; max-width: 268px; flex-shrink: 0; box-sizing: border-box;
+  min-height: 0;
   background: var(--rail-bg); color: #fff;
   border: 1px solid var(--rail-border); border-radius: 8px;
-  padding: 18px 14px;
+  padding: 16px 14px;
   display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto;
-  gap: 14px; overflow: hidden;
+  gap: 12px; overflow: hidden;
 }
 
 .brand { display: flex; align-items: center; gap: 11px; min-width: 0; }
@@ -204,34 +206,42 @@ button, input, textarea, select { font: inherit; }
   background: #4B5563;
   box-shadow: 0 0 0 3px rgba(75, 85, 99, 0.25);
   display: inline-block;
+  flex-shrink: 0;
 }
 
-.brand-title { min-width: 0; }
+.brand-title { min-width: 0; overflow: hidden; }
 .brand-title h1 { margin: 0; font-size: 15px; line-height: 1.1; color: #fff; font-weight: 700; letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .brand-title p { margin: 3px 0 0; color: #888; font-size: 11px; font-family: var(--mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-.scope-chip { font-size: 9.5px; color: #888; font-family: var(--mono); font-weight: 600; display: flex; align-items: center; gap: 6px; }
+.scope-chip { font-size: 9.5px; color: #888; font-family: var(--mono); font-weight: 600; display: flex; align-items: center; gap: 6px; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 
 .side-metrics { min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 8px; overflow: hidden; }
 .side-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; border-bottom: 1px solid rgba(255,255,255,.07); padding-bottom: 6px; }
-.side-head h2 { margin: 0; font-size: 11px; color: #888; font-family: var(--mono); font-weight: 600; letter-spacing: .07em; text-transform: uppercase; }
+.side-head h2 { margin: 0; font-size: 11px; color: #888; font-family: var(--mono); font-weight: 600; letter-spacing: .07em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 .metric-list {
   min-height: 0; display: flex; flex-direction: column; justify-content: space-between;
-  overflow: hidden; background: transparent; border: none; padding: 2px 0;
+  overflow-y: auto; overflow-x: hidden; background: transparent; border: none; padding: 2px 0; gap: 2px;
 }
 
 .side-card {
-  display: flex; justify-content: space-between; align-items: center;
-  background: transparent; padding: 5px 4px; min-width: 0;
-  border-bottom: 1px solid rgba(255,255,255,.04);
-  transition: background .12s;
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center;
+  background: transparent; padding: 5px 6px; min-width: 0;
+  border-bottom: 1px solid rgba(255,255,255,.05); border-radius: 4px;
+  transition: background .12s; box-sizing: border-box;
 }
 .side-card:last-child { border-bottom: none; }
-.side-card:hover { background: rgba(255,255,255,.03); border-radius: 3px; }
-.side-card label { font-size: 10px; color: #666; font-family: var(--mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.side-card strong { font-size: 13px; color: #e8e8e8; font-weight: 600; white-space: nowrap; font-family: var(--mono); }
-.side-card.accent { background: rgba(75, 85, 99, 0.12); border-radius: 4px; }
+.side-card:hover { background: rgba(255,255,255,.04); }
+.side-card label {
+  font-size: 10px; color: #888; font-family: var(--mono);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
+}
+.side-card strong {
+  font-size: 12.5px; color: #e8e8e8; font-weight: 600;
+  white-space: nowrap; font-family: var(--mono); text-align: right;
+  flex-shrink: 0; padding-left: 4px;
+}
+.side-card.accent { background: rgba(75, 85, 99, 0.14); }
 .side-card.accent strong { color: #d0d5dd; }
 
 .credit { border-top: 1px solid rgba(255,255,255,.07); padding-top: 10px; color: #444; font-size: 10px; font-family: var(--mono); line-height: 1.5; }
@@ -721,6 +731,10 @@ details[open] summary::before, .calc-toggle[open] summary::before { content: '�
       "Number count-ups: 600ms with easeOutCubic (1 - Math.pow(1 - t, 3)). Typewriter effects for generated output: 20-55ms per character with 180ms pause at punctuation. All animations must respect prefers-reduced-motion by skipping to final state.",
     noTextCardPiles:
       "STRICT ANTI-PATTERN: Never generate piles, stacks, or lists of text cards (such as repeated .finding-card blocks under 'Key Findings'). Executive summaries and written takeaways belong exclusively in the Generated Output panel (.gen-output). Data insights must be communicated visually through interactive KPI cards, horizontal bars, procedural SVG trend charts, heatmaps, and tables.",
+    sidebarTextIntegrity:
+      "STRICT INVARIANT — ZERO SIDEBAR TEXT CUT-OFF: The left rail (.rail) must have a guaranteed width: 268px with min-width: 268px on desktop and box-sizing: border-box. All metric rows (.side-card) must use grid-template-columns: minmax(0, 1fr) auto with gap: 8px. Metric labels in column 1 truncate with text-overflow: ellipsis, while metric values (strong) in column 2 remain flex-shrink: 0, text-align: right, and 100% visible. Never allow numbers, counts, dates, or currency figures in the sidebar snapshot to be clipped or truncated at the right edge.",
+    canonicalDayDrawer:
+      "STRICT INVARIANT — CANONICAL SLA-PULSE DAYWISE BREAKDOWN DRAWER: When drilling down into any day, date, month, or batch, NEVER dump a plain HTML table into a basic white slide drawer. ALWAYS open the canonical SLA-Pulse DayDrawer (.day-drawer, width: min(720px, 50vw)) featuring: (1) dark header (background: var(--rail-bg)) with back button ('← Back to Daily List'), close button ('✕'), date title, subtitle, and 4-7 compact KPI metric chips (.drawer-kpis); (2) Root Cause Breakdown card (.rc-card) with proportional 2-tone meter track (.rc-meter-track) and operational takeaway callout; (3) Active contributors/agents chips; (4) Cumulative/running progression SVG line chart (.cum-gos-wrap) with 80% (green) and 60% (amber) target dashed lines and hover probe tooltips (#chartTooltip); (5) Intraday hourly/time-slice clickable bar chart (.hourly-gos-chart); (6) Expandable .hour-detail panel displaying that hour's statistics grid and dynamic operational narrative explanation.",
     shellChangePolicy:
       "Do not rewrite or restyle the app root, rail, header, upload control, navigation, or shared overlay/drawer code. Make dataset-specific changes only below the fixed header inside the existing main content region, plus the data bindings and local CSV/Excel parsing needed for the existing sidebar snapshot and uploader.",
   },
@@ -743,7 +757,8 @@ details[open] summary::before, .calc-toggle[open] summary::before { content: '�
   ],
 } as const;
 
-export const SECTION_LAYOUT_CSS = `/* ── Section Layouts & 1-Screen Viewport Fitting (Incident/SLA Canonical) ── */
+export const SECTION_LAYOUT_CSS = `
+/* ── Section Layouts & 1-Screen Viewport Fitting (Incident-SLA Canonical) ── */
 .tab-content-area, .dashboard-body {
   min-height: 0; flex: 1; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; height: 100%;
 }
@@ -1028,9 +1043,13 @@ export const HTML_SNIPPETS = {
       </div>
       <div class="rc-takeaway" id="dayTakeaway">Operational takeaway summary</div>
     </div>
+    <div class="drawer-section" id="dayContribSection">
+      <h4>Active Contributors / Entities</h4>
+      <div id="dayContribList" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+    </div>
     <div class="drawer-section">
       <h4>Intraday Metric Progression</h4>
-      <div class="cum-gos-wrap"><svg id="dayProgressionSvg" class="cum-gos-svg" viewBox="0 0 500 130" preserveAspectRatio="xMidYMid meet"></svg></div>
+      <div class="cum-gos-wrap"><svg id="dayProgressionSvg" class="cum-gos-svg" viewBox="0 0 500 135" preserveAspectRatio="xMidYMid meet"></svg></div>
     </div>
     <div class="drawer-section">
       <h4>Hourly Breakdown — Click bar for detail</h4>

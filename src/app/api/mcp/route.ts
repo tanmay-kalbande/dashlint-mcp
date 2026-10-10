@@ -9,7 +9,7 @@ import {
 } from "@/lib/generation-guide";
 import { DASHBOARD_SHELL_CONTRACT } from "@/lib/shell-contract";
 import { getFullDashboardTemplate, JS_UTILITIES } from "@/lib/dashboard-template";
-import { getCompleteStylesheet, HTML_SNIPPETS, SECTION_LAYOUT_CSS, getComponentPatterns, getAvailableComponents } from "@/lib/shell-contract";
+import { getComponentPatterns, getAvailableComponents } from "@/lib/shell-contract";
 import { incrementCounter } from "@/lib/counter";
 import { buildDashboardBlueprint } from "@/lib/blueprint";
 
