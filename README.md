@@ -29,15 +29,20 @@ The MCP is an orchestration layer with a schema-aware blueprint tool: it accepts
 
 ## MCP tools
 
-| Tool | Purpose |
-|------|---------|
-| `get_dashboard_creation_workflow()` | Start here; returns the end-to-end workflow and all playbooks in one response. |
-| `build_dashboard_blueprint(fields, businessQuestion?, audience?)` | Tailors field-role matches, candidate metric recipes, chart plans, and uncertainty warnings to locally profiled column metadata. Accepts no row data or sample values. |
-| `get_shell_preservation_spec()` | Strict app-shell and exact upload-position invariants. |
-| `get_data_insight_playbook()` | Local data profiling, metric, insight, and uncertainty instructions. |
-| `get_dashboard_composition_playbook()` | Adaptive narrative, layout, chart selection, and visual hierarchy. |
-| `get_dashboard_interaction_playbook()` | Upload, filters, cross-filtering, drawers, responsive and accessibility behavior. |
-| `get_dashboard_completion_checklist()` | Final data, shell, interaction, and responsive review. |
+| Tool | Status | Purpose |
+|------|--------|---------|
+| `get_dashboard_creation_workflow()` | Active | Start here; returns the end-to-end workflow and all playbooks in one response. |
+| `build_dashboard_blueprint(fields, businessQuestion?, audience?, rowCount?)` | Active (v2.0) | Schema-aware implementation blueprint: single justified roles per field, additivity classes, default aggregations, grain detection, ratio formulas, local checks, and askUser questions. Accepts no row data or sample values. |
+| `get_dashboard_kit(components?, domain?, brand?, credit?, mode?)` | Active (v2.0) | Primary dashboard assembly tool. In CLI mode, returns `npx dashlint-kit` commands and API reference. In inline mode, returns deduplicated wireframe, component patterns, domain packs, and JS utilities within a 35 KB budget. |
+| `get_version()` | Active (v2.0) | Returns DashLint MCP server version (2.0.0), supported features, and compatibility matrix. |
+| `get_data_insight_playbook()` | Active | Local data profiling, metric, insight, and uncertainty instructions. |
+| `get_dashboard_composition_playbook()` | Active | Adaptive narrative, layout, chart selection, and visual hierarchy. |
+| `get_dashboard_interaction_playbook()` | Active | Upload, filters, cross-filtering, drawers, responsive and accessibility behavior. |
+| `get_dashboard_completion_checklist()` | Active | Final data, shell, interaction, and responsive review. |
+| `get_shell_preservation_spec()` | Deprecated | Legacy shell contract. Prefer `get_dashboard_kit()`. |
+| `get_full_dashboard_template()` | Deprecated | Legacy wireframe template. Prefer `get_dashboard_kit()`. |
+| `get_component_patterns(components)` | Deprecated | Legacy component CSS/HTML snippets. Prefer `get_dashboard_kit()`. |
+| `get_js_utilities()` | Deprecated | Legacy pre-wired JavaScript utilities. Prefer `get_dashboard_kit()`. |
 
 No tool accepts raw rows, files, or datasets. The assistant creates and edits dashboard files in the user's project.
 

@@ -1,11 +1,5 @@
-/**
- * Dashboard wireframe template and JS utilities for DashLint MCP.
- * 
- * Architecture: The tool system splits into 3 focused responses:
- * 1. Wireframe (this file) — fixed shell: tokens + frame + sidebar + header + empty main
- * 2. Component patterns (shell-contract.ts) — AI picks only what it needs
- * 3. JS utilities (this file) — parser, animations, filters, drawer, upload
- */
+import { CreditConfig, renderCreditMarkup } from "./shell-contract";
+
 
 export const SECTION_TEMPLATES = {
   kpiGrid: {
@@ -119,9 +113,20 @@ details[open] summary::before, .calc-toggle[open] summary::before { content: '�
 
 export const JS_UTILITIES = `
 /* ═══════════════════════════════════════════════════════
-   DASHLINT DASHBOARD UTILITIES
+   DASHLINT DASHBOARD UTILITIES v2.0
    Copy-ready JS for every generated dashboard.
    ═══════════════════════════════════════════════════════ */
+
+// ── HTML Escape Helper (A9) ──
+function esc(s) {
+  if (s == null) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 
 // ── Global State ──
 const S = {
@@ -135,92 +140,199 @@ const S = {
   lastOpener: null,
 };
 
-// ── CSV Parser (hand-written, ~50 lines) ──
-function parseCSV(text) {
-  const lines = text.split(/\\r?\\n/).filter(l => l.trim());
-  if (!lines.length) return { columns: [], rows: [] };
-  const sep = (lines[0].match(/\\t/g) || []).length > (lines[0].match(/,/g) || []).length ? '\\t' : ',';
-  function splitRow(line) {
-    const cells = []; let cur = '', inQ = false;
-    for (let i = 0; i < line.length; i++) {
-      const c = line[i];
-      if (c === '"') { if (inQ && line[i+1] === '"') { cur += '"'; i++; } else { inQ = !inQ; } }
-      else if (c === sep && !inQ) { cells.push(cur.trim()); cur = ''; }
-      else { cur += c; }
+// ── Modal Accessibility & Inert Management (A16) ──
+function setModalInert(isInert) {
+  const appRoot = document.getElementById('appRoot') || document.querySelector('.shell') || document.querySelector('.main');
+  if (appRoot) {
+    if (isInert) {
+      appRoot.setAttribute('inert', '');
+      if ('inert' in appRoot) appRoot.inert = true;
+    } else {
+      appRoot.removeAttribute('inert');
+      if ('inert' in appRoot) appRoot.inert = false;
     }
-    cells.push(cur.trim());
-    return cells;
   }
-  const columns = splitRow(lines[0]);
-  const rows = [];
-  for (let i = 1; i < lines.length; i++) {
-    const vals = splitRow(lines[i]);
-    if (vals.length < 2) continue;
-    const obj = {};
-    columns.forEach((col, j) => { obj[col] = vals[j] ?? ''; });
-    rows.push(obj);
-  }
-  return { columns, rows };
 }
 
-// ── Excel Parser (SheetJS CDN) ──
+// ── CSV Parser (A11: BOM strip \uFEFF, character state machine for quotes & newlines, delimiter detection) ──
+function parseCSV(text) {
+    if (!text) return { columns: [], headers: [], rows: [] };
+    if (text.charCodeAt(0) === 0xFEFF || text.startsWith('\\uFEFF') || text.startsWith('\uFEFF')) {
+        text = text.replace(/^(\\uFEFF|\uFEFF)/, '');
+    }
+
+    // Detect delimiter from first line
+    const firstLineEnd = text.search(/\\r?\\n/);
+    const sample = firstLineEnd === -1 ? text : text.slice(0, firstLineEnd);
+    const commaCount = (sample.match(/,/g) || []).length;
+    const semiCount = (sample.match(/;/g) || []).length;
+    const tabCount = (sample.match(/\\t/g) || []).length;
+    let sep = ',';
+    if (tabCount > commaCount && tabCount > semiCount) sep = '\\t';
+    else if (semiCount > commaCount) sep = ';';
+
+    const rows = [];
+    let curRow = [];
+    let curCell = '';
+    let inQuotes = false;
+
+    for (let i = 0; i < text.length; i++) {
+        const ch = text[i];
+        if (ch === '"') {
+            if (inQuotes && text[i + 1] === '"') {
+                curCell += '"';
+                i++;
+            } else {
+                inQuotes = !inQuotes;
+            }
+        } else if (ch === sep && !inQuotes) {
+            curRow.push(curCell.trim());
+            curCell = '';
+        } else if ((ch === '\\r' || ch === '\\n') && !inQuotes) {
+            if (ch === '\\r' && text[i + 1] === '\\n') i++;
+            curRow.push(curCell.trim());
+            curCell = '';
+            if (curRow.length > 1 || (curRow.length === 1 && curRow[0] !== '')) {
+                rows.push(curRow);
+            }
+            curRow = [];
+        } else {
+            curCell += ch;
+        }
+    }
+    if (curCell !== '' || curRow.length > 0) {
+        curRow.push(curCell.trim());
+        if (curRow.length > 1 || (curRow.length === 1 && curRow[0] !== '')) {
+            rows.push(curRow);
+        }
+    }
+
+    if (rows.length === 0) return { columns: [], headers: [], rows: [] };
+    const columns = rows[0];
+    const dataRows = [];
+    for (let r = 1; r < rows.length; r++) {
+        const vals = rows[r];
+        if (vals.length === 1 && vals[0] === '') continue;
+        const obj = {};
+        columns.forEach((col, j) => {
+            obj[col] = vals[j] ?? '';
+        });
+        dataRows.push(obj);
+    }
+    return { columns, headers: columns, rows: dataRows };
+  }
+
+// ── Excel Parser (A12: First non-empty sheet, date shifts & serial numbers) ──
 function parseExcel(buffer) {
   if (typeof XLSX === 'undefined') {
     alert('Excel support requires an internet connection. Please use CSV for offline.');
     return null;
   }
   const wb = XLSX.read(buffer, { type: 'array', cellDates: true });
-  const sheet = wb.Sheets[wb.SheetNames[0]];
-  const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+  let sheet = null;
+  let activeSheetName = '';
+  for (const name of wb.SheetNames) {
+    const s = wb.Sheets[name];
+    if (s && s['!ref']) {
+      sheet = s;
+      activeSheetName = name;
+      break;
+    }
+  }
+  if (!sheet) {
+    sheet = wb.Sheets[wb.SheetNames[0]];
+    activeSheetName = wb.SheetNames[0];
+  }
+  const rawRows = XLSX.utils.sheet_to_json(sheet, { defval: '', raw: false });
+  const rows = rawRows.map(row => {
+    const clean = {};
+    for (const [k, v] of Object.entries(row)) {
+      if (v instanceof Date) {
+        const shifted = new Date(v.getTime() + 12 * 3600 * 1000);
+        clean[k] = shifted.toISOString().split('T')[0];
+      } else {
+        clean[k] = v;
+      }
+    }
+    return clean;
+  });
   const columns = rows.length ? Object.keys(rows[0]) : [];
-  return { columns, rows };
+  return { columns, rows, sheetName: activeSheetName, sheets: wb.SheetNames };
 }
 
-// ── Count-Up Animation (600ms easeOutCubic) ──
+// ── Count-Up Animation (A14: unit preservation, value caching, reduced motion) ──
 function countUp(el, target, opts = {}) {
-  const { duration = 600, prefix = '', suffix = '', decimals = 0 } = opts;
+  if (!el) return;
+  const duration = opts.duration || 600;
+  const prefix = opts.prefix || '';
+  const suffix = opts.suffix || '';
+  const decimals = opts.decimals || 0;
+  const numTarget = typeof target === 'number' ? target : parseFloat(String(target).replace(/[^0-9.-]/g, '')) || 0;
   const prefersRM = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (prefersRM) { el.textContent = prefix + (decimals ? target.toFixed(decimals) : Math.round(target).toLocaleString()) + suffix; return; }
+  const formatVal = (v) => prefix + (decimals ? v.toFixed(decimals) : Math.round(v).toLocaleString()) + suffix;
+  if (prefersRM) {
+    el.textContent = formatVal(numTarget);
+    el._currentValue = numTarget;
+    return;
+  }
   const start = performance.now();
-  const from = parseFloat(el.textContent.replace(/[^0-9.-]/g, '')) || 0;
+  const prevVal = el._currentValue ?? 0;
+  el._currentValue = numTarget;
   function frame(now) {
     let t = Math.min((now - start) / duration, 1);
     t = 1 - Math.pow(1 - t, 3); // easeOutCubic
-    const val = from + (target - from) * t;
-    el.textContent = prefix + (decimals ? val.toFixed(decimals) : Math.round(val).toLocaleString()) + suffix;
+    const val = prevVal + (numTarget - prevVal) * t;
+    el.textContent = formatVal(val);
     if (t < 1) requestAnimationFrame(frame);
+    else el.textContent = formatVal(numTarget);
   }
   requestAnimationFrame(frame);
 }
 
-// ── Typewriter Effect (20-55ms per char, 180ms pause at punctuation) ──
-function typeText(el, text, cb) {
+// ── Typewriter Effect (A15: capped duration, cancellation support) ──
+function typeText(el, text, cb, opts = {}) {
   if (!el) return;
+  el._typeGen = (el._typeGen || 0) + 1;
+  const myGen = el._typeGen;
+  if (typeText.activeTimer) {
+    clearTimeout(typeText.activeTimer);
+    typeText.activeTimer = null;
+  }
+  const maxDuration = opts.maxDuration || 1800;
+  const leadSentenceOnly = opts.leadSentenceOnly || false;
+  const content = leadSentenceOnly ? (text.split(/(?<=[.!?])\\s/)[0] || text) : text;
   const isTA = el.tagName === 'TEXTAREA' || el.tagName === 'INPUT';
   const prefersRM = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (prefersRM) {
-    if (isTA) el.value = text; else el.textContent = text;
+    if (isTA) el.value = content; else el.textContent = content;
     if (cb) cb();
     return;
   }
   let i = 0;
   if (isTA) el.value = ''; else el.textContent = '';
+  const baseDelay = Math.min(30, Math.max(8, Math.floor(maxDuration / Math.max(content.length, 1))));
   function next() {
-    if (i >= text.length) { if (cb) cb(); return; }
+    if (el._typeGen !== myGen) return;
+    if (i >= content.length) {
+      typeText.activeTimer = null;
+      if (cb) cb();
+      return;
+    }
     if (isTA) {
-      el.value += text[i];
+      el.value += content[i];
       el.scrollTop = el.scrollHeight;
     } else {
-      el.textContent += text[i];
+      el.textContent += content[i];
     }
-    const c = text[i]; i++;
-    const pause = /[.!?\\n]/.test(c) ? 180 : (20 + Math.random() * 35);
-    setTimeout(next, pause);
+    const c = content[i];
+    i++;
+    const pause = /[.!?\\n]/.test(c) ? Math.min(baseDelay * 3, 120) : baseDelay;
+    typeText.activeTimer = setTimeout(next, pause);
   }
   next();
 }
 
-// ── Tab Switching ──
+// ── Tab Switching (A6: aliases .tab-panel & .tab-pane) ──
 function switchTab(tabId) {
   S.activeTab = tabId;
   document.querySelectorAll('.nav-tab').forEach(t => {
@@ -228,43 +340,57 @@ function switchTab(tabId) {
     t.classList.toggle('active', isActive);
     t.setAttribute('aria-selected', isActive);
   });
-  document.querySelectorAll('.tab-panel').forEach(p => {
-    p.classList.toggle('active', p.id === 'panel-' + tabId);
+  document.querySelectorAll('.tab-panel, .tab-pane').forEach(p => {
+    p.classList.toggle('active', p.id === 'panel-' + tabId || p.id === tabId);
   });
 }
-document.getElementById('navTabs').addEventListener('click', e => {
+document.getElementById('navTabs')?.addEventListener('click', e => {
   const tab = e.target.closest('.nav-tab');
   if (tab && tab.dataset.tab) switchTab(tab.dataset.tab);
 });
 
-// ── Filter Engine ──
+// ── Filter Engine (A13: empty result state handling) ──
 function applyFilters() {
   S.filtered = S.raw.filter(row => {
     for (const [col, selected] of Object.entries(S.filters)) {
-      if (selected.length && !selected.includes(String(row[col]))) return false;
+      if (selected.length && !selected.includes(String(row[col] ?? ''))) return false;
     }
     return true;
   });
+  const emptyFilterMsg = document.getElementById('emptyFilterState');
+  if (S.filtered.length === 0) {
+    if (emptyFilterMsg) emptyFilterMsg.style.display = 'flex';
+  } else {
+    if (emptyFilterMsg) emptyFilterMsg.style.display = 'none';
+  }
   renderDashboard();
 }
 
+// ── Filter Button Builder (A2: sibling model, A9: escaping, A10: empty-string handling) ──
 function buildFilterButton(col, container) {
-  const values = [...new Set(S.raw.map(r => String(r[col])))].sort();
+  const values = [...new Set(S.raw.map(r => String(r[col] ?? '')))].sort();
   if (values.length < 2 || values.length > 50) return;
   const wrap = document.createElement('div');
   wrap.style.position = 'relative'; wrap.style.display = 'inline-block';
   const btn = document.createElement('button');
   btn.className = 'scope-bar-btn';
   btn.textContent = 'All ' + col;
-  btn.addEventListener('click', () => {
-    const isOpen = btn.classList.toggle('open');
-    document.querySelectorAll('.scope-bar-btn.open').forEach(b => { if (b !== btn) b.classList.remove('open'); });
-  });
   const drop = document.createElement('div');
   drop.className = 'filter-drop';
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isOpen = btn.classList.toggle('open');
+    drop.classList.toggle('open', isOpen);
+    document.querySelectorAll('.scope-bar-btn.open').forEach(b => {
+      if (b !== btn) {
+        b.classList.remove('open');
+        b.nextElementSibling?.classList.remove('open');
+      }
+    });
+  });
   const head = document.createElement('div');
   head.className = 'filter-drop-head';
-  head.innerHTML = \`<span>\${col}</span><div><button data-a="all">All</button> <button data-a="clear">Clear</button></div>\`;
+  head.innerHTML = '<span>' + esc(col) + '</span><div><button data-a=\"all\">All</button> <button data-a=\"clear\">Clear</button></div>';
   head.addEventListener('click', e => {
     const a = e.target.dataset.a;
     if (a === 'all') { drop.querySelectorAll('input').forEach(i => i.checked = true); S.filters[col] = []; }
@@ -276,8 +402,10 @@ function buildFilterButton(col, container) {
   values.forEach(v => {
     const opt = document.createElement('label');
     opt.className = 'filter-opt';
-    const cnt = S.raw.filter(r => String(r[col]) === v).length;
-    opt.innerHTML = \`<input type="checkbox" checked value="\${v}"> \${v} <span class="cnt">\${cnt}</span>\`;
+    const cnt = S.raw.filter(r => String(r[col] ?? '') === v).length;
+    const val = v;
+    const displayLabel = val === '' ? '(none)' : val;
+    opt.innerHTML = '<input type=\"checkbox\" checked value=\"' + esc(v) + '\"> <span>' + esc(displayLabel) + '</span> <span class=\"cnt\">' + cnt + '</span>';
     opt.querySelector('input').addEventListener('change', () => {
       const checked = [...drop.querySelectorAll('input:checked')].map(i => i.value);
       S.filters[col] = checked.length === values.length ? [] : checked;
@@ -295,16 +423,18 @@ function buildFilterButton(col, container) {
   }
 }
 
-// Close dropdowns on outside click
+// Close dropdowns on outside click (A2)
 document.addEventListener('click', e => {
   if (!e.target.closest('.scope-bar-btn') && !e.target.closest('.filter-drop')) {
     document.querySelectorAll('.scope-bar-btn.open').forEach(b => b.classList.remove('open'));
+    document.querySelectorAll('.filter-drop.open').forEach(d => d.classList.remove('open'));
   }
 });
 
-// ── Drawers & Canonical SLA-Pulse Day Breakdown Drawer ──
+// ── Drawers & Focus/Inert Management (A16) ──
 function openDrawer(title, html) {
   S.lastOpener = document.activeElement;
+  setModalInert(true);
   const t = document.getElementById('drawerTitle'); if (t) t.textContent = title;
   const b = document.getElementById('drawerBody'); if (b) b.innerHTML = html;
   document.getElementById('drawerBackdrop')?.classList.add('open');
@@ -316,105 +446,110 @@ function closeDrawer() {
   document.getElementById('drawerBackdrop')?.classList.remove('open');
   document.getElementById('slideDrawer')?.classList.remove('open');
   S.drawerOpen = false;
-  if (S.lastOpener) S.lastOpener.focus();
+  setModalInert(false);
+  if (S.lastOpener && typeof S.lastOpener.focus === 'function') S.lastOpener.focus();
 }
 document.getElementById('drawerBackdrop')?.addEventListener('click', closeDrawer);
 document.getElementById('drawerClose')?.addEventListener('click', closeDrawer);
 
-/**
- * Canonical SLA-Pulse Day Breakdown Drawer Renderer
- * Renders the rich intraday deep dive matching SLA-Pulse:
- * 1. Dark header with 4-7 KPI metrics + CSV export + Back button
- * 2. Root Cause Breakdown card (.rc-card) with dual-color meter track (.rc-meter-track) and dynamic takeaway
- * 3. Active contributors / agents chips (.clickable-agent-pill)
- * 4. Running progression SVG curve (.cum-gos-wrap) with 80%/60% target dashed lines and hover probes (#chartTooltip)
- * 5. Hourly / time-bucket clickable breakdown bar chart (.hourly-gos-chart)
- * 6. Expandable .hour-detail panel displaying the selected hour's statistics grid and operational narrative
- */
+// ── Period / Day Drilldown Drawer (F2: No fabricated defaults, A8: data-tip, A17: dynamic chips) ──
 function openDayDrawer(dayTitle, config = {}) {
-  const drawer = document.getElementById('dayDrawer') || document.querySelector('.day-drawer');
+  const drawer = document.getElementById('dayDrawer') || document.querySelector('.day-drawer') || document.querySelector('.period-drawer');
   const backdrop = document.getElementById('dayDrawerOverlay') || document.querySelector('.drawer-backdrop');
   if (!drawer) return;
 
   S.lastOpener = document.activeElement;
+  setModalInert(true);
   const rows = config.rows || [];
   const titleEl = document.getElementById('dayDrawerTitle') || drawer.querySelector('.drawer-agent-name');
   if (titleEl && dayTitle) titleEl.textContent = dayTitle;
 
   const subEl = document.getElementById('dayDrawerSub') || drawer.querySelector('.drawer-agent-sub');
-  if (subEl) subEl.textContent = config.sub || (rows.length ? (rows.length + ' records · intraday deep dive') : 'Intraday progression & root cause breakdown');
+  if (subEl) subEl.textContent = config.sub || (rows.length ? (rows.length + ' records · drilldown inspection') : '');
 
-  // 1. KPI Cards
-  const kpis = config.kpis || {};
-  const kpiMap = {
-    vol: kpis.volume ?? kpis.total ?? rows.length ?? '—',
-    handled: kpis.handled ?? kpis.completed ?? kpis.inTarget ?? '—',
-    comp: kpis.compliance ?? kpis.rate ?? (rows.length ? '94.3%' : '—'),
-    breaches: kpis.breaches ?? kpis.misses ?? kpis.defects ?? '—',
-  };
-  const ddVol = document.getElementById('ddVol'); if (ddVol) ddVol.textContent = String(kpiMap.vol);
-  const ddHandled = document.getElementById('ddHandled'); if (ddHandled) ddHandled.textContent = String(kpiMap.handled);
-  const ddComp = document.getElementById('ddCompliance');
-  if (ddComp) {
-    ddComp.textContent = String(kpiMap.comp);
-    const numComp = parseFloat(String(kpiMap.comp));
-    if (!isNaN(numComp)) {
-      ddComp.style.color = numComp >= 80 ? 'var(--ok)' : numComp >= 60 ? 'var(--warn)' : 'var(--err)';
+  // 1. KPI Chips (A17: supports config array of 4-7 chips or map)
+  const chipsContainer = document.getElementById('drawerKpis') || drawer.querySelector('.drawer-kpis');
+  if (chipsContainer && Array.isArray(config.kpis)) {
+    chipsContainer.innerHTML = config.kpis.map(chip => 
+      '<div class=\"drawer-kpi\"><span class=\"drawer-kpi-label\">' + esc(chip.label) + '</span><span class=\"drawer-kpi-val\"' + (chip.color ? (' style=\"color:' + esc(chip.color) + '\"') : '') + '>' + esc(chip.value) + '</span>' + (chip.sub ? ('<span class=\"drawer-kpi-sub\">' + esc(chip.sub) + '</span>') : '') + '</div>'
+    ).join('');
+  } else {
+    // Backward compatibility with individual IDs if present
+    const kpis = config.kpis || {};
+    const ddVol = document.getElementById('ddVol'); if (ddVol) ddVol.textContent = kpis.volume != null ? String(kpis.volume) : String(rows.length || '—');
+    const ddHandled = document.getElementById('ddHandled'); if (ddHandled) ddHandled.textContent = kpis.handled != null ? String(kpis.handled) : '—';
+    const ddComp = document.getElementById('ddCompliance');
+    if (ddComp) {
+      const compVal = kpis.compliance ?? kpis.rate ?? (kpis.volume && kpis.handled ? ((kpis.handled / kpis.volume) * 100).toFixed(1) + '%' : '—');
+      ddComp.textContent = String(compVal);
     }
-  }
-  const ddBreaches = document.getElementById('ddBreaches');
-  if (ddBreaches) {
-    ddBreaches.textContent = String(kpiMap.breaches);
-    const nB = parseInt(String(kpiMap.breaches), 10);
-    if (!isNaN(nB) && nB > 0) ddBreaches.style.color = 'var(--err)';
+    const ddBreaches = document.getElementById('ddBreaches');
+    if (ddBreaches) ddBreaches.textContent = kpis.breaches != null ? String(kpis.breaches) : '—';
   }
 
-  // 2. Root Cause Breakdown Card
-  const rca = config.rca || {};
-  const segAPct = rca.segAPct ?? 65;
-  const segBPct = rca.segBPct ?? (100 - segAPct);
-  const segAEl = document.getElementById('rcSegA'); if (segAEl) segAEl.style.width = segAPct + '%';
-  const segBEl = document.getElementById('rcSegB'); if (segBEl) segBEl.style.width = segBPct + '%';
-  const rcValA = document.getElementById('rcValA'); if (rcValA) rcValA.textContent = (rca.valA ?? '—') + (rca.pctA ? (' (' + rca.pctA + '%)') : '');
-  const rcValB = document.getElementById('rcValB'); if (rcValB) rcValB.textContent = (rca.valB ?? '—') + (rca.pctB ? (' (' + rca.pctB + '%)') : '');
-  const rcBadge = document.getElementById('dayStatusBadge');
-  if (rcBadge) {
-    rcBadge.textContent = rca.badgeText || (kpiMap.comp !== '—' ? (kpiMap.comp + ' Compliance') : 'Analyzed');
-    rcBadge.className = 'pill ' + (rca.statusClass || (parseFloat(String(kpiMap.comp)) >= 80 ? 'ok' : 'warn'));
+  // 2. Root Cause Breakdown Card (F2: Hide if no data)
+  const rcCard = document.getElementById('rcCard') || drawer.querySelector('.rc-card');
+  if (config.rca && (config.rca.valA != null || config.rca.segAPct != null)) {
+    if (rcCard) rcCard.style.display = 'block';
+    const segAPct = config.rca.segAPct ?? 0;
+    const segBPct = config.rca.segBPct ?? (100 - segAPct);
+    const segAEl = document.getElementById('rcSegA'); if (segAEl) segAEl.style.width = segAPct + '%';
+    const segBEl = document.getElementById('rcSegB'); if (segBEl) segBEl.style.width = segBPct + '%';
+    const rcValA = document.getElementById('rcValA'); if (rcValA) rcValA.textContent = (config.rca.valA ?? '—') + (config.rca.pctA ? (' (' + config.rca.pctA + '%)') : '');
+    const rcValB = document.getElementById('rcValB'); if (rcValB) rcValB.textContent = (config.rca.valB ?? '—') + (config.rca.pctB ? (' (' + config.rca.pctB + '%)') : '');
+    const rcBadge = document.getElementById('dayStatusBadge');
+    if (rcBadge) {
+      rcBadge.textContent = config.rca.badgeText || 'Analyzed';
+      rcBadge.className = 'pill ' + (config.rca.statusClass || 'neutral');
+    }
+  } else {
+    if (rcCard) rcCard.style.display = 'none';
   }
+
+  // Takeaway callout (F2: Hide if none supplied)
   const takeawayEl = document.getElementById('dayTakeaway');
   if (takeawayEl) {
-    takeawayEl.textContent = rca.takeaway || config.takeaway || 'Root Cause Analysis: Queue delay during peak batch window accounted for the majority of threshold variance.';
+    const text = config.takeaway || config.rca?.takeaway || '';
+    if (text) { takeawayEl.textContent = text; takeawayEl.style.display = 'block'; }
+    else { takeawayEl.style.display = 'none'; }
   }
 
-  // 3. Active Contributors Pills
+  // 3. Active Contributors / Entities
   const contribEl = document.getElementById('dayContribList');
-  if (contribEl && config.contributors && config.contributors.length) {
-    contribEl.innerHTML = config.contributors.map(c => 
-      '<span class="pill neutral clickable-agent-pill" title="' + (c.name || c) + '">👤 <strong>' + (c.name || c) + '</strong>' + (c.count ? (' <span style="opacity:0.7">(' + c.count + ')</span>') : '') + '</span>'
-    ).join('');
+  const contribSection = document.getElementById('dayContribSection');
+  if (config.contributors && config.contributors.length) {
+    if (contribSection) contribSection.style.display = 'block';
+    if (contribEl) {
+      contribEl.innerHTML = config.contributors.map(c => 
+        '<span class=\"pill neutral entity-pill clickable-agent-pill\" title=\"' + esc(c.name || c) + '\">👤 <strong>' + esc(c.name || c) + '</strong>' + (c.count ? (' <span style=\"opacity:0.7\">(' + c.count + ')</span>') : '') + '</span>'
+      ).join('');
+    }
+  } else {
+    if (contribSection) contribSection.style.display = 'none';
   }
 
-  // 4. Intraday Running Progression SVG Chart
+  // 4. Running Progression Chart (F2: No hardcoded points/lines, A8: data-tip)
+  const progWrap = document.getElementById('dayProgressionWrap') || drawer.querySelector('.progress-wrap') || drawer.querySelector('.cum-gos-wrap');
+  const progSection = progWrap;
   const svgEl = document.getElementById('dayProgressionSvg');
-  if (svgEl) {
-    const points = config.progressionPoints || [
-      { h: '08', rate: 92, run: 92 }, { h: '10', rate: 88, run: 90 },
-      { h: '12', rate: 74, run: 84 }, { h: '14', rate: 89, run: 85 },
-      { h: '16', rate: 95, run: 88 }, { h: '18', rate: 94, run: 89 },
-      { h: '20', rate: 96, run: 91 }
-    ];
+  const points = config.progressionPoints || [];
+  if (!points.length) {
+    if (progSection) progSection.style.display = 'none';
+  } else if (svgEl) {
+    if (progWrap) progWrap.style.display = 'block';
     const W = 500, H = 135, padL = 36, padR = 14, padT = 20, padB = 24;
     const cW = W - padL - padR, cH = H - padT - padB;
     const stepX = points.length > 1 ? cW / (points.length - 1) : cW / 2;
 
+    const targetLines = config.targets || (config.baseline != null ? [{ v: config.baseline, l: 'Baseline (' + config.baseline + '%)' }] : []);
     const gridLines = [
-      { v: 100, l: '100%' }, { v: 80, l: '80%', color: 'var(--chart-green)', dash: '4,3' },
-      { v: 60, l: '60%', color: 'var(--chart-amber)', dash: '4,3' }, { v: 0, l: '0%' }
+      { v: 100, l: '100%' },
+      ...targetLines,
+      { v: 0, l: '0%' }
     ].map(g => {
       const y = padT + cH - (g.v / 100) * cH;
-      return '<line x1="' + padL + '" y1="' + y + '" x2="' + (W - padR) + '" y2="' + y + '" stroke="' + (g.color || 'var(--line)') + '" stroke-width="' + (g.dash ? 1.4 : 0.7) + '" stroke-dasharray="' + (g.dash || '2,4') + '" opacity="0.4"/>' +
-        '<text x="' + (padL - 6) + '" y="' + (y + 3) + '" text-anchor="end" fill="var(--muted)" font-size="8" font-family="var(--mono)">' + g.l + '</text>';
+      return '<line x1=\"' + padL + '\" y1=\"' + y + '\" x2=\"' + (W - padR) + '\" y2=\"' + y + '\" stroke=\"' + (g.color || 'var(--line)') + '\" stroke-width=\"' + (g.dash ? 1.4 : 0.7) + '\" stroke-dasharray=\"' + (g.dash || '2,4') + '\" opacity=\"0.4\"/>' +
+        '<text x=\"' + (padL - 6) + '\" y=\"' + (y + 3) + '\" text-anchor=\"end\" fill=\"var(--muted)\" font-size=\"8\" font-family=\"var(--mono)\">' + esc(g.l) + '</text>';
     }).join('');
 
     const polyPts = points.map((p, i) => {
@@ -426,75 +561,76 @@ function openDayDrawer(dayTitle, config = {}) {
     const dots = points.map((p, i) => {
       const x = (padL + i * stepX).toFixed(1);
       const y = (padT + cH - (p.run / 100) * cH).toFixed(1);
-      const dotColor = p.run >= 80 ? 'var(--chart-green)' : p.run >= 60 ? 'var(--chart-amber)' : 'var(--chart-red)';
-      return '<g>' +
-        '<circle cx="' + x + '" cy="' + y + '" r="4.5" fill="' + dotColor + '" stroke="#fff" stroke-width="1.8" class="cum-gos-dot" style="cursor:pointer" ' +
-        'onmouseenter="showChartTooltip(event.clientX, event.clientY, \\'<strong>' + p.h + ':00</strong><br/>Hour Rate: ' + p.rate + '%<br/>Running: ' + p.run + '%\\')" onmouseleave="hideChartTooltip()" />' +
-        '<text x="' + x + '" y="' + (H - 4) + '" text-anchor="middle" fill="var(--muted)" font-size="8" font-family="var(--mono)">' + p.h + '</text>' +
+      const dotColor = p.color || (p.run >= (config.baseline || 80) ? 'var(--chart-green)' : 'var(--chart-amber)');
+      const tipText = (p.label || (p.h + ':00')) + ' — Rate: ' + p.rate + '%' + (p.run != null ? (' (Cum: ' + p.run + '%)') : '');
+      return '<g tabindex=\"0\" role=\"button\" aria-label=\"' + esc(tipText) + '\" data-tip=\"' + esc(tipText) + '\">' +
+        '<circle cx=\"' + x + '\" cy=\"' + y + '\" r=\"4.5\" fill=\"' + dotColor + '\" stroke=\"#fff\" stroke-width=\"1.8\" class=\"progress-dot cum-gos-dot\" style=\"cursor:pointer\" />' +
+        '<text x=\"' + x + '\" y=\"' + (H - 4) + '\" text-anchor=\"middle\" fill=\"var(--muted)\" font-size=\"8\" font-family=\"var(--mono)\">' + esc(p.h || String(i + 1)) + '</text>' +
         '</g>';
     }).join('');
 
-    svgEl.innerHTML = gridLines + '<polyline points="' + polyPts + '" fill="none" stroke="var(--chart-blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>' + dots;
+    svgEl.innerHTML = gridLines + '<polyline points=\"' + polyPts + '\" fill=\"none\" stroke=\"var(--chart-blue)\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" opacity=\"0.6\"/>' + dots;
   }
 
-  // 5. Intraday Hourly Bar Chart
+  // 5. Bucket / Hourly Bar Chart (F2: Hide if none supplied, A8: data-tip)
+  const hourlyWrap = document.getElementById('dayHourlyWrap') || drawer.querySelector('.hourly-gos-chart') || drawer.querySelector('.bucket-chart');
+  const hourlySection = hourlyWrap;
   const barsEl = document.getElementById('dayHourlyBars');
-  if (barsEl) {
-    const hours = config.hourlyData || [
-      { h: '08', rate: 92, count: 12 }, { h: '10', rate: 88, count: 18 },
-      { h: '12', rate: 74, count: 24 }, { h: '14', rate: 89, count: 21 },
-      { h: '16', rate: 95, count: 19 }, { h: '18', rate: 94, count: 15 },
-      { h: '20', rate: 96, count: 8 }
-    ];
+  const hours = config.hourlyData || [];
+  if (!hours.length) {
+    if (hourlySection) hourlySection.style.display = 'none';
+    if (barsEl) barsEl.style.display = 'none';
+  } else if (barsEl) {
+    if (hourlyWrap) hourlyWrap.style.display = 'flex';
+    barsEl.style.display = 'flex';
     barsEl.innerHTML = hours.map((hd, i) => {
-      const barColor = hd.rate >= 80 ? 'var(--chart-green)' : hd.rate >= 60 ? 'var(--chart-amber)' : 'var(--chart-red)';
-      return '<div class="h-gos-col" onclick="selectDayHour(' + i + ')" title="' + hd.h + ':00 — ' + hd.rate + '% (' + hd.count + ' records)">' +
-        '<span class="h-gos-val">' + hd.rate + '%</span>' +
-        '<div class="h-gos-bar" style="height:' + Math.max(hd.rate, 6) + '%;background:' + barColor + '"></div>' +
-        '<span class="h-gos-lbl">' + hd.h + '</span>' +
+      const barColor = hd.color || (hd.rate >= (config.baseline || 80) ? 'var(--chart-green)' : 'var(--chart-amber)');
+      const tipContent = esc((hd.h != null ? (hd.h + ':00') : (hd.label || ('#' + (i+1)))) + ' — ' + hd.rate + '%' + (hd.count ? (' (' + hd.count + ' records)') : ''));
+      return '<div class=\"bucket-col h-gos-col\" tabindex=\"0\" role=\"button\" data-tip=\"' + tipContent + '\" onclick=\"selectDayHour(' + i + ')\">' +
+        '<span class=\"bucket-val h-gos-val\">' + esc(String(hd.rate)) + '%</span>' +
+        '<div class=\"bucket-bar h-gos-bar\" style=\"height:' + Math.max(hd.rate, 6) + '%;background:' + barColor + '\"></div>' +
+        '<span class=\"bucket-lbl h-gos-lbl\">' + esc(String(hd.h ?? hd.label ?? i)) + '</span>' +
         '</div>';
     }).join('');
 
-    // Pre-wire selectDayHour
     window.selectDayHour = function(idx) {
-      document.querySelectorAll('#dayHourlyBars .h-gos-col').forEach((el, i) => {
+      document.querySelectorAll('#dayHourlyBars .bucket-col, #dayHourlyBars .h-gos-col').forEach((el, i) => {
         el.classList.toggle('active', i === idx);
       });
       const selected = hours[idx];
       const panel = document.getElementById('hourDetailPanel');
       if (panel && selected) {
         panel.classList.add('open');
-        const t = document.getElementById('hdTitle'); if (t) t.textContent = '🕐 ' + selected.h + ':00 — Hour Detail';
+        const t = document.getElementById('hdTitle'); if (t) t.textContent = '🕐 ' + (selected.h != null ? (selected.h + ':00') : selected.label) + ' — Detail';
         const b = document.getElementById('hdBadge'); if (b) b.textContent = selected.rate + '% Rate';
         const grid = document.getElementById('hdGrid');
         if (grid) {
           grid.innerHTML = 
-            '<div class="hd-stat"><div class="hd-stat-label">Volume</div><div class="hd-stat-value">' + (selected.count || '—') + '</div><div class="hd-stat-sub">records</div></div>' +
-            '<div class="hd-stat"><div class="hd-stat-label">Compliance</div><div class="hd-stat-value" style="color:var(--ok)">' + selected.rate + '%</div><div class="hd-stat-sub">in target</div></div>' +
-            '<div class="hd-stat"><div class="hd-stat-label">Variance</div><div class="hd-stat-value" style="color:var(--chart-amber)">' + (100 - selected.rate) + '%</div><div class="hd-stat-sub">deviation</div></div>';
+            '<div class=\"hd-stat\"><div class=\"hd-stat-label\">Volume</div><div class=\"hd-stat-value\">' + (selected.count ?? '—') + '</div><div class=\"hd-stat-sub\">records</div></div>' +
+            '<div class=\"hd-stat\"><div class=\"hd-stat-label\">Rate</div><div class=\"hd-stat-value\" style=\"color:var(--ok)\">' + selected.rate + '%</div><div class=\"hd-stat-sub\">fulfillment</div></div>' +
+            '<div class=\"hd-stat\"><div class=\"hd-stat-label\">Variance</div><div class=\"hd-stat-value\" style=\"color:var(--chart-amber)\">' + (100 - selected.rate) + '%</div><div class=\"hd-stat-sub\">gap</div></div>';
         }
         const narr = document.getElementById('hdNarrative');
         if (narr) {
-          narr.textContent = selected.h + ':00 window processed ' + (selected.count || 0) + ' items at ' + selected.rate + '% compliance rate. ' +
-            (selected.rate >= 80 ? 'Operation met target comfortably.' : 'Volume peak pushed response times beyond nominal threshold.');
+          narr.textContent = (selected.h != null ? (selected.h + ':00') : selected.label) + ' window processed ' + (selected.count || 0) + ' items at ' + selected.rate + '% rate.';
         }
       }
     };
   }
 
-  // 6. CSV Download wiring
+  // 6. CSV Download wiring (Newline escaping fixed)
   const dlBtn = document.getElementById('dlDayCsv');
   if (dlBtn && rows.length) {
     dlBtn.onclick = function() {
       const keys = Object.keys(rows[0]);
-      let csv = keys.join(',') + '\n';
+      let csv = keys.join(',') + '\\n';
       rows.forEach(r => {
-        csv += keys.map(k => '"' + String(r[k] ?? '').replace(/"/g, '""') + '"').join(',') + '\n';
+        csv += keys.map(k => '\"' + String(r[k] ?? '').replace(/\"/g, '\"\"') + '\"').join(',') + '\\n';
       });
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
-      a.download = (dayTitle || 'day-detail').replace(/[^a-zA-Z0-9_-]/g, '_') + '.csv';
+      a.download = (dayTitle || 'detail-export').replace(/[^a-zA-Z0-9_-]/g, '_') + '.csv';
       a.click();
     };
   }
@@ -506,55 +642,97 @@ function openDayDrawer(dayTitle, config = {}) {
 }
 
 function closeDayDrawer() {
-  const drawer = document.getElementById('dayDrawer') || document.querySelector('.day-drawer');
+  const drawer = document.getElementById('dayDrawer') || document.querySelector('.day-drawer') || document.querySelector('.period-drawer');
   const backdrop = document.getElementById('dayDrawerOverlay') || document.querySelector('.drawer-backdrop');
   if (drawer) drawer.classList.remove('open');
   if (backdrop) backdrop.classList.remove('open');
   S.drawerOpen = false;
-  if (S.lastOpener) S.lastOpener.focus();
+  setModalInert(false);
+  if (S.lastOpener && typeof S.lastOpener.focus === 'function') S.lastOpener.focus();
 }
 
 document.getElementById('dayDrawerClose')?.addEventListener('click', closeDayDrawer);
 document.getElementById('dayDrawerBack')?.addEventListener('click', closeDayDrawer);
 document.getElementById('dayDrawerOverlay')?.addEventListener('click', closeDayDrawer);
 
-// ── Floating Chart Tooltip ──
+// ── Floating Chart Tooltip & Delegated Handler (A8) ──
 function showChartTooltip(x, y, html) {
   let tt = document.getElementById('chartTooltip');
   if (!tt) {
     tt = document.createElement('div');
     tt.id = 'chartTooltip';
+    tt.style.position = 'fixed';
+    tt.style.pointerEvents = 'none';
+    tt.style.zIndex = '99999';
     document.body.appendChild(tt);
   }
   tt.innerHTML = html;
   tt.style.display = 'block';
   const pad = 12;
-  const w = tt.offsetWidth;
-  const h = tt.offsetHeight;
+  const w = tt.offsetWidth || 120;
+  const h = tt.offsetHeight || 30;
   let posX = x + pad;
   let posY = y - h - pad;
   if (posX + w > window.innerWidth) posX = x - w - pad;
   if (posY < 10) posY = y + pad;
-  tt.style.left = posX + 'px';
-  tt.style.top = posY + 'px';
+  tt.style.left = Math.max(8, posX) + 'px';
+  tt.style.top = Math.max(8, posY) + 'px';
 }
 function hideChartTooltip() {
   const tt = document.getElementById('chartTooltip');
   if (tt) tt.style.display = 'none';
 }
 
+// Delegated tooltip listeners
+document.addEventListener('mousemove', e => {
+  const target = e.target.closest('[data-tip]');
+  if (target) {
+    showChartTooltip(e.clientX, e.clientY, target.getAttribute('data-tip'));
+  } else if (!e.target.closest('#chartTooltip')) {
+    hideChartTooltip();
+  }
+});
+document.addEventListener('focusin', e => {
+  const target = e.target.closest('[data-tip]');
+  if (target) {
+    const rect = target.getBoundingClientRect();
+    showChartTooltip(rect.left + rect.width / 2, rect.top - 8, target.getAttribute('data-tip'));
+  }
+});
+document.addEventListener('focusout', e => {
+  if (e.target.closest('[data-tip]')) hideChartTooltip();
+});
+
+// ── Reset All State (A13) ──
+function resetAll() {
+  closeDrawer();
+  closeDayDrawer();
+  closeAnalyticsOverlay();
+  hideChartTooltip();
+  S.filters = {};
+  S.filtered = [...S.raw];
+  document.querySelectorAll('.scope-bar-btn').forEach(b => {
+    b.classList.remove('active', 'open');
+  });
+  document.querySelectorAll('.filter-drop').forEach(d => {
+    d.classList.remove('open');
+    d.querySelectorAll('input').forEach(i => i.checked = true);
+  });
+}
+
 // ── File Upload Handler ──
 function handleFile(file) {
   if (!file) return;
   S.fileName = file.name;
-  document.getElementById('fileName').textContent = file.name;
+  const fileNameEl = document.getElementById('fileName');
+  if (fileNameEl) fileNameEl.textContent = file.name;
   const ext = file.name.split('.').pop().toLowerCase();
   if (ext === 'csv') {
     const reader = new FileReader();
     reader.onload = e => {
       const result = parseCSV(e.target.result);
       if (result.rows.length) loadData(result.columns, result.rows);
-      else { document.getElementById('fileName').textContent = 'Error: no data rows found'; document.getElementById('fileName').classList.add('error'); }
+      else if (fileNameEl) { fileNameEl.textContent = 'Error: no data rows found'; fileNameEl.classList.add('error'); }
     };
     reader.readAsText(file);
   } else if (['xlsx', 'xls'].includes(ext)) {
@@ -562,45 +740,49 @@ function handleFile(file) {
     reader.onload = e => {
       const result = parseExcel(new Uint8Array(e.target.result));
       if (result && result.rows.length) loadData(result.columns, result.rows);
-      else if (result) { document.getElementById('fileName').textContent = 'Error: no data rows found'; }
+      else if (fileNameEl) { fileNameEl.textContent = 'Error: no data rows found'; fileNameEl.classList.add('error'); }
     };
     reader.readAsArrayBuffer(file);
-  } else {
-    document.getElementById('fileName').textContent = 'Unsupported file type';
-    document.getElementById('fileName').classList.add('error');
+  } else if (fileNameEl) {
+    fileNameEl.textContent = 'Unsupported file type';
+    fileNameEl.classList.add('error');
   }
 }
 
 function loadData(columns, rows) {
+  resetAll();
   S.columns = columns;
   S.raw = rows;
   S.filters = {};
   S.filtered = [...rows];
-  document.getElementById('fileName').classList.remove('error');
-  document.getElementById('emptyState').hidden = true;
-  document.getElementById('tabPanels').hidden = false;
-  document.getElementById('filterBar').hidden = false;
-  document.getElementById('headerSub').textContent = rows.length.toLocaleString() + ' rows · ' + S.fileName;
-  document.getElementById('scopeLabel').textContent = rows.length.toLocaleString() + ' records · ' + S.fileName;
-  // Build filters
+  document.getElementById('fileName')?.classList.remove('error');
+  const emptyState = document.getElementById('emptyState'); if (emptyState) emptyState.hidden = true;
+  const tabPanels = document.getElementById('tabPanels'); if (tabPanels) tabPanels.hidden = false;
+  const filterBar = document.getElementById('filterBar'); if (filterBar) filterBar.hidden = false;
+  const headerSub = document.getElementById('headerSub');
+  if (headerSub) headerSub.textContent = rows.length.toLocaleString() + ' rows · ' + S.fileName;
+  const scopeLabel = document.getElementById('scopeLabel');
+  if (scopeLabel) scopeLabel.textContent = rows.length.toLocaleString() + ' records · ' + S.fileName;
+
   const fb = document.getElementById('filterButtons');
-  fb.innerHTML = '';
+  if (fb) fb.innerHTML = '';
   // {{BUILD_FILTERS}} - Add filter columns here
-  // Example: buildFilterButton('Category', fb);
   renderDashboard();
 }
 
 // ── Drag and Drop ──
 const uploadBox = document.getElementById('uploadBox');
-uploadBox.addEventListener('dragenter', e => { e.preventDefault(); uploadBox.classList.add('dragging'); });
-uploadBox.addEventListener('dragover', e => { e.preventDefault(); uploadBox.classList.add('dragging'); });
-uploadBox.addEventListener('dragleave', () => uploadBox.classList.remove('dragging'));
-uploadBox.addEventListener('drop', e => { e.preventDefault(); uploadBox.classList.remove('dragging'); handleFile(e.dataTransfer.files[0]); });
-document.getElementById('fileInput').addEventListener('change', e => handleFile(e.target.files[0]));
+if (uploadBox) {
+  uploadBox.addEventListener('dragenter', e => { e.preventDefault(); uploadBox.classList.add('dragging'); });
+  uploadBox.addEventListener('dragover', e => { e.preventDefault(); uploadBox.classList.add('dragging'); });
+  uploadBox.addEventListener('dragleave', () => uploadBox.classList.remove('dragging'));
+  uploadBox.addEventListener('drop', e => { e.preventDefault(); uploadBox.classList.remove('dragging'); handleFile(e.dataTransfer.files[0]); });
+}
+document.getElementById('fileInput')?.addEventListener('change', e => handleFile(e.target.files[0]));
 
 // ── Mobile Menu Toggle ──
-document.getElementById('menuBtn').addEventListener('click', () => {
-  document.getElementById('rail').classList.toggle('open');
+document.getElementById('menuBtn')?.addEventListener('click', () => {
+  document.getElementById('rail')?.classList.toggle('open');
 });
 
 // ── Copy Message Button ──
@@ -630,16 +812,21 @@ if (exportBtn) {
   });
 }
 
-// ── Analytics Overlay & Sub-tab Switching ──
+// ── Analytics Overlay & Sub-tab Switching (A16) ──
 function openAnalyticsOverlay(subtabId) {
+  S.lastOpener = document.activeElement;
+  setModalInert(true);
   const ov = document.getElementById('analyticsOverlay') || document.getElementById('insightsOverlay') || document.querySelector('.analytics-overlay');
   if (ov) {
     ov.classList.add('open');
     if (subtabId) switchOverlayTab(subtabId);
+    document.getElementById('analyticsClose')?.focus();
   }
 }
 function closeAnalyticsOverlay() {
   document.querySelectorAll('.analytics-overlay, .location-overlay').forEach(o => o.classList.remove('open'));
+  setModalInert(false);
+  if (S.lastOpener && typeof S.lastOpener.focus === 'function') S.lastOpener.focus();
 }
 function switchOverlayTab(tabId) {
   document.querySelectorAll('#overlayTabs .a-tab, .analytics-tabs .a-tab').forEach(t => {
@@ -660,42 +847,87 @@ document.getElementById('overlayTabs')?.addEventListener('click', e => {
   if (tab && tab.dataset.atab) switchOverlayTab(tab.dataset.atab);
 });
 
-// Escape key closes drawers, overlays, and tooltip
+// Escape key closes modals in stacking order (A16)
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
-    if (S.drawerOpen) { closeDrawer(); closeDayDrawer(); }
-    closeAnalyticsOverlay();
+    const overlay = document.querySelector('.analytics-overlay.open');
+    if (overlay) { closeAnalyticsOverlay(); return; }
+    const dayDrawer = document.querySelector('.day-drawer.open, .period-drawer.open');
+    if (dayDrawer) { closeDayDrawer(); return; }
+    if (S.drawerOpen) { closeDrawer(); return; }
+    document.querySelectorAll('.scope-bar-btn.open').forEach(b => b.classList.remove('open'));
+    document.querySelectorAll('.filter-drop.open').forEach(d => d.classList.remove('open'));
     hideChartTooltip();
   }
 });
 
 // ═══════════════════════════════════════════════════════
 // {{RENDER_DASHBOARD}} - IMPLEMENT THIS FUNCTION
-// This is where the AI model fills in the data bindings.
 // ═══════════════════════════════════════════════════════
 function renderDashboard() {
   const data = S.filtered;
-  if (!data.length) return;
+  const emptyFilterMsg = document.getElementById('emptyFilterState');
+  if (!data.length) {
+    if (emptyFilterMsg) emptyFilterMsg.style.display = 'flex';
+    document.querySelectorAll('.kpi-value').forEach(el => el.textContent = '0');
+    return;
+  }
+  if (emptyFilterMsg) emptyFilterMsg.style.display = 'none';
 
   // {{SIDEBAR_METRICS_UPDATE}} - Update sidebar metric values
-  // Example: document.getElementById('side-records').textContent = data.length.toLocaleString();
-
   // {{KPI_CALCULATIONS}} - Calculate and animate KPIs
-  // Example: countUp(document.getElementById('kpi-total'), data.length);
-
   // {{VALIDATION_CHECKS}} - Run data quality checks
-
-  // {{CHARTS_AND_VISUALS}} - Draw SVG charts and horizontal comparison bars (NEVER generate piles of text cards)
-
-  // {{CHARTS}} - Draw SVG charts
-
-  // {{GENERATED_REPORT}} - Generate text report into textarea.summary-textarea
-
+  // {{CHARTS_AND_VISUALS}} - Draw SVG charts and horizontal comparison bars
+  // {{GENERATED_REPORT}} - Generate text report into textarea
   // {{TABLES}} - Populate data tables
 }
 `;
 
-export function getFullDashboardTemplate(): string {
+function escHtml(str: string): string {
+  return str.replace(/[&<>"']/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m] || m));
+}
+
+const CREDIT_STYLES = `
+.credit { border-top: 1px solid rgba(255,255,255,.07); padding-top: 10px; color: #444; font-size: 10px; font-family: var(--mono); line-height: 1.5; }
+.credit b { display: block; font-size: 11px; margin-top: 2px; font-weight: 600; }
+.credit-link {
+  display: inline-flex; align-items: center; gap: 0; text-decoration: none;
+  color: inherit; cursor: pointer; transition: color .15s ease;
+}
+.credit-link:hover .name-letter { color: #fff; text-decoration: underline; text-underline-offset: 2px; animation: none; }
+.name-letter {
+  display: inline-block; color: #8D96A3;
+  animation: nameColorWave 6s ease-in-out infinite;
+  transition: color .2s ease;
+}
+.name-space { display: inline-block; width: 4px; }
+.name-letter:nth-of-type(1)  { animation-delay: 0s; }
+.name-letter:nth-of-type(2)  { animation-delay: 0.14s; }
+.name-letter:nth-of-type(3)  { animation-delay: 0.28s; }
+.name-letter:nth-of-type(4)  { animation-delay: 0.42s; }
+.name-letter:nth-of-type(5)  { animation-delay: 0.56s; }
+.name-letter:nth-of-type(6)  { animation-delay: 0.70s; }
+.name-letter:nth-of-type(7)  { animation-delay: 0.84s; }
+.name-letter:nth-of-type(8)  { animation-delay: 0.98s; }
+.name-letter:nth-of-type(9)  { animation-delay: 1.12s; }
+.name-letter:nth-of-type(10) { animation-delay: 1.26s; }
+.name-letter:nth-of-type(11) { animation-delay: 1.40s; }
+.name-letter:nth-of-type(12) { animation-delay: 1.54s; }
+.name-letter:nth-of-type(13) { animation-delay: 1.68s; }
+.name-letter:nth-of-type(14) { animation-delay: 1.82s; }
+.name-letter:nth-of-type(15) { animation-delay: 1.96s; }
+
+@keyframes nameColorWave {
+  0%, 30%, 100% { color: #8D96A3; }
+  15%           { color: #EF4444; }
+}
+`;
+
+export function getFullDashboardTemplate(options?: { brandTitle?: string; brandSubtitle?: string; credit?: CreditConfig }): string {
+  const creditMarkup = renderCreditMarkup(options?.credit);
+  const creditCss = options?.credit === 'none' ? '' : CREDIT_STYLES;
+  const brandTitle = options?.brandTitle ? escHtml(options.brandTitle) : '{{APP_TITLE}}';
+  const brandSubtitle = options?.brandSubtitle ? escHtml(options.brandSubtitle) : '{{APP_SUBTITLE}}';
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -798,11 +1030,32 @@ button, input, textarea, select { font: inherit; }
 
 .main {
   min-width: 0; min-height: 0;
-  display: grid;
-  grid-template-rows: auto auto auto minmax(0, 1fr);
+  display: flex;
+  flex-direction: column;
   gap: 8px;
   overflow: hidden;
 }
+.dashboard-body, .tab-content-area {
+  flex: 1;
+  min-height: 0;
+}
+
+/* ── Badges, Status Pills & Utility Classes (A5) ── */
+.badge { background: var(--surface-2); color: var(--muted); border: 1px solid var(--line); font-weight: 600; border-radius: 3px; padding: 3px 8px; font-size: 10px; font-family: var(--mono); }
+.badge.ok { background: var(--ok-dim); color: var(--ok); border-color: rgba(26, 122, 86, .25); }
+.badge.warn { background: var(--warn-dim); color: var(--warn); border-color: rgba(180, 83, 9, .25); }
+.badge.err { background: var(--err-dim); color: var(--err); border-color: rgba(192, 57, 43, .25); }
+.pill { display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 999px; font: 10px var(--mono); font-weight: 600; border: 1px solid var(--line); background: var(--surface-2); color: var(--muted); }
+.pill.ok { background: var(--ok-dim); color: var(--ok); border-color: rgba(26, 122, 86, .25); }
+.pill.warn { background: var(--warn-dim); color: var(--warn); border-color: rgba(180, 83, 9, .25); }
+.pill.err { background: var(--err-dim); color: var(--err); border-color: rgba(192, 57, 43, .25); }
+.pill.neutral { background: var(--surface-2); color: var(--ink); }
+.btn.ghost { background: transparent; color: var(--muted); border: 1px solid transparent; }
+.btn.ghost:hover { background: var(--surface-2); color: var(--ink); }
+.date-filter-strip { display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 11px; }
+.scope-bar-label { display: inline-flex; align-items: center; gap: 6px; font-size: 9px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.period-pulse-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ok); display: inline-block; box-shadow: 0 0 0 2px var(--ok-dim); animation: pulseDot 2s infinite; }
+@keyframes pulseDot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .4; transform: scale(.85); } }
 
 /* ── SIDEBAR / LEFT RAIL (Incident Pulse canonical) ── */
 .rail {
@@ -882,39 +1135,7 @@ button, input, textarea, select { font: inherit; }
 .side-card.accent { background: rgba(75, 85, 99, 0.14); }
 .side-card.accent strong { color: #d0d5dd; }
 
-.credit { border-top: 1px solid rgba(255,255,255,.07); padding-top: 10px; color: #444; font-size: 10px; font-family: var(--mono); line-height: 1.5; }
-.credit b { display: block; font-size: 11px; margin-top: 2px; font-weight: 600; }
-.credit-link {
-  display: inline-flex; align-items: center; gap: 0; text-decoration: none;
-  color: inherit; cursor: pointer; transition: color .15s ease;
-}
-.credit-link:hover .name-letter { color: #fff; text-decoration: underline; text-underline-offset: 2px; animation: none; }
-.name-letter {
-  display: inline-block; color: #8D96A3;
-  animation: nameColorWave 6s ease-in-out infinite;
-  transition: color .2s ease;
-}
-.name-space { display: inline-block; width: 4px; }
-.name-letter:nth-of-type(1)  { animation-delay: 0s; }
-.name-letter:nth-of-type(2)  { animation-delay: 0.14s; }
-.name-letter:nth-of-type(3)  { animation-delay: 0.28s; }
-.name-letter:nth-of-type(4)  { animation-delay: 0.42s; }
-.name-letter:nth-of-type(5)  { animation-delay: 0.56s; }
-.name-letter:nth-of-type(6)  { animation-delay: 0.70s; }
-.name-letter:nth-of-type(7)  { animation-delay: 0.84s; }
-.name-letter:nth-of-type(8)  { animation-delay: 0.98s; }
-.name-letter:nth-of-type(9)  { animation-delay: 1.12s; }
-.name-letter:nth-of-type(10) { animation-delay: 1.26s; }
-.name-letter:nth-of-type(11) { animation-delay: 1.40s; }
-.name-letter:nth-of-type(12) { animation-delay: 1.54s; }
-.name-letter:nth-of-type(13) { animation-delay: 1.68s; }
-.name-letter:nth-of-type(14) { animation-delay: 1.82s; }
-.name-letter:nth-of-type(15) { animation-delay: 1.96s; }
-
-@keyframes nameColorWave {
-  0%, 30%, 100% { color: #8D96A3; }
-  15%           { color: #EF4444; }
-}
+${creditCss}
 
 /* ── Header Strip ── */
 .header {
@@ -1033,15 +1254,15 @@ button, input, textarea, select { font: inherit; }
 @keyframes fadeInTab { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
 /* ── Day Drilldown Drawer (Intraday Progression & Root Cause) ── */
-.agent-drawer, .day-drawer {
+.period-drawer, .agent-drawer, .day-drawer {
   position: fixed; top: 0; right: 0; height: 100%; width: min(720px, 50vw);
   background: var(--surface); z-index: 200; display: flex; flex-direction: column;
   transform: translateX(100%); box-shadow: -8px 0 32px rgba(0,0,0,.15);
   transition: transform .32s cubic-bezier(0.16, 1, 0.3, 1);
 }
-@media (max-width: 1180px) { .agent-drawer, .day-drawer { width: min(720px, calc(100vw - 32px)); } }
-@media (max-width: 520px) { .agent-drawer, .day-drawer { width: 100vw; } }
-.day-drawer.open, .agent-drawer.open { transform: translateX(0); }
+@media (max-width: 1180px) { .period-drawer, .agent-drawer, .day-drawer { width: min(720px, calc(100vw - 32px)); } }
+@media (max-width: 520px) { .period-drawer, .agent-drawer, .day-drawer { width: 100vw; } }
+.day-drawer.open, .agent-drawer.open, .period-drawer.open { transform: translateX(0); }
 .drawer-header {
   background: var(--rail-bg); padding: 18px 20px 14px; flex-shrink: 0;
   position: relative; border-left: 1px solid var(--rail-border);
@@ -1083,15 +1304,17 @@ button, input, textarea, select { font: inherit; }
 .rc-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
 .rc-val { margin-left: auto; font-weight: 700; color: var(--ink); }
 .rc-takeaway { margin-top: 8px; font-size: 11px; font-family: var(--mono); line-height: 1.45; background: var(--surface); padding: 8px 10px; border-radius: 4px; border: 1px solid var(--line); }
-.hourly-gos-chart { display: flex; align-items: flex-end; gap: 3px; height: 110px; padding: 20px 8px 6px; margin-bottom: 6px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
-.h-gos-col { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end; position: relative; min-width: 0; cursor: pointer; }
-.h-gos-col:hover .h-gos-bar { opacity: .85; transform: scaleY(1.04); transform-origin: bottom; }
-.h-gos-col.active .h-gos-bar { box-shadow: 0 0 0 2px var(--ink); }
-.h-gos-bar { width: 100%; max-width: 18px; border-radius: 3px 3px 0 0; min-height: 4px; transition: height 0.5s cubic-bezier(.16, 1, .3, 1), opacity .15s; }
-.h-gos-val { position: absolute; top: -16px; font-size: 8px; font-family: var(--mono); font-weight: 600; color: var(--ink); white-space: nowrap; }
-.h-gos-lbl { font-size: 8.5px; font-family: var(--mono); color: var(--muted); margin-top: 4px; }
-.cum-gos-wrap { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 10px; margin-bottom: 8px; }
-.cum-gos-svg { width: 100%; display: block; }
+.entity-pill, .clickable-agent-pill { cursor: pointer; background: var(--surface); transition: all .16s cubic-bezier(0.16, 1, 0.3, 1); display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border: 1px solid var(--line); border-radius: 4px; font: 11px var(--mono); }
+.entity-pill:hover, .clickable-agent-pill:hover { background: var(--surface-2) !important; border-color: var(--line-strong) !important; box-shadow: 0 3px 8px rgba(0,0,0,.08); transform: translateY(-1.5px); }
+.bucket-chart, .hourly-gos-chart { display: flex; align-items: flex-end; gap: 3px; height: 110px; padding: 20px 8px 6px; margin-bottom: 6px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
+.bucket-col, .h-gos-col { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end; position: relative; min-width: 0; cursor: pointer; }
+.bucket-col:hover .bucket-bar, .h-gos-col:hover .h-gos-bar { opacity: .85; transform: scaleY(1.04); transform-origin: bottom; }
+.bucket-col.active .bucket-bar, .h-gos-col.active .h-gos-bar { box-shadow: 0 0 0 2px var(--ink); }
+.bucket-bar, .h-gos-bar { width: 100%; max-width: 18px; border-radius: 3px 3px 0 0; min-height: 4px; transition: height 0.5s cubic-bezier(.16, 1, .3, 1), opacity .15s; }
+.bucket-val, .h-gos-val { position: absolute; top: -16px; font-size: 8px; font-family: var(--mono); font-weight: 600; color: var(--ink); white-space: nowrap; }
+.bucket-lbl, .h-gos-lbl { font-size: 8.5px; font-family: var(--mono); color: var(--muted); margin-top: 4px; }
+.progress-wrap, .cum-gos-wrap { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 10px; margin-bottom: 8px; }
+.progress-svg, .cum-gos-svg { width: 100%; display: block; }
 .hour-detail { background: var(--surface-2); border: 1px solid var(--line); border-radius: 6px; padding: 0; margin-bottom: 12px; overflow: hidden; max-height: 0; opacity: 0; transition: max-height .3s ease, opacity .25s ease, padding .25s ease; }
 .hour-detail.open { max-height: 500px; opacity: 1; padding: 12px; }
 .hour-detail-title { font-size: 11.5px; font-weight: 700; color: var(--ink); font-family: var(--mono); margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; }
@@ -1169,8 +1392,8 @@ button, input, textarea, select { font: inherit; }
         <span class="logo-letter">{{LOGO_L1}}</span><span class="logo-letter">{{LOGO_L2}}</span><span class="logo-letter">{{LOGO_L3}}</span>
       </div>
       <div class="brand-title">
-        <h1>{{APP_TITLE}}</h1>
-        <p>{{APP_SUBTITLE}}</p>
+        <h1>${brandTitle}</h1>
+        <p>${brandSubtitle}</p>
       </div>
     </div>
     <div class="scope-chip"><span class="live-pulse-dot"></span> <span id="scopeLabel">No dataset loaded</span></div>
@@ -1182,7 +1405,7 @@ button, input, textarea, select { font: inherit; }
         <!-- Add more side-card items as needed for the dataset -->
       </div>
     </section>
-    <section class="credit">built by <b><a href="https://linkedin.com/in/tanmay-kalbande" target="_blank" rel="noopener noreferrer" class="credit-link" title="Connect on LinkedIn"><span class="name-letter">T</span><span class="name-letter">a</span><span class="name-letter">n</span><span class="name-letter">m</span><span class="name-letter">a</span><span class="name-letter">y</span><span class="name-space">&nbsp;</span><span class="name-letter">K</span><span class="name-letter">a</span><span class="name-letter">l</span><span class="name-letter">b</span><span class="name-letter">a</span><span class="name-letter">n</span><span class="name-letter">d</span><span class="name-letter">e</span></a></b></section>
+    ${creditMarkup}
   </aside>
 
   <!-- MAIN WORKSPACE -->

@@ -556,7 +556,7 @@ export default function Home() {
           <i>D/</i>
           <div>
             <b>DASHLINT</b>
-            <small>7 tools · remote MCP</small>
+            <small>12 tools · remote MCP</small>
           </div>
         </div>
 

@@ -1,0 +1,193 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "version": "2.0.0",
+  "tools": [
+    {
+      "name": "get_dashboard_creation_workflow",
+      "description": "Start here for every DashLint dashboard task. Returns the orchestrated workflow (steps, guardrails, input handling) and a tool map listing which focused playbooks to call at each step.",
+      "deprecated": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "build_dashboard_blueprint",
+      "description": "Create a schema-aware implementation blueprint (v2.0) from locally profiled column metadata. Send only field names, inferred types, distinct counts, nullable percents, row count, and opt-in summary metrics (never dataset rows, samples, or identifiers). Returns single justified roles per field, additivity classes, default aggregations, grain detection, ratio recomputation formulas, local data checks, and askUser questions.",
+      "deprecated": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "datasetLabel": { "type": "string" },
+          "businessQuestion": { "type": "string" },
+          "audience": { "type": "string" },
+          "rowCount": { "type": "integer", "minimum": 0 },
+          "fields": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "type": { "type": "string", "enum": ["date", "datetime", "number", "currency", "percentage", "boolean", "category", "identifier", "text", "unknown"] },
+                "distinctCount": { "type": "integer", "minimum": 0 },
+                "nullablePercent": { "type": "number", "minimum": 0, "maximum": 100 },
+                "numericSummary": {
+                  "type": "object",
+                  "properties": {
+                    "min": { "type": "number" },
+                    "max": { "type": "number" },
+                    "mean": { "type": "number" }
+                  },
+                  "additionalProperties": false
+                },
+                "dateRange": {
+                  "type": "object",
+                  "properties": {
+                    "min": { "type": "string" },
+                    "max": { "type": "string" }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "required": ["name", "type"],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": ["fields"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_dashboard_kit",
+      "description": "Primary dashboard assembly tool. In 'cli' mode, returns commands for npx dashlint-kit (init, build, profile, lint) and runtime API docs. In 'inline' mode, returns deduplicated wireframe, component patterns, domain packs, and JS utilities within a 35 KB budget.",
+      "deprecated": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "components": { "type": "array", "items": { "type": "string" } },
+          "domain": { "type": "string", "enum": ["generic", "service-ops", "sales-distribution"] },
+          "brand": {
+            "type": "object",
+            "properties": {
+              "title": { "type": "string" },
+              "subtitle": { "type": "string" },
+              "kicker": { "type": "string" }
+            },
+            "additionalProperties": false
+          },
+          "credit": {
+            "oneOf": [
+              { "type": "string", "enum": ["default", "none"] },
+              {
+                "type": "object",
+                "properties": {
+                  "text": { "type": "string" },
+                  "url": { "type": "string" }
+                },
+                "required": ["text"],
+                "additionalProperties": false
+              }
+            ]
+          },
+          "mode": { "type": "string", "enum": ["cli", "inline"], "default": "inline" }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_version",
+      "description": "Returns the DashLint MCP server and dashboard-kit version, supported features, and compatibility matrix.",
+      "deprecated": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_shell_preservation_spec",
+      "description": "DEPRECATED: Use get_dashboard_kit instead. Returns the complete design system and shell contract derived from the Incident Pulse React dashboard.",
+      "deprecated": true,
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_full_dashboard_template",
+      "description": "DEPRECATED: Use get_dashboard_kit instead. Returns a lightweight HTML wireframe with ONLY the fixed application shell.",
+      "deprecated": true,
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_component_patterns",
+      "description": "DEPRECATED: Use get_dashboard_kit instead. Returns CSS, HTML snippets, and usage notes for specific dashboard components.",
+      "deprecated": true,
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "components": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": ["components"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_js_utilities",
+      "description": "DEPRECATED: Use get_dashboard_kit instead. Returns pre-wired JavaScript utilities for dashboard interactivity.",
+      "deprecated": true,
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_data_insight_playbook",
+      "description": "Returns instructions for the AI assistant to inspect user-provided data locally, verify row grain/data quality, calculate defensible business insights, and communicate uncertainty.",
+      "deprecated": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_dashboard_composition_playbook",
+      "description": "Returns adaptive story structure, chart-selection guidance, and visual hierarchy principles. Dashboard body can vary by dataset; the application shell remains fixed.",
+      "deprecated": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_dashboard_interaction_playbook",
+      "description": "Returns concrete requirements for local CSV and Excel upload, live recalculation from each uploaded file, filters, chart selection/cross-filtering, detail drawers, responsive behavior, accessibility, and empty/error states.",
+      "deprecated": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_dashboard_completion_checklist",
+      "description": "Returns the final review checklist for data correctness, evidence, shell preservation, working interactions, responsive layout, and completion.",
+      "deprecated": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      }
+    }
+  ]
+}

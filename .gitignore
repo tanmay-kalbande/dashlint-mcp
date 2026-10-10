@@ -9,3 +9,6 @@ dist/
 !.env.example
 src/lib/rulebook-compiled.json
 next-env.d.ts
+incident-pulse/
+SLA-Pulse/
+public/samples/

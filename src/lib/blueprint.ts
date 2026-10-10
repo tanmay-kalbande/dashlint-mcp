@@ -15,96 +15,278 @@ export interface DashboardFieldInput {
   type: DashboardFieldType;
   distinctCount?: number;
   nullablePercent?: number;
+  numericSummary?: {
+    min?: number;
+    max?: number;
+    mean?: number;
+  };
+  dateRange?: {
+    min?: string;
+    max?: string;
+  };
 }
 
-type FieldRole = "time" | "identifier" | "measure" | "duration" | "amount" | "rate" | "status" | "category" | "entity";
+export type FieldRole =
+  | "identifier"
+  | "time"
+  | "status"
+  | "reason"
+  | "measure"
+  | "rate"
+  | "dimension"
+  | "unknown";
 
-const ROLE_SIGNALS: Record<FieldRole, string[]> = {
-  time: ["date", "time", "timestamp", "opened", "created", "resolved", "closed", "updated", "period", "month", "week", "day"],
-  identifier: ["id", "key", "record id", "ticket id", "incident id", "case id", "conversation id", "interaction id", "session id", "incident number", "ticket number", "case number", "conversation number", "interaction number", "reference"],
-  measure: ["count", "volume", "total", "quantity", "units", "score", "value", "amount", "duration", "handle", "wait", "queue", "age", "cost", "revenue", "sales", "calls", "tickets", "incidents", "orders", "requests"],
-  duration: ["duration", "handle time", "wait time", "queue time", "total queue", "total handle", "total hold", "hold time", "contacting time", "total contacting", "time to abandon", "resolution time", "elapsed", "age", "minutes", "seconds", "hours", "mttr"],
-  amount: ["amount", "revenue", "sales", "cost", "price", "value", "spend", "balance", "profit"],
-  rate: ["rate", "percent", "percentage", "ratio", "compliance", "sla", "conversion", "margin", "share"],
-  status: ["status", "state", "priority", "severity", "outcome", "result", "resolved", "closed", "abandoned", "made sla", "breached"],
-  category: ["category", "type", "channel", "queue", "group", "team", "agent", "owner", "reason", "product", "service", "department", "segment", "source"],
-  entity: ["caller", "customer", "user", "agent", "requester", "account", "employee", "location", "region", "store", "site", "product"],
-};
+export type AdditivityClass =
+  | "additive"
+  | "non_additive"
+  | "snapshot"
+  | "count_distinct"
+  | "count_and_share"
+  | "none";
 
-const TYPE_ROLE_HINTS: Partial<Record<DashboardFieldType, FieldRole[]>> = {
-  date: ["time"],
-  datetime: ["time"],
-  number: ["measure"],
-  currency: ["amount", "measure"],
-  percentage: ["rate"],
-  boolean: ["status"],
-  identifier: ["identifier"],
-  category: ["category", "status", "entity"],
-};
+export type DefaultAggregation =
+  | "sum"
+  | "weighted_avg"
+  | "recompute"
+  | "avg"
+  | "median"
+  | "latest"
+  | "count"
+  | "count_distinct"
+  | "none";
 
-const ROLE_ALLOWED_TYPES: Record<FieldRole, DashboardFieldType[]> = {
-  time: ["date", "datetime", "unknown", "text"],
-  identifier: ["identifier", "category", "text", "unknown"],
-  measure: ["number", "currency", "percentage", "unknown"],
-  duration: ["number", "unknown"],
-  amount: ["number", "currency", "unknown"],
-  rate: ["number", "percentage", "unknown"],
-  status: ["boolean", "category", "text", "unknown"],
-  category: ["boolean", "category", "text", "unknown"],
-  entity: ["identifier", "category", "text", "unknown"],
-};
+export interface ClassifiedField {
+  name: string;
+  inferredType: DashboardFieldType;
+  distinctCount?: number;
+  nullablePercent?: number;
+  role: FieldRole;
+  additivity: AdditivityClass;
+  defaultAggregation: DefaultAggregation;
+  confidence: number;
+  reason: string;
+  guardrail?: string;
+}
 
 function normalize(value: string): string {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 }
 
-function classifyField(field: DashboardFieldInput) {
-  const normalizedName = normalize(field.name);
-  const tokens = new Set(normalizedName.split(" ").filter(Boolean));
-  const possibleRoles: { role: FieldRole; confidence: number; reason: string }[] = [];
+export function classifyField(field: DashboardFieldInput, rowCount?: number): ClassifiedField {
+  const normName = normalize(field.name);
+  const tokens = new Set(normName.split(" ").filter(Boolean));
+  const distinctRatio = (rowCount && field.distinctCount != null) ? (field.distinctCount / rowCount) : 0;
 
-  for (const [role, aliases] of Object.entries(ROLE_SIGNALS) as [FieldRole, string[]][]) {
-    if (!ROLE_ALLOWED_TYPES[role].includes(field.type)) continue;
-    const normalizedAliases = aliases.map(normalize);
-    const exact = normalizedAliases.find((alias) => alias === normalizedName);
-    const tokenMatch = normalizedAliases.find((alias) => alias.includes(" ")
-      ? normalizedName.includes(alias)
-      : tokens.has(alias));
-
-    if (exact || tokenMatch) {
-      const specific = 0.94;
-      possibleRoles.push({ role, confidence: exact ? specific : 0.78, reason: `Field name matches ${role} terminology.` });
-    }
+  // 1. Identifier check
+  const idSuffixes = ["id", "code", "no", "number", "key", "ref", "reference", "uuid", "guid"];
+  const isIdName = idSuffixes.some(s => normName === s || normName.endsWith(" " + s) || normName.endsWith("_" + s));
+  if (field.type === "identifier" || isIdName || distinctRatio >= 0.90) {
+    return {
+      name: field.name,
+      inferredType: field.type,
+      distinctCount: field.distinctCount,
+      nullablePercent: field.nullablePercent,
+      role: "identifier",
+      additivity: "count_distinct",
+      defaultAggregation: "count_distinct",
+      confidence: isIdName ? 0.95 : 0.88,
+      reason: "Column represents record or entity identifier; suitable for grain determination.",
+      guardrail: "Confirm whether this is a record grain key or a recurring entity ID before reporting distinct counts as unique entities."
+    };
   }
 
-  for (const role of TYPE_ROLE_HINTS[field.type] ?? []) {
-    if (!possibleRoles.some((match) => match.role === role)) {
-      possibleRoles.push({ role, confidence: 0.52, reason: `Inferred ${field.type} type suggests this role; confirm against the data dictionary.` });
-    }
+  // 2. Time check (calendar dates and timestamps; durations are measures)
+  const isDurationToken = ["duration", "elapsed", "lead_time", "latency", "wait_time"].some(t => normName.includes(t));
+  const timeTokens = ["date", "time", "timestamp", "opened", "created", "resolved", "closed", "updated", "period", "month", "week", "day", "year", "quarter"];
+  const isTimeMatch = !isDurationToken && timeTokens.some(t => tokens.has(t) || normName.includes(t));
+  if ((["date", "datetime"].includes(field.type) || isTimeMatch) && !isDurationToken) {
+    return {
+      name: field.name,
+      inferredType: field.type,
+      distinctCount: field.distinctCount,
+      nullablePercent: field.nullablePercent,
+      role: "time",
+      additivity: "none",
+      defaultAggregation: "none",
+      confidence: 0.96,
+      reason: "Time or date dimension indicating event sequence or temporal partition.",
+      guardrail: "Aggregate by consistent calendar buckets (e.g. day or month); do not sum or average date values."
+    };
   }
 
-  if (["text", "unknown"].includes(field.type) && !possibleRoles.length) {
-    possibleRoles.push({ role: "category", confidence: 0.3, reason: "Could be a dimension; inspect locally before using it." });
+  // 3. Status or Outcome check
+  const statusTokens = ["status", "state", "outcome", "result", "flag", "on time", "breach", "priority", "severity", "stage", "active", "closed", "resolved", "delivered", "returned", "cancelled"];
+  const isStatusMatch = statusTokens.some(t => t.includes(" ") ? normName.includes(t) : tokens.has(t));
+  const isQtyField = ["qty", "quantity", "count", "units", "volume", "amount"].some(t => tokens.has(t)) || field.type === "number" || field.type === "currency";
+  if (!isQtyField && (field.type === "boolean" || isStatusMatch)) {
+    return {
+      name: field.name,
+      inferredType: field.type,
+      distinctCount: field.distinctCount,
+      nullablePercent: field.nullablePercent,
+      role: "status",
+      additivity: "count_and_share",
+      defaultAggregation: "count",
+      confidence: 0.92,
+      reason: "Categorical status, outcome, or priority flag indicating operational state.",
+      guardrail: "Always display counts alongside percentage shares, and make missing/unresolved statuses explicit."
+    };
   }
 
-  const strongRoles = possibleRoles.filter((role) => role.confidence >= 0.7);
-  const familyOf = (role: FieldRole) => {
-    if (role === "time") return "time";
-    if (role === "identifier") return "identifier";
-    if (["measure", "duration", "amount", "rate"].includes(role)) return "numeric";
-    return "dimension";
-  };
-  const competingTopRoles = strongRoles.length > 1
-    && strongRoles[0].confidence - strongRoles[1].confidence < 0.12
-    && familyOf(strongRoles[0].role) !== familyOf(strongRoles[1].role);
+  // 4. Reason or Root Cause check
+  const reasonTokens = ["reason", "cause", "issue reason", "defect", "root cause", "failure"];
+  const isReasonMatch = reasonTokens.some(t => t.includes(" ") ? normName.includes(t) : tokens.has(t));
+  if (isReasonMatch) {
+    return {
+      name: field.name,
+      inferredType: field.type,
+      distinctCount: field.distinctCount,
+      nullablePercent: field.nullablePercent,
+      role: "reason",
+      additivity: "count_and_share",
+      defaultAggregation: "count",
+      confidence: 0.94,
+      reason: "Categorical explanation for exceptions, returns, or service delays.",
+      guardrail: "Empty or null values represent normal/issue-free transactions; label as (none) rather than omitting."
+    };
+  }
 
+  // 5. Rates & Percentages (NON-ADDITIVE)
+  const rateTokens = ["percent", "pct", "ratio", "rate", "fulfilment", "fulfillment", "share", "margin", "compliance"];
+  const isRateMatch = rateTokens.some(t => t.includes(" ") ? normName.includes(t) : tokens.has(t));
+  if (field.type === "percentage" || isRateMatch) {
+    return {
+      name: field.name,
+      inferredType: field.type,
+      distinctCount: field.distinctCount,
+      nullablePercent: field.nullablePercent,
+      role: "rate",
+      additivity: "non_additive",
+      defaultAggregation: "recompute",
+      confidence: 0.95,
+      reason: "Normalized rate or ratio. Must be recomputed from numerator and denominator, never averaged directly.",
+      guardrail: "NON-ADDITIVE: Never average percentages across rows; recompute using sum(numerator) / sum(denominator)."
+    };
+  }
+
+  // 6. Prices & Unit Rates (NON-ADDITIVE)
+  const priceTokens = ["price", "mrp", "unit price", "rate per", "cost per", "fare", "fee per"];
+  const isPriceMatch = priceTokens.some(t => t.includes(" ") ? normName.includes(t) : tokens.has(t));
+  if (isPriceMatch) {
+    return {
+      name: field.name,
+      inferredType: field.type,
+      distinctCount: field.distinctCount,
+      nullablePercent: field.nullablePercent,
+      role: "measure",
+      additivity: "non_additive",
+      defaultAggregation: "weighted_avg",
+      confidence: 0.94,
+      reason: "Unit price or per-item rate. Non-additive across transactions; aggregate using weighted average (value / units) or median.",
+      guardrail: "NON-ADDITIVE: Never SUM unit prices or rates; calculate weighted average (total value / total units) or display median/distribution."
+    };
+  }
+
+  // 7. Ratings & Scores (NON-ADDITIVE)
+  const ratingTokens = ["rating", "score", "csat", "nps", "stars", "points", "grade"];
+  const isRatingMatch = ratingTokens.some(t => tokens.has(t) || normName.includes(t));
+  if (isRatingMatch) {
+    return {
+      name: field.name,
+      inferredType: field.type,
+      distinctCount: field.distinctCount,
+      nullablePercent: field.nullablePercent,
+      role: "measure",
+      additivity: "non_additive",
+      defaultAggregation: "avg",
+      confidence: 0.92,
+      reason: "Evaluative rating or ordinal score. Non-additive; summarize with average or median with score distribution.",
+      guardrail: "NON-ADDITIVE: Do not sum ratings; report mean score, response count, and score breakdown."
+    };
+  }
+
+  // 8. Durations, Times, Distances, Ages (NON-ADDITIVE)
+  const durationTokens = ["duration", "seconds", "minutes", "hours", "days", "wait", "handle", "hold", "elapsed", "lead time", "distance", "km", "miles", "age", "mttr", "latency"];
+  const isDurationMatch = durationTokens.some(t => t.includes(" ") ? normName.includes(t) : tokens.has(t));
+  if (isDurationMatch) {
+    return {
+      name: field.name,
+      inferredType: field.type,
+      distinctCount: field.distinctCount,
+      nullablePercent: field.nullablePercent,
+      role: "measure",
+      additivity: "non_additive",
+      defaultAggregation: "avg",
+      confidence: 0.92,
+      reason: "Continuous duration, distance, or age measure with potential positive skew.",
+      guardrail: "NON-ADDITIVE: Prefer median over mean for skewed durations/distances; do not sum across records by default."
+    };
+  }
+
+  // 9. Point-in-time Snapshot / Balances
+  const snapshotTokens = ["stock", "inventory", "balance", "opening", "closing", "headcount", "backlog", "in hand"];
+  const isSnapshotMatch = snapshotTokens.some(t => t.includes(" ") ? normName.includes(t) : tokens.has(t));
+  if (isSnapshotMatch) {
+    return {
+      name: field.name,
+      inferredType: field.type,
+      distinctCount: field.distinctCount,
+      nullablePercent: field.nullablePercent,
+      role: "measure",
+      additivity: "snapshot",
+      defaultAggregation: "latest",
+      confidence: 0.91,
+      reason: "Point-in-time inventory or state snapshot balance.",
+      guardrail: "SNAPSHOT: Never sum across time periods; report latest value, period-end level, or average level."
+    };
+  }
+
+  // 10. Additive Quantities and Monetary Values
+  const additiveTokens = ["units", "qty", "quantity", "count", "volume", "total", "amount", "revenue", "sales", "cost", "spend", "margin", "profit", "value", "delivered", "ordered", "calls", "tickets", "orders", "records", "clicks"];
+  const isAdditiveMatch = additiveTokens.some(t => tokens.has(t) || normName.includes(t));
+  if (["currency", "number"].includes(field.type) || isAdditiveMatch) {
+    return {
+      name: field.name,
+      inferredType: field.type,
+      distinctCount: field.distinctCount,
+      nullablePercent: field.nullablePercent,
+      role: "measure",
+      additivity: "additive",
+      defaultAggregation: "sum",
+      confidence: 0.93,
+      reason: "Additive numeric quantity or currency amount representing transaction volume or value.",
+      guardrail: "Summable within consistent scope; verify source currency or units before formatting."
+    };
+  }
+
+  // 11. Categorical Dimension
+  if (["category", "text"].includes(field.type) || (field.distinctCount && field.distinctCount < 100)) {
+    return {
+      name: field.name,
+      inferredType: field.type,
+      distinctCount: field.distinctCount,
+      nullablePercent: field.nullablePercent,
+      role: "dimension",
+      additivity: "none",
+      defaultAggregation: "none",
+      confidence: 0.89,
+      reason: "Categorical attribute suitable for grouping, filtering, or breakdown comparisons.",
+      guardrail: "Handle high cardinality by capping to top N and grouping long tail into 'Other'."
+    };
+  }
+
+  // 12. Fallback Unknown
   return {
     name: field.name,
     inferredType: field.type,
     distinctCount: field.distinctCount,
     nullablePercent: field.nullablePercent,
-    possibleRoles: possibleRoles.sort((a, b) => b.confidence - a.confidence),
-    confirmMeaning: strongRoles.length === 0 || competingTopRoles,
+    role: "unknown",
+    additivity: "none",
+    defaultAggregation: "none",
+    confidence: 0.50,
+    reason: "Ambiguous role from column metadata alone; inspect distinct values locally.",
+    guardrail: "Confirm business definition before relying on this field for primary KPIs."
   };
 }
 
@@ -112,117 +294,250 @@ export function buildDashboardBlueprint(input: {
   datasetLabel?: string;
   businessQuestion?: string;
   audience?: string;
+  rowCount?: number;
   fields: DashboardFieldInput[];
 }) {
-  const classified = input.fields.map(classifyField);
-  const fieldsFor = (role: FieldRole) => classified
-    .filter((field) => field.possibleRoles.some((candidate) => candidate.role === role && candidate.confidence >= 0.7))
-    .map((field) => field.name);
+  const allowedInputKeys = new Set(['datasetLabel', 'businessQuestion', 'audience', 'rowCount', 'fields', 'credit', 'brand']);
+  const allowedFieldKeys = new Set(['name', 'type', 'distinctCount', 'nullablePercent', 'numericSummary', 'dateRange']);
+  const allowedNumericKeys = new Set(['min', 'max', 'mean']);
+  const allowedDateKeys = new Set(['min', 'max']);
 
-  const timeFields = fieldsFor("time");
-  const ids = fieldsFor("identifier");
-  const measures = fieldsFor("measure");
-  const durations = fieldsFor("duration");
-  const amounts = fieldsFor("amount");
-  const rates = fieldsFor("rate");
-  const statuses = fieldsFor("status");
-  const categories = [...new Set([...fieldsFor("category"), ...fieldsFor("entity")])];
-  const additiveMeasures = measures.filter((field) => !durations.includes(field) && !amounts.includes(field) && !rates.includes(field));
-  const chartMeasures = [...new Set([...amounts, ...durations, ...additiveMeasures, ...rates])];
+  for (const k of Object.keys(input || {})) {
+    if (!allowedInputKeys.has(k)) {
+      throw new Error(`Input contains unknown or disallowed keys: '${k}'. Only aggregate column metadata is accepted.`);
+    }
+  }
 
+  if (!input || !Array.isArray(input.fields)) {
+    throw new Error("Input must provide a 'fields' array.");
+  }
+
+  for (const field of input.fields) {
+    if (typeof field !== 'object' || field === null) {
+      throw new Error("Each field must be an object.");
+    }
+    for (const fk of Object.keys(field)) {
+      if (!allowedFieldKeys.has(fk)) {
+        throw new Error(`Input contains unknown or disallowed keys: field '${fk}'. Never send dataset rows or sample values.`);
+      }
+    }
+    if (field.numericSummary && typeof field.numericSummary === 'object') {
+      for (const nk of Object.keys(field.numericSummary)) {
+        if (!allowedNumericKeys.has(nk)) {
+          throw new Error(`Input contains unknown or disallowed keys: numericSummary '${nk}'.`);
+        }
+      }
+    }
+    if (field.dateRange && typeof field.dateRange === 'object') {
+      for (const dk of Object.keys(field.dateRange)) {
+        if (!allowedDateKeys.has(dk)) {
+          throw new Error(`Input contains unknown or disallowed keys: dateRange '${dk}'.`);
+        }
+      }
+    }
+  }
+
+  const classified = input.fields.map(f => classifyField(f, input.rowCount));
+
+  const timeFields = classified.filter(f => f.role === "time").map(f => f.name);
+  const idFields = classified.filter(f => f.role === "identifier").map(f => f.name);
+  const statusFields = classified.filter(f => f.role === "status").map(f => f.name);
+  const reasonFields = classified.filter(f => f.role === "reason").map(f => f.name);
+  const dimensionFields = classified.filter(f => f.role === "dimension").map(f => f.name);
+  const additiveMeasures = classified.filter(f => f.role === "measure" && f.additivity === "additive").map(f => f.name);
+  const nonAdditiveMeasures = classified.filter(f => f.role === "measure" && f.additivity === "non_additive");
+  const rateFields = classified.filter(f => f.role === "rate").map(f => f.name);
+  const unknownFields = classified.filter(f => f.role === "unknown").map(f => f.name);
+
+  // Grain Determination
+  let grainGuess = "Single transaction record per row";
+  if (idFields.length) {
+    const primaryId = classified.find(f => f.role === "identifier");
+    if (primaryId && input.rowCount && primaryId.distinctCount === input.rowCount) {
+      grainGuess = `One row per individual ${primaryId.name.replace(/_?(id|code|number)$/i, '') || 'transaction'} (verified unique)`;
+    } else if (primaryId) {
+      grainGuess = `One row per ${primaryId.name.replace(/_?(id|code|number)$/i, '') || 'event'} grain`;
+    }
+  }
+
+  // Ratios detection (explicit numerator and denominator)
+  const ratios: { name: string; formula: string; numerator: string; denominator: string; guardrail: string }[] = [];
+  
+  // Units fulfillment ratio
+  const orderedUnits = additiveMeasures.find(m => /order.*(unit|qty)/i.test(m));
+  const deliveredUnits = additiveMeasures.find(m => /deliver.*(unit|qty)/i.test(m));
+  if (orderedUnits && deliveredUnits) {
+    ratios.push({
+      name: "Unit Fulfilment Rate",
+      formula: `SUM(${deliveredUnits}) / SUM(${orderedUnits})`,
+      numerator: deliveredUnits,
+      denominator: orderedUnits,
+      guardrail: "Weight by ordered units; never average the row percentages."
+    });
+  }
+
+  // Value fulfillment ratio
+  const orderedVal = additiveMeasures.find(m => /ordered.*(val|amount)/i.test(m));
+  const deliveredVal = additiveMeasures.find(m => /delivered.*(val|amount)/i.test(m));
+  if (orderedVal && deliveredVal) {
+    ratios.push({
+      name: "Value Fulfillment Rate",
+      formula: `SUM(${deliveredVal}) / SUM(${orderedVal})`,
+      numerator: deliveredVal,
+      denominator: orderedVal,
+      guardrail: "Weight by ordered value; never average individual order rates."
+    });
+  }
+
+  // Realized Unit Price
+  const valueField = additiveMeasures.find(m => /value|revenue|sales|amount/i.test(m));
+  const unitsField = additiveMeasures.find(m => /unit|qty|quantity/i.test(m));
+  if (valueField && unitsField) {
+    ratios.push({
+      name: "Effective Realized Unit Price",
+      formula: `SUM(${valueField}) / SUM(${unitsField})`,
+      numerator: valueField,
+      denominator: unitsField,
+      guardrail: "Weighted average unit price across fulfilled volume."
+    });
+  }
+
+  // SLA or Breach ratio
+  const breachField = statusFields.find(s => /breach|fail|defect|miss/i.test(s));
+  if (breachField) {
+    ratios.push({
+      name: "SLA Compliance Rate",
+      formula: `(COUNT(rows) - COUNT(${breachField} = TRUE)) / COUNT(rows)`,
+      numerator: `Eligible rows meeting target`,
+      denominator: `Total eligible rows`,
+      guardrail: "Confirm whether canceled or abandoned tickets are included in the denominator."
+    });
+  }
+
+  // Metric Recipes
   const metricRecipes = [
     {
-      name: "Record volume",
-      formula: "COUNT(rows) after applying the visible date range and filters",
+      name: "Total Volume",
+      formula: "COUNT(rows) within active filters and date range",
       requiredFields: [],
-      guardrail: "Label this as row count; do not imply unique entities unless an identifier is validated.",
+      aggregation: "count",
+      guardrail: "Represents row count. Do not imply unique individuals unless validated against an identifier."
     },
-    ...ids.map((field) => ({
-      name: `Distinct ${field}`,
-      formula: `COUNT DISTINCT(${field}) within the selected scope`,
-      requiredFields: [field],
-      guardrail: "Confirm the field is an entity key rather than an event ID before presenting it as people, customers, or accounts.",
+    ...idFields.map(id => ({
+      name: `Distinct ${id}`,
+      formula: `COUNT_DISTINCT(${id}) within filtered scope`,
+      requiredFields: [id],
+      aggregation: "count_distinct",
+      guardrail: "Confirm whether field is unique transaction ID or repeating customer/entity ID."
     })),
-    ...amounts.map((field) => ({
-      name: `Total ${field}`,
-      formula: `SUM(${field}) only if each row contributes an additive amount; otherwise use the appropriate per-record summary`,
-      requiredFields: [field],
-      guardrail: "Preserve and display the source currency/unit; do not sum snapshots or percentages.",
+    ...additiveMeasures.map(measure => ({
+      name: `Total ${measure}`,
+      formula: `SUM(${measure})`,
+      requiredFields: [measure],
+      aggregation: "sum",
+      guardrail: "Additive metric. Preserve source currency symbol and scale appropriately (K, M, L, Cr)."
     })),
-    ...additiveMeasures.map((field) => ({
-      name: `Total ${field}`,
-      formula: `SUM(${field}) only if each row contributes an additive count/quantity; otherwise select a per-record summary`,
-      requiredFields: [field],
-      guardrail: "Confirm the measure is additive and show its source unit; never sum rates, snapshots, IDs, or durations.",
+    ...nonAdditiveMeasures.map(item => ({
+      name: item.defaultAggregation === "weighted_avg" ? `Weighted ${item.name}` : `Typical ${item.name}`,
+      formula: item.defaultAggregation === "weighted_avg"
+        ? (valueField && unitsField ? `SUM(${valueField}) / SUM(${unitsField})` : `WEIGHTED_AVG(${item.name})`)
+        : `${item.defaultAggregation.toUpperCase()}(${item.name})`,
+      requiredFields: [item.name],
+      aggregation: item.defaultAggregation,
+      guardrail: item.guardrail || "NON-ADDITIVE: Do not sum directly."
     })),
-    ...durations.map((field) => ({
-      name: `Typical ${field}`,
-      formula: `MEDIAN(${field}) with mean and distribution available for context`,
-      requiredFields: [field],
-      guardrail: "Confirm source unit and exclude missing/invalid values transparently; do not sum a duration field by default.",
-    })),
-    ...rates.map((field) => ({
-      name: field,
-      formula: `Use the source rate if its definition is documented; otherwise derive numerator / eligible denominator only when both are identified`,
-      requiredFields: [field],
-      guardrail: "Never average percentages blindly; expose numerator, denominator, and eligible population.",
-    })),
-    ...statuses.map((field) => ({
-      name: `${field} mix and outcomes`,
-      formula: `COUNT(rows) and share of eligible rows by ${field}`,
-      requiredFields: [field],
-      guardrail: "State the denominator and keep missing/unknown statuses visible.",
-    })),
+    ...statusFields.map(status => ({
+      name: `${status} Distribution & Share`,
+      formula: `COUNT(rows) and share (%) grouped by ${status}`,
+      requiredFields: [status],
+      aggregation: "count",
+      guardrail: "State the denominator clearly and keep missing/none categories visible."
+    }))
   ];
 
+  // Chart Plan
   const chartPlan = [];
-  if (timeFields.length) chartPlan.push({ question: "How does activity or a measure change over time?", chart: "Line chart or compact time series", fields: [...timeFields.slice(0, 1), ...chartMeasures.slice(0, 2)], condition: "Aggregate by a meaningful time grain and show partial-period coverage." });
-  if (categories.length) chartPlan.push({ question: "Which groups contribute most to the outcome or workload?", chart: "Sorted horizontal bar chart", fields: [...categories.slice(0, 2), ...chartMeasures.slice(0, 1)], condition: "Show counts/denominators and cap high-cardinality views to a useful ranked set." });
-  if (durations.length) chartPlan.push({ question: "How are durations distributed and where is the long tail?", chart: "Histogram or box plot", fields: durations.slice(0, 2), condition: "Keep source units visible; flag outliers as investigation candidates only." });
-  if (statuses.length && categories.length) chartPlan.push({ question: "Do outcomes differ across groups?", chart: "Grouped bar, heatmap, or table", fields: [...statuses.slice(0, 1), ...categories.slice(0, 1)], condition: "Use a normalized rate only with a verified eligible denominator; otherwise show counts." });
-  if (ids.length) chartPlan.push({ question: "Which records need follow-up?", chart: "Searchable, sortable detail table", fields: [...ids.slice(0, 1), ...timeFields.slice(0, 1), ...statuses.slice(0, 1)], condition: "Retain source rows for details and apply dashboard filters consistently." });
+  const primaryMeasures = [...additiveMeasures, ...nonAdditiveMeasures.map(m => m.name)];
+  if (timeFields.length) {
+    chartPlan.push({
+      question: "How does operational volume and performance trend over time?",
+      chart: "Procedural SVG Line / Time-Series Chart",
+      fields: [timeFields[0], ...primaryMeasures.slice(0, 2)],
+      condition: "Aggregate by consistent calendar buckets (e.g. day or week) and provide interactive hover probes (#chartTooltip)."
+    });
+  }
+  if (dimensionFields.length || statusFields.length) {
+    const dim = dimensionFields[0] || statusFields[0];
+    chartPlan.push({
+      question: "Which categories, channels, or queues represent the largest volume or exception share?",
+      chart: "Sorted Horizontal Comparison Bar Chart (.hbar-row)",
+      fields: [dim, ...primaryMeasures.slice(0, 1)],
+      condition: "Order bars in descending order; format values cleanly with counts and percentages."
+    });
+  }
+  if (timeFields.length && (dimensionFields.length || statusFields.length)) {
+    chartPlan.push({
+      question: "Where are temporal bottlenecks or load concentrations occurring?",
+      chart: "Heatmap Matrix (.heatmap-grid)",
+      fields: [timeFields[0], (dimensionFields[0] || statusFields[0])],
+      condition: "Use intensity scale to highlight peak operational windows."
+    });
+  }
+  if (idFields.length) {
+    chartPlan.push({
+      question: "Which individual records or exceptions require investigation?",
+      chart: "Searchable Detail Data Table with Slide Drawer (.data-table + .slide-drawer)",
+      fields: [idFields[0], ...(timeFields.slice(0, 1)), ...(statusFields.slice(0, 1)), ...primaryMeasures.slice(0, 2)],
+      condition: "Make rows clickable to slide open transaction detail drawer."
+    });
+  }
 
-  const warnings: string[] = [];
-  if (!timeFields.length) warnings.push("No date/time column confidently detected; avoid time trends until the AI verifies a usable field locally.");
-  if (!measures.length) warnings.push("No numeric measure confidently detected from column metadata. Do not force numeric KPIs; inspect text, dates, locations, relationships, and other field structures locally to find appropriate analysis, or explain what additional context is needed.");
-  if (classified.some((field) => field.confirmMeaning)) warnings.push("Some field roles are uncertain. Resolve the flagged mappings from local inspection or user confirmation before asserting business meaning.");
-  if (!input.businessQuestion) warnings.push("No business question supplied; infer a focused question from the dataset, in any domain, and state the chosen scope in the dashboard.");
+  // Local Suggested Checks
+  const suggestedChecks = [
+    "Verify null percentages on key fields to avoid misleading visual shares.",
+    "Confirm date coverage is complete with no hidden time gaps or missing days.",
+  ];
+  if (orderedUnits && deliveredUnits) suggestedChecks.push(`Verify delivered units (${deliveredUnits}) <= ordered units (${orderedUnits}) on all valid records.`);
+  if (orderedVal && deliveredVal) suggestedChecks.push(`Verify delivered value (${deliveredVal}) <= ordered value (${orderedVal}) on all normal records.`);
 
-  const recommendedComponents: string[] = ["kpiCards", "healthBar", "panels", "validation", "generatedOutput", "buttons", "sectionLayouts", "overlays"];
-  if (categories.length) recommendedComponents.push("horizontalBars", "multiSelectFilter");
-  if (timeFields.length) recommendedComponents.push("chartContainer", "dayDrawer", "dayComparator", "chartTooltip");
-  if (ids.length || categories.length) recommendedComponents.push("dataTables", "drawers");
-  if (timeFields.length && categories.length) recommendedComponents.push("heatmap");
-  recommendedComponents.push("badges", "accessibility");
+  // Ask User Questions (max 3)
+  const askUser: string[] = [];
+  if (unknownFields.length) {
+    askUser.push(`What is the operational meaning and preferred aggregation for column(s): ${unknownFields.slice(0, 3).join(", ")}?`);
+  }
+  if (!input.businessQuestion) {
+    askUser.push("What primary decision or operational question should this dashboard answer for executives?");
+  }
+  if (!timeFields.length) {
+    askUser.push("No explicit date column was detected; would you like to view this as a snapshot comparison or ordinal sequence?");
+  }
 
   return {
-    blueprintVersion: "1.1",
-    datasetLabel: input.datasetLabel ?? "User dataset",
-    businessQuestion: input.businessQuestion ?? null,
-    audience: input.audience ?? null,
-    privacy: "Only column metadata was provided to this tool. The AI must read rows and calculate values locally; never send file contents to DashLint.",
-    recommendedComponents,
-    layoutArchitecture: {
-      tab1: "Executive Overview: 1-screen balanced workspace (.workspace / .overview-split). Left column: .kpi-panel with 2x3 .kpis grid, Operational Health Bar gauge (.health-bar-wrap), and .validation checks. Right column: .message-panel with textarea.summary-textarea, .rules, and 4-button .actions strip ('Copy msg', 'Insights', '.txt', 'Deep Dive/Locations'). Clicking 'Insights' wipes open the full .analytics-overlay with sub-tabs. Crucial: Tab 1 must NOT scroll on desktop — both panels must match 100% height.",
-      tab2: timeFields.length ? "Trends & Analysis: Stacked SVG trend charts (.chart-container) with interactive probe (#chartTooltip), day breakdown table with row click to .day-drawer, and segment distributions (.seg-grid)." : "Distribution & Rankings: Horizontal progress bars (.hbar-row) and category scorecards.",
-      tab3: ids.length ? "Record Explorer: Searchable, sortable data table (.data-table) with row-click detail drawer (.slide-drawer) or day comparator (.comparator-controls)." : "Deep Dive: Detailed breakdown matrices and category tables.",
+    blueprintVersion: "2.0",
+    datasetLabel: input.datasetLabel || "Uploaded Dataset",
+    datasetSummary: {
+      grainGuess,
+      primaryMeasures,
+      dimensions: dimensionFields,
+      timeField: timeFields[0] || null,
+      rowCount: input.rowCount
     },
+    grainGuess,
+    primaryMeasures,
+    dimensions: dimensionFields,
+    timeField: timeFields[0] || null,
+    ratios,
+    fields: classified,
     fieldMappings: classified,
     metricRecipes,
     chartPlan,
-    implementationPriorities: [
-      "STRICT RULE — ZERO TEXT CARD PILES: Never generate piles, stacks, or lists of cards filled with text (no 'Key Findings' text card piles). All written executive briefings and operational updates must be placed inside the Generated Output panel (.gen-output) on Tab 1. All analytical findings must be rendered visually through interactive KPI cards, sorted horizontal bars (.hbar-row), SVG trend charts, heatmaps, and detail tables with drawers.",
-      "STRICT RULE — SIDEBAR INTEGRITY & ZERO TEXT CUT-OFF: The dark left rail (.rail) must maintain a strict width: 268px with min-width: 268px on desktop, and every metric row (.side-card) must use grid-template-columns: minmax(0, 1fr) auto with gap: 8px. Never allow snapshot numbers, period ranges, or counts in the sidebar to be truncated or cut off at the right edge. Metric labels truncate cleanly with text-overflow: ellipsis in column 1, while numeric values in column 2 remain flex-shrink: 0, text-align: right, and fully visible.",
-      "STRICT RULE — CANONICAL SLA-PULSE DAYWISE BREAKDOWN DRAWER: When clicking any date, month, or batch in a table or trend chart, NEVER dump a basic HTML table into a plain white drawer. ALWAYS open the canonical SLA-Pulse DayDrawer (.day-drawer, width: min(720px, 50vw)) featuring: (1) dark header (background: var(--rail-bg)) with back button ('← Back to Daily List'), close button ('✕'), date title, subtitle, and 4-7 compact KPI metric chips (.drawer-kpis); (2) Root Cause Breakdown card (.rc-card) with proportional 2-tone meter track (.rc-meter-track) and actionable takeaway callout; (3) Active contributors/agents chips; (4) Cumulative/running progression SVG line chart (.cum-gos-wrap) with 80% (green) and 60% (amber) target dashed lines and hover probe tooltips (#chartTooltip); (5) Intraday hourly/time-slice clickable bar chart (.hourly-gos-chart); (6) Expandable .hour-detail panel displaying that hour's statistics grid and dynamic operational narrative explanation.",
-      "Use the shared dataset only to choose field mappings, formulas, labels, and insight-generation rules; do not embed source rows, calculated totals, chart points, or fixed findings in the generated HTML.",
-      "Deliver a reusable, downloadable HTML application that opens to an empty upload state and locally parses CSV, XLSX, and XLS files.",
-      "Recompute every visible metric, chart, narrative insight, filter option, validation status, and detail row from the currently uploaded file. Replacing the file must discard all old data and derived state.",
-      "Preserve the existing reference shell, including the exact header upload-control position, while adapting the main dashboard body to this schema.",
-      "The role matcher, metric recipes, and chart ideas in this blueprint are non-exhaustive heuristics, never a domain whitelist or required catalog. Build for any domain and use other verified fields, defensible formulas, and suitable custom visualizations when they better answer the user's question.",
-      "Keep the reference 'built by Tanmay Kalbande' LinkedIn credit at the very bottom of the sidebar in its muted mono style; preserve the source name animation when available.",
-      "Crucial: Tab 1 (Executive Overview) must NEVER scroll vertically on desktop. Structure it as a 2-column balanced workspace (.workspace) where left KPI panel and right Generated Output panel are identically tall.",
-      "CSV parsing should be hand-written (~50 lines). For Excel (.xlsx, .xls) support, load SheetJS via a CDN script tag — never inline the library source (it is ~700 KB). If the CDN is unreachable, disable Excel and prompt the user to export as CSV. Do not require a backend, development server, or network upload for data handling.",
-    ],
-    warnings,
+    suggestedChecks,
+    suggestedViews: {
+      tab1: "Executive Overview: 1-screen balanced workspace (.workspace / .overview-split) with KPI cards, health bar, and generated operational briefing.",
+      tab2: timeFields.length ? "Trends & Time-Series: Interactive SVG charts with hover probes and period drilldown drawers." : "Rankings & Distributions: Sorted horizontal progress bars and category breakdown.",
+      tab3: idFields.length ? "Record Explorer & Diagnostics: Searchable data table with slide drawer inspection." : "Segment Matrix & Deep Dive."
+    },
+    askUser: askUser.slice(0, 3),
+    privacy: "Strict metadata-only profile. No dataset rows, cell values, or sample data were sent or stored."
   };
 }

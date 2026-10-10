@@ -1,0 +1,401 @@
+Ticket_ID,Timestamp,Queue,Agent,Duration_Seconds,Wait_Time_Seconds,Outcome,SLA_Breach_Flag
+TCK-0001,2026-03-02T09:07:13Z,"Technical Support","Priya Sharma",108,22,"Escalated Tier 2",FALSE
+TCK-0002,2026-03-03T10:14:26Z,"Order Tracking","Rohan Gupta",126,34,"Resolved Follow-up",FALSE
+TCK-0003,2026-03-04T11:21:39Z,"Returns & Refunds","Neha Deshmukh",144,46,"Customer Abandoned",FALSE
+TCK-0004,2026-03-05T12:28:52Z,"Enterprise VIP","Vikram Singh",162,58,"Resolved First Contact",FALSE
+TCK-0005,2026-03-06T13:35:05Z,"Billing & Invoicing","Ananya Iyer",180,70,"Escalated Tier 2",FALSE
+TCK-0006,2026-03-07T14:42:18Z,"Technical Support","Aarav Patel",198,82,"Resolved Follow-up",FALSE
+TCK-0007,2026-03-08T15:49:31Z,"Order Tracking","Priya Sharma",216,94,"Customer Abandoned",FALSE
+TCK-0008,2026-03-09T16:56:44Z,"Returns & Refunds","Rohan Gupta",234,106,"Resolved First Contact",FALSE
+TCK-0009,2026-03-10T17:03:57Z,"Enterprise VIP","Neha Deshmukh",252,118,"Escalated Tier 2",FALSE
+TCK-0010,2026-03-11T18:10:10Z,"Billing & Invoicing","Vikram Singh",270,130,"Resolved Follow-up",FALSE
+TCK-0011,2026-03-12T19:17:23Z,"Technical Support","Ananya Iyer",288,142,"Customer Abandoned",FALSE
+TCK-0012,2026-03-13T08:24:36Z,"Order Tracking","Aarav Patel",306,154,"Resolved First Contact",FALSE
+TCK-0013,2026-03-14T09:31:49Z,"Returns & Refunds","Priya Sharma",324,166,"Escalated Tier 2",FALSE
+TCK-0014,2026-03-15T10:38:02Z,"Enterprise VIP","Rohan Gupta",342,178,"Resolved Follow-up",FALSE
+TCK-0015,2026-03-16T11:45:15Z,"Billing & Invoicing","Neha Deshmukh",360,190,"Customer Abandoned",TRUE
+TCK-0016,2026-03-17T12:52:28Z,"Technical Support","Vikram Singh",378,202,"Resolved First Contact",TRUE
+TCK-0017,2026-03-18T13:59:41Z,"Order Tracking","Ananya Iyer",396,214,"Escalated Tier 2",TRUE
+TCK-0018,2026-03-19T14:06:54Z,"Returns & Refunds","Aarav Patel",414,226,"Resolved Follow-up",TRUE
+TCK-0019,2026-03-20T15:13:07Z,"Enterprise VIP","Priya Sharma",432,238,"Customer Abandoned",TRUE
+TCK-0020,2026-03-21T16:20:20Z,"Billing & Invoicing","Rohan Gupta",450,250,"Resolved First Contact",TRUE
+TCK-0021,2026-03-22T17:27:33Z,"Technical Support","Neha Deshmukh",468,262,"Escalated Tier 2",TRUE
+TCK-0022,2026-03-23T18:34:46Z,"Order Tracking","Vikram Singh",486,274,"Resolved Follow-up",TRUE
+TCK-0023,2026-03-24T19:41:59Z,"Returns & Refunds","Ananya Iyer",504,286,"Customer Abandoned",TRUE
+TCK-0024,2026-03-25T08:48:12Z,"Enterprise VIP","Aarav Patel",522,298,"Resolved First Contact",TRUE
+TCK-0025,2026-03-26T09:55:25Z,"Billing & Invoicing","Priya Sharma",540,310,"Escalated Tier 2",TRUE
+TCK-0026,2026-03-27T10:02:38Z,"Technical Support","Rohan Gupta",558,322,"Resolved Follow-up",TRUE
+TCK-0027,2026-03-28T11:09:51Z,"Order Tracking","Neha Deshmukh",576,334,"Customer Abandoned",TRUE
+TCK-0028,2026-03-01T12:16:04Z,"Returns & Refunds","Vikram Singh",594,346,"Resolved First Contact",TRUE
+TCK-0029,2026-03-02T13:23:17Z,"Enterprise VIP","Ananya Iyer",612,358,"Escalated Tier 2",TRUE
+TCK-0030,2026-03-03T14:30:30Z,"Billing & Invoicing","Aarav Patel",630,10,"Resolved Follow-up",TRUE
+TCK-0031,2026-03-04T15:37:43Z,"Technical Support","Priya Sharma",648,22,"Customer Abandoned",TRUE
+TCK-0032,2026-03-05T16:44:56Z,"Order Tracking","Rohan Gupta",666,34,"Resolved First Contact",TRUE
+TCK-0033,2026-03-06T17:51:09Z,"Returns & Refunds","Neha Deshmukh",684,46,"Escalated Tier 2",TRUE
+TCK-0034,2026-03-07T18:58:22Z,"Enterprise VIP","Vikram Singh",702,58,"Resolved Follow-up",TRUE
+TCK-0035,2026-03-08T19:05:35Z,"Billing & Invoicing","Ananya Iyer",720,70,"Customer Abandoned",TRUE
+TCK-0036,2026-03-09T08:12:48Z,"Technical Support","Aarav Patel",738,82,"Resolved First Contact",TRUE
+TCK-0037,2026-03-10T09:19:01Z,"Order Tracking","Priya Sharma",756,94,"Escalated Tier 2",TRUE
+TCK-0038,2026-03-11T10:26:14Z,"Returns & Refunds","Rohan Gupta",774,106,"Resolved Follow-up",TRUE
+TCK-0039,2026-03-12T11:33:27Z,"Enterprise VIP","Neha Deshmukh",792,118,"Customer Abandoned",TRUE
+TCK-0040,2026-03-13T12:40:40Z,"Billing & Invoicing","Vikram Singh",810,130,"Resolved First Contact",TRUE
+TCK-0041,2026-03-14T13:47:53Z,"Technical Support","Ananya Iyer",828,142,"Escalated Tier 2",TRUE
+TCK-0042,2026-03-15T14:54:06Z,"Order Tracking","Aarav Patel",846,154,"Resolved Follow-up",TRUE
+TCK-0043,2026-03-16T15:01:19Z,"Returns & Refunds","Priya Sharma",864,166,"Customer Abandoned",TRUE
+TCK-0044,2026-03-17T16:08:32Z,"Enterprise VIP","Rohan Gupta",882,178,"Resolved First Contact",TRUE
+TCK-0045,2026-03-18T17:15:45Z,"Billing & Invoicing","Neha Deshmukh",900,190,"Escalated Tier 2",TRUE
+TCK-0046,2026-03-19T18:22:58Z,"Technical Support","Vikram Singh",918,202,"Resolved Follow-up",TRUE
+TCK-0047,2026-03-20T19:29:11Z,"Order Tracking","Ananya Iyer",936,214,"Customer Abandoned",TRUE
+TCK-0048,2026-03-21T08:36:24Z,"Returns & Refunds","Aarav Patel",954,226,"Resolved First Contact",TRUE
+TCK-0049,2026-03-22T09:43:37Z,"Enterprise VIP","Priya Sharma",972,238,"Escalated Tier 2",TRUE
+TCK-0050,2026-03-23T10:50:50Z,"Billing & Invoicing","Rohan Gupta",90,250,"Resolved Follow-up",TRUE
+TCK-0051,2026-03-24T11:57:03Z,"Technical Support","Neha Deshmukh",108,262,"Customer Abandoned",TRUE
+TCK-0052,2026-03-25T12:04:16Z,"Order Tracking","Vikram Singh",126,274,"Resolved First Contact",TRUE
+TCK-0053,2026-03-26T13:11:29Z,"Returns & Refunds","Ananya Iyer",144,286,"Escalated Tier 2",TRUE
+TCK-0054,2026-03-27T14:18:42Z,"Enterprise VIP","Aarav Patel",162,298,"Resolved Follow-up",TRUE
+TCK-0055,2026-03-28T15:25:55Z,"Billing & Invoicing","Priya Sharma",180,310,"Customer Abandoned",TRUE
+TCK-0056,2026-03-01T16:32:08Z,"Technical Support","Rohan Gupta",198,322,"Resolved First Contact",TRUE
+TCK-0057,2026-03-02T17:39:21Z,"Order Tracking","Neha Deshmukh",216,334,"Escalated Tier 2",TRUE
+TCK-0058,2026-03-03T18:46:34Z,"Returns & Refunds","Vikram Singh",234,346,"Resolved Follow-up",TRUE
+TCK-0059,2026-03-04T19:53:47Z,"Enterprise VIP","Ananya Iyer",252,358,"Customer Abandoned",TRUE
+TCK-0060,2026-03-05T08:00:00Z,"Billing & Invoicing","Aarav Patel",270,10,"Resolved First Contact",FALSE
+TCK-0061,2026-03-06T09:07:13Z,"Technical Support","Priya Sharma",288,22,"Escalated Tier 2",FALSE
+TCK-0062,2026-03-07T10:14:26Z,"Order Tracking","Rohan Gupta",306,34,"Resolved Follow-up",FALSE
+TCK-0063,2026-03-08T11:21:39Z,"Returns & Refunds","Neha Deshmukh",324,46,"Customer Abandoned",FALSE
+TCK-0064,2026-03-09T12:28:52Z,"Enterprise VIP","Vikram Singh",342,58,"Resolved First Contact",FALSE
+TCK-0065,2026-03-10T13:35:05Z,"Billing & Invoicing","Ananya Iyer",360,70,"Escalated Tier 2",FALSE
+TCK-0066,2026-03-11T14:42:18Z,"Technical Support","Aarav Patel",378,82,"Resolved Follow-up",FALSE
+TCK-0067,2026-03-12T15:49:31Z,"Order Tracking","Priya Sharma",396,94,"Customer Abandoned",FALSE
+TCK-0068,2026-03-13T16:56:44Z,"Returns & Refunds","Rohan Gupta",414,106,"Resolved First Contact",FALSE
+TCK-0069,2026-03-14T17:03:57Z,"Enterprise VIP","Neha Deshmukh",432,118,"Escalated Tier 2",FALSE
+TCK-0070,2026-03-15T18:10:10Z,"Billing & Invoicing","Vikram Singh",450,130,"Resolved Follow-up",FALSE
+TCK-0071,2026-03-16T19:17:23Z,"Technical Support","Ananya Iyer",468,142,"Customer Abandoned",FALSE
+TCK-0072,2026-03-17T08:24:36Z,"Order Tracking","Aarav Patel",486,154,"Resolved First Contact",FALSE
+TCK-0073,2026-03-18T09:31:49Z,"Returns & Refunds","Priya Sharma",504,166,"Escalated Tier 2",FALSE
+TCK-0074,2026-03-19T10:38:02Z,"Enterprise VIP","Rohan Gupta",522,178,"Resolved Follow-up",FALSE
+TCK-0075,2026-03-20T11:45:15Z,"Billing & Invoicing","Neha Deshmukh",540,190,"Customer Abandoned",TRUE
+TCK-0076,2026-03-21T12:52:28Z,"Technical Support","Vikram Singh",558,202,"Resolved First Contact",TRUE
+TCK-0077,2026-03-22T13:59:41Z,"Order Tracking","Ananya Iyer",576,214,"Escalated Tier 2",TRUE
+TCK-0078,2026-03-23T14:06:54Z,"Returns & Refunds","Aarav Patel",594,226,"Resolved Follow-up",TRUE
+TCK-0079,2026-03-24T15:13:07Z,"Enterprise VIP","Priya Sharma",612,238,"Customer Abandoned",TRUE
+TCK-0080,2026-03-25T16:20:20Z,"Billing & Invoicing","Rohan Gupta",630,250,"Resolved First Contact",TRUE
+TCK-0081,2026-03-26T17:27:33Z,"Technical Support","Neha Deshmukh",648,262,"Escalated Tier 2",TRUE
+TCK-0082,2026-03-27T18:34:46Z,"Order Tracking","Vikram Singh",666,274,"Resolved Follow-up",TRUE
+TCK-0083,2026-03-28T19:41:59Z,"Returns & Refunds","Ananya Iyer",684,286,"Customer Abandoned",TRUE
+TCK-0084,2026-03-01T08:48:12Z,"Enterprise VIP","Aarav Patel",702,298,"Resolved First Contact",TRUE
+TCK-0085,2026-03-02T09:55:25Z,"Billing & Invoicing","Priya Sharma",720,310,"Escalated Tier 2",TRUE
+TCK-0086,2026-03-03T10:02:38Z,"Technical Support","Rohan Gupta",738,322,"Resolved Follow-up",TRUE
+TCK-0087,2026-03-04T11:09:51Z,"Order Tracking","Neha Deshmukh",756,334,"Customer Abandoned",TRUE
+TCK-0088,2026-03-05T12:16:04Z,"Returns & Refunds","Vikram Singh",774,346,"Resolved First Contact",TRUE
+TCK-0089,2026-03-06T13:23:17Z,"Enterprise VIP","Ananya Iyer",792,358,"Escalated Tier 2",TRUE
+TCK-0090,2026-03-07T14:30:30Z,"Billing & Invoicing","Aarav Patel",810,10,"Resolved Follow-up",TRUE
+TCK-0091,2026-03-08T15:37:43Z,"Technical Support","Priya Sharma",828,22,"Customer Abandoned",TRUE
+TCK-0092,2026-03-09T16:44:56Z,"Order Tracking","Rohan Gupta",846,34,"Resolved First Contact",TRUE
+TCK-0093,2026-03-10T17:51:09Z,"Returns & Refunds","Neha Deshmukh",864,46,"Escalated Tier 2",TRUE
+TCK-0094,2026-03-11T18:58:22Z,"Enterprise VIP","Vikram Singh",882,58,"Resolved Follow-up",TRUE
+TCK-0095,2026-03-12T19:05:35Z,"Billing & Invoicing","Ananya Iyer",900,70,"Customer Abandoned",TRUE
+TCK-0096,2026-03-13T08:12:48Z,"Technical Support","Aarav Patel",918,82,"Resolved First Contact",TRUE
+TCK-0097,2026-03-14T09:19:01Z,"Order Tracking","Priya Sharma",936,94,"Escalated Tier 2",TRUE
+TCK-0098,2026-03-15T10:26:14Z,"Returns & Refunds","Rohan Gupta",954,106,"Resolved Follow-up",TRUE
+TCK-0099,2026-03-16T11:33:27Z,"Enterprise VIP","Neha Deshmukh",972,118,"Customer Abandoned",TRUE
+TCK-0100,2026-03-17T12:40:40Z,"Billing & Invoicing","Vikram Singh",90,130,"Resolved First Contact",FALSE
+TCK-0101,2026-03-18T13:47:53Z,"Technical Support","Ananya Iyer",108,142,"Escalated Tier 2",FALSE
+TCK-0102,2026-03-19T14:54:06Z,"Order Tracking","Aarav Patel",126,154,"Resolved Follow-up",FALSE
+TCK-0103,2026-03-20T15:01:19Z,"Returns & Refunds","Priya Sharma",144,166,"Customer Abandoned",FALSE
+TCK-0104,2026-03-21T16:08:32Z,"Enterprise VIP","Rohan Gupta",162,178,"Resolved First Contact",FALSE
+TCK-0105,2026-03-22T17:15:45Z,"Billing & Invoicing","Neha Deshmukh",180,190,"Escalated Tier 2",TRUE
+TCK-0106,2026-03-23T18:22:58Z,"Technical Support","Vikram Singh",198,202,"Resolved Follow-up",TRUE
+TCK-0107,2026-03-24T19:29:11Z,"Order Tracking","Ananya Iyer",216,214,"Customer Abandoned",TRUE
+TCK-0108,2026-03-25T08:36:24Z,"Returns & Refunds","Aarav Patel",234,226,"Resolved First Contact",TRUE
+TCK-0109,2026-03-26T09:43:37Z,"Enterprise VIP","Priya Sharma",252,238,"Escalated Tier 2",TRUE
+TCK-0110,2026-03-27T10:50:50Z,"Billing & Invoicing","Rohan Gupta",270,250,"Resolved Follow-up",TRUE
+TCK-0111,2026-03-28T11:57:03Z,"Technical Support","Neha Deshmukh",288,262,"Customer Abandoned",TRUE
+TCK-0112,2026-03-01T12:04:16Z,"Order Tracking","Vikram Singh",306,274,"Resolved First Contact",TRUE
+TCK-0113,2026-03-02T13:11:29Z,"Returns & Refunds","Ananya Iyer",324,286,"Escalated Tier 2",TRUE
+TCK-0114,2026-03-03T14:18:42Z,"Enterprise VIP","Aarav Patel",342,298,"Resolved Follow-up",TRUE
+TCK-0115,2026-03-04T15:25:55Z,"Billing & Invoicing","Priya Sharma",360,310,"Customer Abandoned",TRUE
+TCK-0116,2026-03-05T16:32:08Z,"Technical Support","Rohan Gupta",378,322,"Resolved First Contact",TRUE
+TCK-0117,2026-03-06T17:39:21Z,"Order Tracking","Neha Deshmukh",396,334,"Escalated Tier 2",TRUE
+TCK-0118,2026-03-07T18:46:34Z,"Returns & Refunds","Vikram Singh",414,346,"Resolved Follow-up",TRUE
+TCK-0119,2026-03-08T19:53:47Z,"Enterprise VIP","Ananya Iyer",432,358,"Customer Abandoned",TRUE
+TCK-0120,2026-03-09T08:00:00Z,"Billing & Invoicing","Aarav Patel",450,10,"Resolved First Contact",FALSE
+TCK-0121,2026-03-10T09:07:13Z,"Technical Support","Priya Sharma",468,22,"Escalated Tier 2",FALSE
+TCK-0122,2026-03-11T10:14:26Z,"Order Tracking","Rohan Gupta",486,34,"Resolved Follow-up",FALSE
+TCK-0123,2026-03-12T11:21:39Z,"Returns & Refunds","Neha Deshmukh",504,46,"Customer Abandoned",FALSE
+TCK-0124,2026-03-13T12:28:52Z,"Enterprise VIP","Vikram Singh",522,58,"Resolved First Contact",FALSE
+TCK-0125,2026-03-14T13:35:05Z,"Billing & Invoicing","Ananya Iyer",540,70,"Escalated Tier 2",FALSE
+TCK-0126,2026-03-15T14:42:18Z,"Technical Support","Aarav Patel",558,82,"Resolved Follow-up",FALSE
+TCK-0127,2026-03-16T15:49:31Z,"Order Tracking","Priya Sharma",576,94,"Customer Abandoned",FALSE
+TCK-0128,2026-03-17T16:56:44Z,"Returns & Refunds","Rohan Gupta",594,106,"Resolved First Contact",FALSE
+TCK-0129,2026-03-18T17:03:57Z,"Enterprise VIP","Neha Deshmukh",612,118,"Escalated Tier 2",TRUE
+TCK-0130,2026-03-19T18:10:10Z,"Billing & Invoicing","Vikram Singh",630,130,"Resolved Follow-up",TRUE
+TCK-0131,2026-03-20T19:17:23Z,"Technical Support","Ananya Iyer",648,142,"Customer Abandoned",TRUE
+TCK-0132,2026-03-21T08:24:36Z,"Order Tracking","Aarav Patel",666,154,"Resolved First Contact",TRUE
+TCK-0133,2026-03-22T09:31:49Z,"Returns & Refunds","Priya Sharma",684,166,"Escalated Tier 2",TRUE
+TCK-0134,2026-03-23T10:38:02Z,"Enterprise VIP","Rohan Gupta",702,178,"Resolved Follow-up",TRUE
+TCK-0135,2026-03-24T11:45:15Z,"Billing & Invoicing","Neha Deshmukh",720,190,"Customer Abandoned",TRUE
+TCK-0136,2026-03-25T12:52:28Z,"Technical Support","Vikram Singh",738,202,"Resolved First Contact",TRUE
+TCK-0137,2026-03-26T13:59:41Z,"Order Tracking","Ananya Iyer",756,214,"Escalated Tier 2",TRUE
+TCK-0138,2026-03-27T14:06:54Z,"Returns & Refunds","Aarav Patel",774,226,"Resolved Follow-up",TRUE
+TCK-0139,2026-03-28T15:13:07Z,"Enterprise VIP","Priya Sharma",792,238,"Customer Abandoned",TRUE
+TCK-0140,2026-03-01T16:20:20Z,"Billing & Invoicing","Rohan Gupta",810,250,"Resolved First Contact",TRUE
+TCK-0141,2026-03-02T17:27:33Z,"Technical Support","Neha Deshmukh",828,262,"Escalated Tier 2",TRUE
+TCK-0142,2026-03-03T18:34:46Z,"Order Tracking","Vikram Singh",846,274,"Resolved Follow-up",TRUE
+TCK-0143,2026-03-04T19:41:59Z,"Returns & Refunds","Ananya Iyer",864,286,"Customer Abandoned",TRUE
+TCK-0144,2026-03-05T08:48:12Z,"Enterprise VIP","Aarav Patel",882,298,"Resolved First Contact",TRUE
+TCK-0145,2026-03-06T09:55:25Z,"Billing & Invoicing","Priya Sharma",900,310,"Escalated Tier 2",TRUE
+TCK-0146,2026-03-07T10:02:38Z,"Technical Support","Rohan Gupta",918,322,"Resolved Follow-up",TRUE
+TCK-0147,2026-03-08T11:09:51Z,"Order Tracking","Neha Deshmukh",936,334,"Customer Abandoned",TRUE
+TCK-0148,2026-03-09T12:16:04Z,"Returns & Refunds","Vikram Singh",954,346,"Resolved First Contact",TRUE
+TCK-0149,2026-03-10T13:23:17Z,"Enterprise VIP","Ananya Iyer",972,358,"Escalated Tier 2",TRUE
+TCK-0150,2026-03-11T14:30:30Z,"Billing & Invoicing","Aarav Patel",90,10,"Resolved Follow-up",FALSE
+TCK-0151,2026-03-12T15:37:43Z,"Technical Support","Priya Sharma",108,22,"Customer Abandoned",FALSE
+TCK-0152,2026-03-13T16:44:56Z,"Order Tracking","Rohan Gupta",126,34,"Resolved First Contact",FALSE
+TCK-0153,2026-03-14T17:51:09Z,"Returns & Refunds","Neha Deshmukh",144,46,"Escalated Tier 2",FALSE
+TCK-0154,2026-03-15T18:58:22Z,"Enterprise VIP","Vikram Singh",162,58,"Resolved Follow-up",FALSE
+TCK-0155,2026-03-16T19:05:35Z,"Billing & Invoicing","Ananya Iyer",180,70,"Customer Abandoned",FALSE
+TCK-0156,2026-03-17T08:12:48Z,"Technical Support","Aarav Patel",198,82,"Resolved First Contact",FALSE
+TCK-0157,2026-03-18T09:19:01Z,"Order Tracking","Priya Sharma",216,94,"Escalated Tier 2",FALSE
+TCK-0158,2026-03-19T10:26:14Z,"Returns & Refunds","Rohan Gupta",234,106,"Resolved Follow-up",FALSE
+TCK-0159,2026-03-20T11:33:27Z,"Enterprise VIP","Neha Deshmukh",252,118,"Customer Abandoned",FALSE
+TCK-0160,2026-03-21T12:40:40Z,"Billing & Invoicing","Vikram Singh",270,130,"Resolved First Contact",FALSE
+TCK-0161,2026-03-22T13:47:53Z,"Technical Support","Ananya Iyer",288,142,"Escalated Tier 2",FALSE
+TCK-0162,2026-03-23T14:54:06Z,"Order Tracking","Aarav Patel",306,154,"Resolved Follow-up",FALSE
+TCK-0163,2026-03-24T15:01:19Z,"Returns & Refunds","Priya Sharma",324,166,"Customer Abandoned",FALSE
+TCK-0164,2026-03-25T16:08:32Z,"Enterprise VIP","Rohan Gupta",342,178,"Resolved First Contact",FALSE
+TCK-0165,2026-03-26T17:15:45Z,"Billing & Invoicing","Neha Deshmukh",360,190,"Escalated Tier 2",TRUE
+TCK-0166,2026-03-27T18:22:58Z,"Technical Support","Vikram Singh",378,202,"Resolved Follow-up",TRUE
+TCK-0167,2026-03-28T19:29:11Z,"Order Tracking","Ananya Iyer",396,214,"Customer Abandoned",TRUE
+TCK-0168,2026-03-01T08:36:24Z,"Returns & Refunds","Aarav Patel",414,226,"Resolved First Contact",TRUE
+TCK-0169,2026-03-02T09:43:37Z,"Enterprise VIP","Priya Sharma",432,238,"Escalated Tier 2",TRUE
+TCK-0170,2026-03-03T10:50:50Z,"Billing & Invoicing","Rohan Gupta",450,250,"Resolved Follow-up",TRUE
+TCK-0171,2026-03-04T11:57:03Z,"Technical Support","Neha Deshmukh",468,262,"Customer Abandoned",TRUE
+TCK-0172,2026-03-05T12:04:16Z,"Order Tracking","Vikram Singh",486,274,"Resolved First Contact",TRUE
+TCK-0173,2026-03-06T13:11:29Z,"Returns & Refunds","Ananya Iyer",504,286,"Escalated Tier 2",TRUE
+TCK-0174,2026-03-07T14:18:42Z,"Enterprise VIP","Aarav Patel",522,298,"Resolved Follow-up",TRUE
+TCK-0175,2026-03-08T15:25:55Z,"Billing & Invoicing","Priya Sharma",540,310,"Customer Abandoned",TRUE
+TCK-0176,2026-03-09T16:32:08Z,"Technical Support","Rohan Gupta",558,322,"Resolved First Contact",TRUE
+TCK-0177,2026-03-10T17:39:21Z,"Order Tracking","Neha Deshmukh",576,334,"Escalated Tier 2",TRUE
+TCK-0178,2026-03-11T18:46:34Z,"Returns & Refunds","Vikram Singh",594,346,"Resolved Follow-up",TRUE
+TCK-0179,2026-03-12T19:53:47Z,"Enterprise VIP","Ananya Iyer",612,358,"Customer Abandoned",TRUE
+TCK-0180,2026-03-13T08:00:00Z,"Billing & Invoicing","Aarav Patel",630,10,"Resolved First Contact",TRUE
+TCK-0181,2026-03-14T09:07:13Z,"Technical Support","Priya Sharma",648,22,"Escalated Tier 2",TRUE
+TCK-0182,2026-03-15T10:14:26Z,"Order Tracking","Rohan Gupta",666,34,"Resolved Follow-up",TRUE
+TCK-0183,2026-03-16T11:21:39Z,"Returns & Refunds","Neha Deshmukh",684,46,"Customer Abandoned",TRUE
+TCK-0184,2026-03-17T12:28:52Z,"Enterprise VIP","Vikram Singh",702,58,"Resolved First Contact",TRUE
+TCK-0185,2026-03-18T13:35:05Z,"Billing & Invoicing","Ananya Iyer",720,70,"Escalated Tier 2",TRUE
+TCK-0186,2026-03-19T14:42:18Z,"Technical Support","Aarav Patel",738,82,"Resolved Follow-up",TRUE
+TCK-0187,2026-03-20T15:49:31Z,"Order Tracking","Priya Sharma",756,94,"Customer Abandoned",TRUE
+TCK-0188,2026-03-21T16:56:44Z,"Returns & Refunds","Rohan Gupta",774,106,"Resolved First Contact",TRUE
+TCK-0189,2026-03-22T17:03:57Z,"Enterprise VIP","Neha Deshmukh",792,118,"Escalated Tier 2",TRUE
+TCK-0190,2026-03-23T18:10:10Z,"Billing & Invoicing","Vikram Singh",810,130,"Resolved Follow-up",TRUE
+TCK-0191,2026-03-24T19:17:23Z,"Technical Support","Ananya Iyer",828,142,"Customer Abandoned",TRUE
+TCK-0192,2026-03-25T08:24:36Z,"Order Tracking","Aarav Patel",846,154,"Resolved First Contact",TRUE
+TCK-0193,2026-03-26T09:31:49Z,"Returns & Refunds","Priya Sharma",864,166,"Escalated Tier 2",TRUE
+TCK-0194,2026-03-27T10:38:02Z,"Enterprise VIP","Rohan Gupta",882,178,"Resolved Follow-up",TRUE
+TCK-0195,2026-03-28T11:45:15Z,"Billing & Invoicing","Neha Deshmukh",900,190,"Customer Abandoned",TRUE
+TCK-0196,2026-03-01T12:52:28Z,"Technical Support","Vikram Singh",918,202,"Resolved First Contact",TRUE
+TCK-0197,2026-03-02T13:59:41Z,"Order Tracking","Ananya Iyer",936,214,"Escalated Tier 2",TRUE
+TCK-0198,2026-03-03T14:06:54Z,"Returns & Refunds","Aarav Patel",954,226,"Resolved Follow-up",TRUE
+TCK-0199,2026-03-04T15:13:07Z,"Enterprise VIP","Priya Sharma",972,238,"Customer Abandoned",TRUE
+TCK-0200,2026-03-05T16:20:20Z,"Billing & Invoicing","Rohan Gupta",90,250,"Resolved First Contact",TRUE
+TCK-0201,2026-03-06T17:27:33Z,"Technical Support","Neha Deshmukh",108,262,"Escalated Tier 2",TRUE
+TCK-0202,2026-03-07T18:34:46Z,"Order Tracking","Vikram Singh",126,274,"Resolved Follow-up",TRUE
+TCK-0203,2026-03-08T19:41:59Z,"Returns & Refunds","Ananya Iyer",144,286,"Customer Abandoned",TRUE
+TCK-0204,2026-03-09T08:48:12Z,"Enterprise VIP","Aarav Patel",162,298,"Resolved First Contact",TRUE
+TCK-0205,2026-03-10T09:55:25Z,"Billing & Invoicing","Priya Sharma",180,310,"Escalated Tier 2",TRUE
+TCK-0206,2026-03-11T10:02:38Z,"Technical Support","Rohan Gupta",198,322,"Resolved Follow-up",TRUE
+TCK-0207,2026-03-12T11:09:51Z,"Order Tracking","Neha Deshmukh",216,334,"Customer Abandoned",TRUE
+TCK-0208,2026-03-13T12:16:04Z,"Returns & Refunds","Vikram Singh",234,346,"Resolved First Contact",TRUE
+TCK-0209,2026-03-14T13:23:17Z,"Enterprise VIP","Ananya Iyer",252,358,"Escalated Tier 2",TRUE
+TCK-0210,2026-03-15T14:30:30Z,"Billing & Invoicing","Aarav Patel",270,10,"Resolved Follow-up",FALSE
+TCK-0211,2026-03-16T15:37:43Z,"Technical Support","Priya Sharma",288,22,"Customer Abandoned",FALSE
+TCK-0212,2026-03-17T16:44:56Z,"Order Tracking","Rohan Gupta",306,34,"Resolved First Contact",FALSE
+TCK-0213,2026-03-18T17:51:09Z,"Returns & Refunds","Neha Deshmukh",324,46,"Escalated Tier 2",FALSE
+TCK-0214,2026-03-19T18:58:22Z,"Enterprise VIP","Vikram Singh",342,58,"Resolved Follow-up",FALSE
+TCK-0215,2026-03-20T19:05:35Z,"Billing & Invoicing","Ananya Iyer",360,70,"Customer Abandoned",FALSE
+TCK-0216,2026-03-21T08:12:48Z,"Technical Support","Aarav Patel",378,82,"Resolved First Contact",FALSE
+TCK-0217,2026-03-22T09:19:01Z,"Order Tracking","Priya Sharma",396,94,"Escalated Tier 2",FALSE
+TCK-0218,2026-03-23T10:26:14Z,"Returns & Refunds","Rohan Gupta",414,106,"Resolved Follow-up",FALSE
+TCK-0219,2026-03-24T11:33:27Z,"Enterprise VIP","Neha Deshmukh",432,118,"Customer Abandoned",FALSE
+TCK-0220,2026-03-25T12:40:40Z,"Billing & Invoicing","Vikram Singh",450,130,"Resolved First Contact",FALSE
+TCK-0221,2026-03-26T13:47:53Z,"Technical Support","Ananya Iyer",468,142,"Escalated Tier 2",FALSE
+TCK-0222,2026-03-27T14:54:06Z,"Order Tracking","Aarav Patel",486,154,"Resolved Follow-up",FALSE
+TCK-0223,2026-03-28T15:01:19Z,"Returns & Refunds","Priya Sharma",504,166,"Customer Abandoned",FALSE
+TCK-0224,2026-03-01T16:08:32Z,"Enterprise VIP","Rohan Gupta",522,178,"Resolved First Contact",FALSE
+TCK-0225,2026-03-02T17:15:45Z,"Billing & Invoicing","Neha Deshmukh",540,190,"Escalated Tier 2",TRUE
+TCK-0226,2026-03-03T18:22:58Z,"Technical Support","Vikram Singh",558,202,"Resolved Follow-up",TRUE
+TCK-0227,2026-03-04T19:29:11Z,"Order Tracking","Ananya Iyer",576,214,"Customer Abandoned",TRUE
+TCK-0228,2026-03-05T08:36:24Z,"Returns & Refunds","Aarav Patel",594,226,"Resolved First Contact",TRUE
+TCK-0229,2026-03-06T09:43:37Z,"Enterprise VIP","Priya Sharma",612,238,"Escalated Tier 2",TRUE
+TCK-0230,2026-03-07T10:50:50Z,"Billing & Invoicing","Rohan Gupta",630,250,"Resolved Follow-up",TRUE
+TCK-0231,2026-03-08T11:57:03Z,"Technical Support","Neha Deshmukh",648,262,"Customer Abandoned",TRUE
+TCK-0232,2026-03-09T12:04:16Z,"Order Tracking","Vikram Singh",666,274,"Resolved First Contact",TRUE
+TCK-0233,2026-03-10T13:11:29Z,"Returns & Refunds","Ananya Iyer",684,286,"Escalated Tier 2",TRUE
+TCK-0234,2026-03-11T14:18:42Z,"Enterprise VIP","Aarav Patel",702,298,"Resolved Follow-up",TRUE
+TCK-0235,2026-03-12T15:25:55Z,"Billing & Invoicing","Priya Sharma",720,310,"Customer Abandoned",TRUE
+TCK-0236,2026-03-13T16:32:08Z,"Technical Support","Rohan Gupta",738,322,"Resolved First Contact",TRUE
+TCK-0237,2026-03-14T17:39:21Z,"Order Tracking","Neha Deshmukh",756,334,"Escalated Tier 2",TRUE
+TCK-0238,2026-03-15T18:46:34Z,"Returns & Refunds","Vikram Singh",774,346,"Resolved Follow-up",TRUE
+TCK-0239,2026-03-16T19:53:47Z,"Enterprise VIP","Ananya Iyer",792,358,"Customer Abandoned",TRUE
+TCK-0240,2026-03-17T08:00:00Z,"Billing & Invoicing","Aarav Patel",810,10,"Resolved First Contact",TRUE
+TCK-0241,2026-03-18T09:07:13Z,"Technical Support","Priya Sharma",828,22,"Escalated Tier 2",TRUE
+TCK-0242,2026-03-19T10:14:26Z,"Order Tracking","Rohan Gupta",846,34,"Resolved Follow-up",TRUE
+TCK-0243,2026-03-20T11:21:39Z,"Returns & Refunds","Neha Deshmukh",864,46,"Customer Abandoned",TRUE
+TCK-0244,2026-03-21T12:28:52Z,"Enterprise VIP","Vikram Singh",882,58,"Resolved First Contact",TRUE
+TCK-0245,2026-03-22T13:35:05Z,"Billing & Invoicing","Ananya Iyer",900,70,"Escalated Tier 2",TRUE
+TCK-0246,2026-03-23T14:42:18Z,"Technical Support","Aarav Patel",918,82,"Resolved Follow-up",TRUE
+TCK-0247,2026-03-24T15:49:31Z,"Order Tracking","Priya Sharma",936,94,"Customer Abandoned",TRUE
+TCK-0248,2026-03-25T16:56:44Z,"Returns & Refunds","Rohan Gupta",954,106,"Resolved First Contact",TRUE
+TCK-0249,2026-03-26T17:03:57Z,"Enterprise VIP","Neha Deshmukh",972,118,"Escalated Tier 2",TRUE
+TCK-0250,2026-03-27T18:10:10Z,"Billing & Invoicing","Vikram Singh",90,130,"Resolved Follow-up",FALSE
+TCK-0251,2026-03-28T19:17:23Z,"Technical Support","Ananya Iyer",108,142,"Customer Abandoned",FALSE
+TCK-0252,2026-03-01T08:24:36Z,"Order Tracking","Aarav Patel",126,154,"Resolved First Contact",FALSE
+TCK-0253,2026-03-02T09:31:49Z,"Returns & Refunds","Priya Sharma",144,166,"Escalated Tier 2",FALSE
+TCK-0254,2026-03-03T10:38:02Z,"Enterprise VIP","Rohan Gupta",162,178,"Resolved Follow-up",FALSE
+TCK-0255,2026-03-04T11:45:15Z,"Billing & Invoicing","Neha Deshmukh",180,190,"Customer Abandoned",TRUE
+TCK-0256,2026-03-05T12:52:28Z,"Technical Support","Vikram Singh",198,202,"Resolved First Contact",TRUE
+TCK-0257,2026-03-06T13:59:41Z,"Order Tracking","Ananya Iyer",216,214,"Escalated Tier 2",TRUE
+TCK-0258,2026-03-07T14:06:54Z,"Returns & Refunds","Aarav Patel",234,226,"Resolved Follow-up",TRUE
+TCK-0259,2026-03-08T15:13:07Z,"Enterprise VIP","Priya Sharma",252,238,"Customer Abandoned",TRUE
+TCK-0260,2026-03-09T16:20:20Z,"Billing & Invoicing","Rohan Gupta",270,250,"Resolved First Contact",TRUE
+TCK-0261,2026-03-10T17:27:33Z,"Technical Support","Neha Deshmukh",288,262,"Escalated Tier 2",TRUE
+TCK-0262,2026-03-11T18:34:46Z,"Order Tracking","Vikram Singh",306,274,"Resolved Follow-up",TRUE
+TCK-0263,2026-03-12T19:41:59Z,"Returns & Refunds","Ananya Iyer",324,286,"Customer Abandoned",TRUE
+TCK-0264,2026-03-13T08:48:12Z,"Enterprise VIP","Aarav Patel",342,298,"Resolved First Contact",TRUE
+TCK-0265,2026-03-14T09:55:25Z,"Billing & Invoicing","Priya Sharma",360,310,"Escalated Tier 2",TRUE
+TCK-0266,2026-03-15T10:02:38Z,"Technical Support","Rohan Gupta",378,322,"Resolved Follow-up",TRUE
+TCK-0267,2026-03-16T11:09:51Z,"Order Tracking","Neha Deshmukh",396,334,"Customer Abandoned",TRUE
+TCK-0268,2026-03-17T12:16:04Z,"Returns & Refunds","Vikram Singh",414,346,"Resolved First Contact",TRUE
+TCK-0269,2026-03-18T13:23:17Z,"Enterprise VIP","Ananya Iyer",432,358,"Escalated Tier 2",TRUE
+TCK-0270,2026-03-19T14:30:30Z,"Billing & Invoicing","Aarav Patel",450,10,"Resolved Follow-up",FALSE
+TCK-0271,2026-03-20T15:37:43Z,"Technical Support","Priya Sharma",468,22,"Customer Abandoned",FALSE
+TCK-0272,2026-03-21T16:44:56Z,"Order Tracking","Rohan Gupta",486,34,"Resolved First Contact",FALSE
+TCK-0273,2026-03-22T17:51:09Z,"Returns & Refunds","Neha Deshmukh",504,46,"Escalated Tier 2",FALSE
+TCK-0274,2026-03-23T18:58:22Z,"Enterprise VIP","Vikram Singh",522,58,"Resolved Follow-up",FALSE
+TCK-0275,2026-03-24T19:05:35Z,"Billing & Invoicing","Ananya Iyer",540,70,"Customer Abandoned",FALSE
+TCK-0276,2026-03-25T08:12:48Z,"Technical Support","Aarav Patel",558,82,"Resolved First Contact",FALSE
+TCK-0277,2026-03-26T09:19:01Z,"Order Tracking","Priya Sharma",576,94,"Escalated Tier 2",FALSE
+TCK-0278,2026-03-27T10:26:14Z,"Returns & Refunds","Rohan Gupta",594,106,"Resolved Follow-up",FALSE
+TCK-0279,2026-03-28T11:33:27Z,"Enterprise VIP","Neha Deshmukh",612,118,"Customer Abandoned",TRUE
+TCK-0280,2026-03-01T12:40:40Z,"Billing & Invoicing","Vikram Singh",630,130,"Resolved First Contact",TRUE
+TCK-0281,2026-03-02T13:47:53Z,"Technical Support","Ananya Iyer",648,142,"Escalated Tier 2",TRUE
+TCK-0282,2026-03-03T14:54:06Z,"Order Tracking","Aarav Patel",666,154,"Resolved Follow-up",TRUE
+TCK-0283,2026-03-04T15:01:19Z,"Returns & Refunds","Priya Sharma",684,166,"Customer Abandoned",TRUE
+TCK-0284,2026-03-05T16:08:32Z,"Enterprise VIP","Rohan Gupta",702,178,"Resolved First Contact",TRUE
+TCK-0285,2026-03-06T17:15:45Z,"Billing & Invoicing","Neha Deshmukh",720,190,"Escalated Tier 2",TRUE
+TCK-0286,2026-03-07T18:22:58Z,"Technical Support","Vikram Singh",738,202,"Resolved Follow-up",TRUE
+TCK-0287,2026-03-08T19:29:11Z,"Order Tracking","Ananya Iyer",756,214,"Customer Abandoned",TRUE
+TCK-0288,2026-03-09T08:36:24Z,"Returns & Refunds","Aarav Patel",774,226,"Resolved First Contact",TRUE
+TCK-0289,2026-03-10T09:43:37Z,"Enterprise VIP","Priya Sharma",792,238,"Escalated Tier 2",TRUE
+TCK-0290,2026-03-11T10:50:50Z,"Billing & Invoicing","Rohan Gupta",810,250,"Resolved Follow-up",TRUE
+TCK-0291,2026-03-12T11:57:03Z,"Technical Support","Neha Deshmukh",828,262,"Customer Abandoned",TRUE
+TCK-0292,2026-03-13T12:04:16Z,"Order Tracking","Vikram Singh",846,274,"Resolved First Contact",TRUE
+TCK-0293,2026-03-14T13:11:29Z,"Returns & Refunds","Ananya Iyer",864,286,"Escalated Tier 2",TRUE
+TCK-0294,2026-03-15T14:18:42Z,"Enterprise VIP","Aarav Patel",882,298,"Resolved Follow-up",TRUE
+TCK-0295,2026-03-16T15:25:55Z,"Billing & Invoicing","Priya Sharma",900,310,"Customer Abandoned",TRUE
+TCK-0296,2026-03-17T16:32:08Z,"Technical Support","Rohan Gupta",918,322,"Resolved First Contact",TRUE
+TCK-0297,2026-03-18T17:39:21Z,"Order Tracking","Neha Deshmukh",936,334,"Escalated Tier 2",TRUE
+TCK-0298,2026-03-19T18:46:34Z,"Returns & Refunds","Vikram Singh",954,346,"Resolved Follow-up",TRUE
+TCK-0299,2026-03-20T19:53:47Z,"Enterprise VIP","Ananya Iyer",972,358,"Customer Abandoned",TRUE
+TCK-0300,2026-03-21T08:00:00Z,"Billing & Invoicing","Aarav Patel",90,10,"Resolved First Contact",FALSE
+TCK-0301,2026-03-22T09:07:13Z,"Technical Support","Priya Sharma",108,22,"Escalated Tier 2",FALSE
+TCK-0302,2026-03-23T10:14:26Z,"Order Tracking","Rohan Gupta",126,34,"Resolved Follow-up",FALSE
+TCK-0303,2026-03-24T11:21:39Z,"Returns & Refunds","Neha Deshmukh",144,46,"Customer Abandoned",FALSE
+TCK-0304,2026-03-25T12:28:52Z,"Enterprise VIP","Vikram Singh",162,58,"Resolved First Contact",FALSE
+TCK-0305,2026-03-26T13:35:05Z,"Billing & Invoicing","Ananya Iyer",180,70,"Escalated Tier 2",FALSE
+TCK-0306,2026-03-27T14:42:18Z,"Technical Support","Aarav Patel",198,82,"Resolved Follow-up",FALSE
+TCK-0307,2026-03-28T15:49:31Z,"Order Tracking","Priya Sharma",216,94,"Customer Abandoned",FALSE
+TCK-0308,2026-03-01T16:56:44Z,"Returns & Refunds","Rohan Gupta",234,106,"Resolved First Contact",FALSE
+TCK-0309,2026-03-02T17:03:57Z,"Enterprise VIP","Neha Deshmukh",252,118,"Escalated Tier 2",FALSE
+TCK-0310,2026-03-03T18:10:10Z,"Billing & Invoicing","Vikram Singh",270,130,"Resolved Follow-up",FALSE
+TCK-0311,2026-03-04T19:17:23Z,"Technical Support","Ananya Iyer",288,142,"Customer Abandoned",FALSE
+TCK-0312,2026-03-05T08:24:36Z,"Order Tracking","Aarav Patel",306,154,"Resolved First Contact",FALSE
+TCK-0313,2026-03-06T09:31:49Z,"Returns & Refunds","Priya Sharma",324,166,"Escalated Tier 2",FALSE
+TCK-0314,2026-03-07T10:38:02Z,"Enterprise VIP","Rohan Gupta",342,178,"Resolved Follow-up",FALSE
+TCK-0315,2026-03-08T11:45:15Z,"Billing & Invoicing","Neha Deshmukh",360,190,"Customer Abandoned",TRUE
+TCK-0316,2026-03-09T12:52:28Z,"Technical Support","Vikram Singh",378,202,"Resolved First Contact",TRUE
+TCK-0317,2026-03-10T13:59:41Z,"Order Tracking","Ananya Iyer",396,214,"Escalated Tier 2",TRUE
+TCK-0318,2026-03-11T14:06:54Z,"Returns & Refunds","Aarav Patel",414,226,"Resolved Follow-up",TRUE
+TCK-0319,2026-03-12T15:13:07Z,"Enterprise VIP","Priya Sharma",432,238,"Customer Abandoned",TRUE
+TCK-0320,2026-03-13T16:20:20Z,"Billing & Invoicing","Rohan Gupta",450,250,"Resolved First Contact",TRUE
+TCK-0321,2026-03-14T17:27:33Z,"Technical Support","Neha Deshmukh",468,262,"Escalated Tier 2",TRUE
+TCK-0322,2026-03-15T18:34:46Z,"Order Tracking","Vikram Singh",486,274,"Resolved Follow-up",TRUE
+TCK-0323,2026-03-16T19:41:59Z,"Returns & Refunds","Ananya Iyer",504,286,"Customer Abandoned",TRUE
+TCK-0324,2026-03-17T08:48:12Z,"Enterprise VIP","Aarav Patel",522,298,"Resolved First Contact",TRUE
+TCK-0325,2026-03-18T09:55:25Z,"Billing & Invoicing","Priya Sharma",540,310,"Escalated Tier 2",TRUE
+TCK-0326,2026-03-19T10:02:38Z,"Technical Support","Rohan Gupta",558,322,"Resolved Follow-up",TRUE
+TCK-0327,2026-03-20T11:09:51Z,"Order Tracking","Neha Deshmukh",576,334,"Customer Abandoned",TRUE
+TCK-0328,2026-03-21T12:16:04Z,"Returns & Refunds","Vikram Singh",594,346,"Resolved First Contact",TRUE
+TCK-0329,2026-03-22T13:23:17Z,"Enterprise VIP","Ananya Iyer",612,358,"Escalated Tier 2",TRUE
+TCK-0330,2026-03-23T14:30:30Z,"Billing & Invoicing","Aarav Patel",630,10,"Resolved Follow-up",TRUE
+TCK-0331,2026-03-24T15:37:43Z,"Technical Support","Priya Sharma",648,22,"Customer Abandoned",TRUE
+TCK-0332,2026-03-25T16:44:56Z,"Order Tracking","Rohan Gupta",666,34,"Resolved First Contact",TRUE
+TCK-0333,2026-03-26T17:51:09Z,"Returns & Refunds","Neha Deshmukh",684,46,"Escalated Tier 2",TRUE
+TCK-0334,2026-03-27T18:58:22Z,"Enterprise VIP","Vikram Singh",702,58,"Resolved Follow-up",TRUE
+TCK-0335,2026-03-28T19:05:35Z,"Billing & Invoicing","Ananya Iyer",720,70,"Customer Abandoned",TRUE
+TCK-0336,2026-03-01T08:12:48Z,"Technical Support","Aarav Patel",738,82,"Resolved First Contact",TRUE
+TCK-0337,2026-03-02T09:19:01Z,"Order Tracking","Priya Sharma",756,94,"Escalated Tier 2",TRUE
+TCK-0338,2026-03-03T10:26:14Z,"Returns & Refunds","Rohan Gupta",774,106,"Resolved Follow-up",TRUE
+TCK-0339,2026-03-04T11:33:27Z,"Enterprise VIP","Neha Deshmukh",792,118,"Customer Abandoned",TRUE
+TCK-0340,2026-03-05T12:40:40Z,"Billing & Invoicing","Vikram Singh",810,130,"Resolved First Contact",TRUE
+TCK-0341,2026-03-06T13:47:53Z,"Technical Support","Ananya Iyer",828,142,"Escalated Tier 2",TRUE
+TCK-0342,2026-03-07T14:54:06Z,"Order Tracking","Aarav Patel",846,154,"Resolved Follow-up",TRUE
+TCK-0343,2026-03-08T15:01:19Z,"Returns & Refunds","Priya Sharma",864,166,"Customer Abandoned",TRUE
+TCK-0344,2026-03-09T16:08:32Z,"Enterprise VIP","Rohan Gupta",882,178,"Resolved First Contact",TRUE
+TCK-0345,2026-03-10T17:15:45Z,"Billing & Invoicing","Neha Deshmukh",900,190,"Escalated Tier 2",TRUE
+TCK-0346,2026-03-11T18:22:58Z,"Technical Support","Vikram Singh",918,202,"Resolved Follow-up",TRUE
+TCK-0347,2026-03-12T19:29:11Z,"Order Tracking","Ananya Iyer",936,214,"Customer Abandoned",TRUE
+TCK-0348,2026-03-13T08:36:24Z,"Returns & Refunds","Aarav Patel",954,226,"Resolved First Contact",TRUE
+TCK-0349,2026-03-14T09:43:37Z,"Enterprise VIP","Priya Sharma",972,238,"Escalated Tier 2",TRUE
+TCK-0350,2026-03-15T10:50:50Z,"Billing & Invoicing","Rohan Gupta",90,250,"Resolved Follow-up",TRUE
+TCK-0351,2026-03-16T11:57:03Z,"Technical Support","Neha Deshmukh",108,262,"Customer Abandoned",TRUE
+TCK-0352,2026-03-17T12:04:16Z,"Order Tracking","Vikram Singh",126,274,"Resolved First Contact",TRUE
+TCK-0353,2026-03-18T13:11:29Z,"Returns & Refunds","Ananya Iyer",144,286,"Escalated Tier 2",TRUE
+TCK-0354,2026-03-19T14:18:42Z,"Enterprise VIP","Aarav Patel",162,298,"Resolved Follow-up",TRUE
+TCK-0355,2026-03-20T15:25:55Z,"Billing & Invoicing","Priya Sharma",180,310,"Customer Abandoned",TRUE
+TCK-0356,2026-03-21T16:32:08Z,"Technical Support","Rohan Gupta",198,322,"Resolved First Contact",TRUE
+TCK-0357,2026-03-22T17:39:21Z,"Order Tracking","Neha Deshmukh",216,334,"Escalated Tier 2",TRUE
+TCK-0358,2026-03-23T18:46:34Z,"Returns & Refunds","Vikram Singh",234,346,"Resolved Follow-up",TRUE
+TCK-0359,2026-03-24T19:53:47Z,"Enterprise VIP","Ananya Iyer",252,358,"Customer Abandoned",TRUE
+TCK-0360,2026-03-25T08:00:00Z,"Billing & Invoicing","Aarav Patel",270,10,"Resolved First Contact",FALSE
+TCK-0361,2026-03-26T09:07:13Z,"Technical Support","Priya Sharma",288,22,"Escalated Tier 2",FALSE
+TCK-0362,2026-03-27T10:14:26Z,"Order Tracking","Rohan Gupta",306,34,"Resolved Follow-up",FALSE
+TCK-0363,2026-03-28T11:21:39Z,"Returns & Refunds","Neha Deshmukh",324,46,"Customer Abandoned",FALSE
+TCK-0364,2026-03-01T12:28:52Z,"Enterprise VIP","Vikram Singh",342,58,"Resolved First Contact",FALSE
+TCK-0365,2026-03-02T13:35:05Z,"Billing & Invoicing","Ananya Iyer",360,70,"Escalated Tier 2",FALSE
+TCK-0366,2026-03-03T14:42:18Z,"Technical Support","Aarav Patel",378,82,"Resolved Follow-up",FALSE
+TCK-0367,2026-03-04T15:49:31Z,"Order Tracking","Priya Sharma",396,94,"Customer Abandoned",FALSE
+TCK-0368,2026-03-05T16:56:44Z,"Returns & Refunds","Rohan Gupta",414,106,"Resolved First Contact",FALSE
+TCK-0369,2026-03-06T17:03:57Z,"Enterprise VIP","Neha Deshmukh",432,118,"Escalated Tier 2",FALSE
+TCK-0370,2026-03-07T18:10:10Z,"Billing & Invoicing","Vikram Singh",450,130,"Resolved Follow-up",FALSE
+TCK-0371,2026-03-08T19:17:23Z,"Technical Support","Ananya Iyer",468,142,"Customer Abandoned",FALSE
+TCK-0372,2026-03-09T08:24:36Z,"Order Tracking","Aarav Patel",486,154,"Resolved First Contact",FALSE
+TCK-0373,2026-03-10T09:31:49Z,"Returns & Refunds","Priya Sharma",504,166,"Escalated Tier 2",FALSE
+TCK-0374,2026-03-11T10:38:02Z,"Enterprise VIP","Rohan Gupta",522,178,"Resolved Follow-up",FALSE
+TCK-0375,2026-03-12T11:45:15Z,"Billing & Invoicing","Neha Deshmukh",540,190,"Customer Abandoned",TRUE
+TCK-0376,2026-03-13T12:52:28Z,"Technical Support","Vikram Singh",558,202,"Resolved First Contact",TRUE
+TCK-0377,2026-03-14T13:59:41Z,"Order Tracking","Ananya Iyer",576,214,"Escalated Tier 2",TRUE
+TCK-0378,2026-03-15T14:06:54Z,"Returns & Refunds","Aarav Patel",594,226,"Resolved Follow-up",TRUE
+TCK-0379,2026-03-16T15:13:07Z,"Enterprise VIP","Priya Sharma",612,238,"Customer Abandoned",TRUE
+TCK-0380,2026-03-17T16:20:20Z,"Billing & Invoicing","Rohan Gupta",630,250,"Resolved First Contact",TRUE
+TCK-0381,2026-03-18T17:27:33Z,"Technical Support","Neha Deshmukh",648,262,"Escalated Tier 2",TRUE
+TCK-0382,2026-03-19T18:34:46Z,"Order Tracking","Vikram Singh",666,274,"Resolved Follow-up",TRUE
+TCK-0383,2026-03-20T19:41:59Z,"Returns & Refunds","Ananya Iyer",684,286,"Customer Abandoned",TRUE
+TCK-0384,2026-03-21T08:48:12Z,"Enterprise VIP","Aarav Patel",702,298,"Resolved First Contact",TRUE
+TCK-0385,2026-03-22T09:55:25Z,"Billing & Invoicing","Priya Sharma",720,310,"Escalated Tier 2",TRUE
+TCK-0386,2026-03-23T10:02:38Z,"Technical Support","Rohan Gupta",738,322,"Resolved Follow-up",TRUE
+TCK-0387,2026-03-24T11:09:51Z,"Order Tracking","Neha Deshmukh",756,334,"Customer Abandoned",TRUE
+TCK-0388,2026-03-25T12:16:04Z,"Returns & Refunds","Vikram Singh",774,346,"Resolved First Contact",TRUE
+TCK-0389,2026-03-26T13:23:17Z,"Enterprise VIP","Ananya Iyer",792,358,"Escalated Tier 2",TRUE
+TCK-0390,2026-03-27T14:30:30Z,"Billing & Invoicing","Aarav Patel",810,10,"Resolved Follow-up",TRUE
+TCK-0391,2026-03-28T15:37:43Z,"Technical Support","Priya Sharma",828,22,"Customer Abandoned",TRUE
+TCK-0392,2026-03-01T16:44:56Z,"Order Tracking","Rohan Gupta",846,34,"Resolved First Contact",TRUE
+TCK-0393,2026-03-02T17:51:09Z,"Returns & Refunds","Neha Deshmukh",864,46,"Escalated Tier 2",TRUE
+TCK-0394,2026-03-03T18:58:22Z,"Enterprise VIP","Vikram Singh",882,58,"Resolved Follow-up",TRUE
+TCK-0395,2026-03-04T19:05:35Z,"Billing & Invoicing","Ananya Iyer",900,70,"Customer Abandoned",TRUE
+TCK-0396,2026-03-05T08:12:48Z,"Technical Support","Aarav Patel",918,82,"Resolved First Contact",TRUE
+TCK-0397,2026-03-06T09:19:01Z,"Order Tracking","Priya Sharma",936,94,"Escalated Tier 2",TRUE
+TCK-0398,2026-03-07T10:26:14Z,"Returns & Refunds","Rohan Gupta",954,106,"Resolved Follow-up",TRUE
+TCK-0399,2026-03-08T11:33:27Z,"Enterprise VIP","Neha Deshmukh",972,118,"Customer Abandoned",TRUE
+TCK-0400,2026-03-09T12:40:40Z,"Billing & Invoicing","Vikram Singh",90,130,"Resolved First Contact",FALSE

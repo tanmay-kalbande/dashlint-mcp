@@ -1,0 +1,4 @@
+Item_ID;Date;Store_Name;Category;Amount;Notes
+1;01/03/2026;Store A;Electronics;1200;Note 1
+2;02/03/2026;Store B;Groceries;45;Note 2
+3;03/03/2026;Store C;Home;80;Note 3

@@ -12,18 +12,48 @@ import { getFullDashboardTemplate, JS_UTILITIES } from "@/lib/dashboard-template
 import { getComponentPatterns, getAvailableComponents } from "@/lib/shell-contract";
 import { incrementCounter } from "@/lib/counter";
 import { buildDashboardBlueprint } from "@/lib/blueprint";
+import { buildDashboardKit } from "@/lib/dashboard-kit";
 
-const noInput = z.object({});
+const noInput = z.object({}).strict();
+
 const blueprintInput = z.object({
   datasetLabel: z.string().trim().max(100).optional(),
   businessQuestion: z.string().trim().max(500).optional(),
   audience: z.string().trim().max(120).optional(),
+  rowCount: z.number().int().nonnegative().optional(),
   fields: z.array(z.object({
     name: z.string().trim().min(1).max(100),
     type: z.enum(["date", "datetime", "number", "currency", "percentage", "boolean", "category", "identifier", "text", "unknown"]),
     distinctCount: z.number().int().nonnegative().optional(),
     nullablePercent: z.number().min(0).max(100).optional(),
+    numericSummary: z.object({
+      min: z.number().optional(),
+      max: z.number().optional(),
+      mean: z.number().optional(),
+    }).strict().optional(),
+    dateRange: z.object({
+      min: z.string().optional(),
+      max: z.string().optional(),
+    }).strict().optional(),
   }).strict()).min(1).max(100),
+}).strict();
+
+const dashboardKitInput = z.object({
+  components: z.array(z.string().trim().min(1).max(50)).optional(),
+  domain: z.enum(["generic", "service-ops", "sales-distribution"]).optional(),
+  brand: z.object({
+    title: z.string().trim().max(100).optional(),
+    subtitle: z.string().trim().max(200).optional(),
+    kicker: z.string().trim().max(50).optional(),
+  }).strict().optional(),
+  credit: z.union([
+    z.enum(["default", "none"]),
+    z.object({
+      text: z.string().trim().min(1).max(100),
+      url: z.string().url().max(300).optional(),
+    }).strict(),
+  ]).optional(),
+  mode: z.enum(["cli", "inline"]).default("inline"),
 }).strict();
 
 const handler = createMcpHandler((server) => {
@@ -44,7 +74,7 @@ const handler = createMcpHandler((server) => {
     "build_dashboard_blueprint",
     {
       description:
-        "Create a schema-aware implementation blueprint from locally profiled column metadata. Send only field names, inferred types, optional distinct/null counts, the business question, and audience—never file rows or sample values. Returns candidate semantic mappings, metric formulas, chart plans, uncertainty warnings, and the reusable local HTML upload requirements.",
+        "Create a schema-aware implementation blueprint (v2.0) from locally profiled column metadata. Send only field names, inferred types, distinct counts, nullable percents, row count, and opt-in summary metrics (never dataset rows, samples, or identifiers). Returns single justified roles per field, additivity classes, default aggregations, grain detection, ratio recomputation formulas, local data checks, and askUser questions.",
       inputSchema: blueprintInput,
     },
     async (input) => {
@@ -54,10 +84,55 @@ const handler = createMcpHandler((server) => {
   );
 
   server.registerTool(
+    "get_dashboard_kit",
+    {
+      description:
+        "Primary dashboard assembly tool. In 'cli' mode, returns commands for npx dashlint-kit (init, build, profile, lint) and runtime API docs. In 'inline' mode, returns deduplicated wireframe, component patterns, domain packs, and JS utilities within a 35 KB budget.",
+      inputSchema: dashboardKitInput,
+    },
+    async (input) => {
+      await incrementCounter("get_dashboard_kit");
+      return { content: [{ type: "text" as const, text: JSON.stringify(buildDashboardKit(input), null, 2) }] };
+    }
+  );
+
+  server.registerTool(
+    "get_version",
+    {
+      description:
+        "Returns the DashLint MCP server and dashboard-kit version, supported features, and compatibility matrix.",
+      inputSchema: noInput,
+    },
+    async () => {
+      await incrementCounter("get_version");
+      return {
+        content: [{
+          type: "text" as const,
+          text: JSON.stringify({
+            serverVersion: "2.0.0",
+            minKitVersion: "2.0.0",
+            protocolVersion: "2024-11-05",
+            features: [
+              "blueprint-v2",
+              "dashboard-kit",
+              "privacy-first",
+              "domain-neutral",
+              "configurable-credit",
+              "single-screen-layout",
+              "zero-fabricated-defaults",
+            ],
+            manifest: "src/lib/tools.manifest.json",
+          }, null, 2),
+        }],
+      };
+    }
+  );
+
+  server.registerTool(
     "get_shell_preservation_spec",
     {
       description:
-        "Returns the complete design system and shell contract derived from the Incident Pulse React dashboard (the canonical design reference). Includes: designTokens (full CSS variable palette), darkOverlayTokens (scoped dark theme), frameCode (viewport shell + scrollbar system), sidebarMarkupTemplate/sidebarCssTemplate (exact sidebar HTML/CSS), componentPatterns (header, upload, nav tabs, KPI cards, panels, tables, overlays, drawers, heatmaps, bars, badges, validation, buttons, accessibility), and invariants (viewport, typography, animation specs). Use the returned code verbatim when building new dashboards; preserve existing shell code when available.",
+        "[DEPRECATED: Prefer get_dashboard_kit] Returns the complete design system and shell contract derived from the Incident Pulse React dashboard (the canonical design reference). Includes: designTokens, darkOverlayTokens, frameCode, sidebarMarkupTemplate/sidebarCssTemplate, componentPatterns, and invariants. Use the returned code verbatim when building new dashboards.",
       inputSchema: noInput,
     },
     async () => {
@@ -122,7 +197,7 @@ const handler = createMcpHandler((server) => {
     "get_full_dashboard_template",
     {
       description:
-        "Returns a lightweight HTML wireframe with ONLY the fixed application shell: design tokens CSS, viewport frame, dark sidebar (brand + metrics + animated credit), header with 56px dashed upload box, nav tabs container, empty dashboard body, and slide-drawer shell. Does NOT include component-specific CSS (KPI cards, charts, tables, bars, etc.) — call get_component_patterns for those. Does NOT include JavaScript — call get_js_utilities for pre-wired utilities. This is the recommended starting point for building any new dashboard.",
+        "[DEPRECATED: Prefer get_dashboard_kit] Returns a lightweight HTML wireframe with ONLY the fixed application shell: design tokens CSS, viewport frame, dark sidebar (brand + metrics + animated credit), header with 56px dashed upload box, nav tabs container, empty dashboard body, and slide-drawer shell.",
       inputSchema: noInput,
     },
     async () => {
@@ -136,10 +211,10 @@ const handler = createMcpHandler((server) => {
             nextSteps: [
               "1. Replace {{PLACEHOLDER}} markers with your brand/dataset values (title, logo letters, subtitle).",
               "2. Profile your dataset and decide which components you need.",
-              "3. Call get_component_patterns with the component names you need (e.g. ['kpiCards', 'panels', 'horizontalBars', 'dataTables', 'findingCards']).",
+              "3. Call get_dashboard_kit or get_component_patterns with the component names you need.",
               "4. Call get_js_utilities for pre-wired CSV/Excel parser, animations, filter engine, drawer, and upload handler.",
               "5. Paste the component CSS into the <style> block and the JS utilities into the <script> block.",
-              "6. Add your tab panels, KPI cards, charts, and tables using the HTML snippets from get_component_patterns.",
+              "6. Add your tab panels, KPI cards, charts, and tables using the HTML snippets.",
               "7. Implement renderDashboard() with your dataset-specific calculations and data bindings.",
             ],
           }, null, 2),
@@ -152,9 +227,9 @@ const handler = createMcpHandler((server) => {
     "get_component_patterns",
     {
       description:
-        "Returns CSS, HTML snippets, and usage notes for specific dashboard components. Call this AFTER get_full_dashboard_template to get only the components your dataset needs. Available components: kpiCards, panels, horizontalBars, dataTables, validation, badges, buttons, generatedOutput, multiSelectFilter, heatmap, overlays, drawers, chartContainer, sectionLayouts, accessibility, healthBar, dayDrawer, dayComparator, chartTooltip. Pass an array of component names to get targeted CSS+HTML for each. Never generate piles of text cards.",
+        "[DEPRECATED: Prefer get_dashboard_kit] Returns CSS, HTML snippets, and usage notes for specific dashboard components. Available components: kpiCards, panels, horizontalBars, dataTables, validation, badges, buttons, generatedOutput, multiSelectFilter, heatmap, overlays, drawers, chartContainer, sectionLayouts, accessibility, healthBar, dayDrawer, dayComparator, chartTooltip. Never generate piles of text cards.",
       inputSchema: z.object({
-        components: z.array(z.string().trim().min(1).max(50)).min(1).max(25).describe("Array of component names to retrieve. Choose from: kpiCards, panels, horizontalBars, dataTables, validation, badges, buttons, generatedOutput, multiSelectFilter, heatmap, overlays, drawers, chartContainer, sectionLayouts, accessibility, healthBar, dayDrawer, dayComparator, chartTooltip"),
+        components: z.array(z.string().trim().min(1).max(50)).min(1).max(25).describe("Array of component names to retrieve."),
       }).strict(),
     },
     async (input) => {
@@ -176,7 +251,7 @@ const handler = createMcpHandler((server) => {
     "get_js_utilities",
     {
       description:
-        "Returns pre-wired JavaScript utilities for dashboard interactivity. Includes: global state management, hand-written CSV parser (~50 lines), SheetJS Excel parser, countUp() animation (600ms easeOutCubic), typeText() typewriter effect (20-55ms per char), tab switching with ARIA, multi-select filter engine with dropdown UI, slide-drawer and day-drawer with focus management, analytics overlay controls with sub-tabs, chart tooltip probe, file upload handler with drag-and-drop, copy button, .txt export, and mobile menu toggle. Paste into the wireframe's <script> block, then implement renderDashboard() with your dataset-specific logic.",
+        "[DEPRECATED: Prefer get_dashboard_kit] Returns pre-wired JavaScript utilities for dashboard interactivity. Includes: global state management, CSV parser, SheetJS Excel parser, countUp(), typeText(), tab switching, filter engine, drawers, overlays, chart tooltips, and file upload.",
       inputSchema: noInput,
     },
     async () => {

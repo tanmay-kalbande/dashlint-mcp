@@ -1,0 +1,11 @@
+﻿Item_ID,Date,Store_Name,Category,Amount,Notes
+1,01/03/2026,"O'Neil ""Main"" Store",Electronics,1200.50,"Simple note"
+2,15/03/2026,"Quick Mart, Downtown",Groceries,45.00,"Quoted, comma note"
+3,20/03/2026,"Metro Station Kiosk","Multi
+Line
+Category",99.90,"Note with
+embedded
+newline"
+4,25/03/2026,"Corner Shop","","15.00","Empty category"
+5,invalid-date,"Boutique Outlet",Fashion,250.00,"Bad date test"
+6,28/03/2026,"Super Depot",Home,"N/A","Non-numeric amount row"

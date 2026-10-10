@@ -113,7 +113,7 @@ button, input, textarea, select { font: inherit; }
 /* Keep overflow in designated content panes; rail width is strictly preserved. */
 .main, .dashboard-body { min-width: 0; min-height: 0; overflow: hidden; }
 .rail { width: 268px; min-width: 268px; max-width: 268px; flex-shrink: 0; min-height: 0; overflow: hidden; box-sizing: border-box; }
-.dashboard-body { overflow: auto; overscroll-behavior: contain; }
+.dashboard-body { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; }
 
 /* ── UNIVERSAL SLEEK SCROLLBAR SYSTEM ── */
 * { scrollbar-width: thin; scrollbar-color: rgba(24, 28, 36, 0.22) transparent; }
@@ -132,11 +132,12 @@ button, input, textarea, select { font: inherit; }
   background: rgba(255, 255, 255, 0.42);
 }
 
-/* ── MAIN WORKSPACE (4-Row Fixed Grid: Header, Filter, Tabs, Content) ── */
+/* ── MAIN WORKSPACE (Flex Column: Header, Filter, Tabs, Content) ── */
 .main {
   min-width: 0; min-height: 0;
-  display: grid;
-  grid-template-rows: auto auto auto minmax(0, 1fr);
+  display: flex;
+  flex-direction: column;
+  flex: 1;
   gap: 8px;
   overflow: hidden;
 }`,
@@ -333,7 +334,7 @@ button, input, textarea, select { font: inherit; }
 
     kpiCards: `/* ── KPI Cards & Summary Grid (Incident/SLA Canonical) ── */
 .kpi-panel {
-  display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 8px;
+  display: grid; grid-template-rows: auto minmax(0, 1fr) auto auto; gap: 8px;
   height: 100%; min-height: 0; overflow: hidden;
 }
 .kpis {
@@ -469,15 +470,15 @@ button, input, textarea, select { font: inherit; }
 .health-bar-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }`,
 
     dayDrawer: `/* ── Day Drilldown Drawer (Intraday Progression & Root Cause) ── */
-.agent-drawer, .day-drawer {
+.period-drawer, .agent-drawer, .day-drawer {
   position: fixed; top: 0; right: 0; height: 100%; width: min(720px, 50vw);
   background: var(--surface); z-index: 200; display: flex; flex-direction: column;
   transform: translateX(100%); box-shadow: -8px 0 32px rgba(0,0,0,.15);
   transition: transform .32s cubic-bezier(0.16, 1, 0.3, 1);
 }
-@media (max-width: 1180px) { .agent-drawer, .day-drawer { width: min(720px, calc(100vw - 32px)); } }
-@media (max-width: 520px) { .agent-drawer, .day-drawer { width: 100vw; } }
-.day-drawer.open, .agent-drawer.open { transform: translateX(0); }
+@media (max-width: 1180px) { .period-drawer, .agent-drawer, .day-drawer { width: min(720px, calc(100vw - 32px)); } }
+@media (max-width: 520px) { .period-drawer, .agent-drawer, .day-drawer { width: 100vw; } }
+.day-drawer.open, .agent-drawer.open, .period-drawer.open { transform: translateX(0); }
 .drawer-header {
   background: var(--rail-bg); padding: 18px 20px 14px; flex-shrink: 0;
   position: relative; border-left: 1px solid var(--rail-border);
@@ -519,21 +520,21 @@ button, input, textarea, select { font: inherit; }
 .rc-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
 .rc-val { margin-left: auto; font-weight: 700; color: var(--ink); }
 .rc-takeaway { margin-top: 8px; font-size: 11px; font-family: var(--mono); line-height: 1.45; background: var(--surface); padding: 8px 10px; border-radius: 4px; border: 1px solid var(--line); }
-.clickable-agent-pill { cursor: pointer; background: var(--surface); transition: all .16s cubic-bezier(0.16, 1, 0.3, 1); display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border: 1px solid var(--line); border-radius: 4px; font: 11px var(--mono); }
-.clickable-agent-pill:hover { background: var(--surface-2) !important; border-color: var(--line-strong) !important; box-shadow: 0 3px 8px rgba(0,0,0,.08); transform: translateY(-1.5px); }
-.hourly-gos-chart, .hourly-miss-chart { display: flex; align-items: flex-end; gap: 3px; height: 110px; padding: 20px 8px 6px; margin-bottom: 6px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
-.h-gos-col, .h-miss-col { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end; position: relative; min-width: 0; cursor: pointer; }
-.h-gos-col:hover .h-gos-bar, .h-miss-col:hover .h-miss-stack { opacity: .85; transform: scaleY(1.04); transform-origin: bottom; }
-.h-gos-col.active .h-gos-bar, .h-miss-col.active .h-miss-stack { box-shadow: 0 0 0 2px var(--ink); }
-.h-gos-bar { width: 100%; max-width: 18px; border-radius: 3px 3px 0 0; min-height: 4px; transition: height 0.5s cubic-bezier(.16, 1, .3, 1), opacity .15s; }
+.entity-pill, .clickable-agent-pill { cursor: pointer; background: var(--surface); transition: all .16s cubic-bezier(0.16, 1, 0.3, 1); display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border: 1px solid var(--line); border-radius: 4px; font: 11px var(--mono); }
+.entity-pill:hover, .clickable-agent-pill:hover { background: var(--surface-2) !important; border-color: var(--line-strong) !important; box-shadow: 0 3px 8px rgba(0,0,0,.08); transform: translateY(-1.5px); }
+.bucket-chart, .hourly-gos-chart, .hourly-miss-chart { display: flex; align-items: flex-end; gap: 3px; height: 110px; padding: 20px 8px 6px; margin-bottom: 6px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
+.bucket-col, .h-gos-col, .h-miss-col { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end; position: relative; min-width: 0; cursor: pointer; }
+.bucket-col:hover .bucket-bar, .h-gos-col:hover .h-gos-bar, .h-miss-col:hover .h-miss-stack { opacity: .85; transform: scaleY(1.04); transform-origin: bottom; }
+.bucket-col.active .bucket-bar, .h-gos-col.active .h-gos-bar, .h-miss-col.active .h-miss-stack { box-shadow: 0 0 0 2px var(--ink); }
+.bucket-bar, .h-gos-bar { width: 100%; max-width: 18px; border-radius: 3px 3px 0 0; min-height: 4px; transition: height 0.5s cubic-bezier(.16, 1, .3, 1), opacity .15s; }
 .h-miss-stack { width: 100%; max-width: 18px; display: flex; flex-direction: column-reverse; border-radius: 3px 3px 0 0; overflow: hidden; }
 .h-miss-seg { width: 100%; transition: height 0.5s cubic-bezier(.16, 1, .3, 1); }
-.h-gos-val, .h-miss-val { position: absolute; top: -16px; font-size: 8px; font-family: var(--mono); font-weight: 600; color: var(--ink); white-space: nowrap; }
-.h-gos-lbl { font-size: 8.5px; font-family: var(--mono); color: var(--muted); margin-top: 4px; }
-.cum-gos-wrap { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 10px; margin-bottom: 8px; }
-.cum-gos-svg { width: 100%; display: block; }
-.cum-gos-dot { transition: r .15s ease, stroke-width .15s ease; }
-circle.cum-gos-dot:hover { r: 6px; stroke-width: 2.5px; }
+.bucket-val, .h-gos-val, .h-miss-val { position: absolute; top: -16px; font-size: 8px; font-family: var(--mono); font-weight: 600; color: var(--ink); white-space: nowrap; }
+.bucket-lbl, .h-gos-lbl { font-size: 8.5px; font-family: var(--mono); color: var(--muted); margin-top: 4px; }
+.progress-wrap, .cum-gos-wrap { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 10px; margin-bottom: 8px; }
+.progress-svg, .cum-gos-svg { width: 100%; display: block; }
+.progress-dot, .cum-gos-dot { transition: r .15s ease, stroke-width .15s ease; }
+circle.progress-dot:hover, circle.cum-gos-dot:hover { r: 6px; stroke-width: 2.5px; }
 .hour-detail { background: var(--surface-2); border: 1px solid var(--line); border-radius: 6px; padding: 0; margin-bottom: 12px; overflow: hidden; max-height: 0; opacity: 0; transition: max-height .3s ease, opacity .25s ease, padding .25s ease; }
 .hour-detail.open { max-height: 500px; opacity: 1; padding: 12px; }
 .hour-detail-title { font-size: 11.5px; font-weight: 700; color: var(--ink); font-family: var(--mono); margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; }
@@ -584,7 +585,9 @@ circle.cum-gos-dot:hover { r: 6px; stroke-width: 2.5px; }
 .btn:active { transform: scale(.98); }
 .btn.info { background: var(--ink); color: #fff; }
 .btn.secondary { background: #FFFFFF; color: var(--ink); border: 1px solid var(--line-strong); }
-.btn.secondary:hover { background: var(--surface-2); }`,
+.btn.secondary:hover { background: var(--surface-2); }
+.btn.ghost { background: transparent; color: var(--muted); border: 1px solid transparent; }
+.btn.ghost:hover { background: var(--surface-2); color: var(--ink); }`,
 
     heatmap: `/* ── Heatmap Grid ── */
 .heatmap-grid { display: grid; grid-template-columns: 54px repeat(24, minmax(0, 1fr)); gap: 2px; width: 100%; }
@@ -593,17 +596,27 @@ circle.cum-gos-dot:hover { r: 6px; stroke-width: 2.5px; }
 .hm-data:hover { transform: scale(1.18); outline: 1.5px solid var(--ink); z-index: 2; }`,
 
     horizontalBars: `/* ── Horizontal Progress Bars ── */
-.hbar-row { display: grid; grid-template-columns: 140px 1fr 44px; gap: 8px; align-items: center; margin-bottom: 2px; font-family: var(--mono); font-size: 10px; }
-.hbar-lbl { color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500; }
+.hbar-row { display: grid; grid-template-columns: minmax(110px, 38%) 1fr 66px; gap: 8px; align-items: center; margin-bottom: 2px; font-family: var(--mono); font-size: 10px; }
+.hbar-lbl { color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500; display: flex; align-items: center; gap: 4px; }
+.hbar-lbl .sub { font-size: 9px; color: var(--muted); font-weight: normal; }
 .hbar-track { height: 8px; background: var(--surface-2); border-radius: 3px; overflow: hidden; border: 1px solid rgba(0,0,0,.03); }
 .hbar-fill { height: 100%; border-radius: 3px; transition: width .4s cubic-bezier(.4,0,.2,1); }
-.hbar-val { color: var(--muted); text-align: right; font-weight: 600; font-size: 10px; }`,
+.hbar-val { color: var(--muted); text-align: right; font-weight: 600; font-size: 10px; font-variant-numeric: tabular-nums; white-space: nowrap; }`,
 
     badges: `/* ── Badges & Status Pills ── */
 .badge { background: var(--surface-2); color: var(--muted); border: 1px solid var(--line); font-weight: 600; border-radius: 3px; padding: 3px 8px; font-size: 10px; font-family: var(--mono); }
 .badge.ok { background: var(--ok-dim); color: var(--ok); border-color: rgba(26, 122, 86, .25); }
 .badge.warn { background: var(--warn-dim); color: var(--warn); border-color: rgba(180, 83, 9, .25); }
-.badge.err { background: var(--err-dim); color: var(--err); border-color: rgba(192, 57, 43, .25); }`,
+.badge.err { background: var(--err-dim); color: var(--err); border-color: rgba(192, 57, 43, .25); }
+.pill { display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 999px; font: 10px var(--mono); font-weight: 600; border: 1px solid var(--line); background: var(--surface-2); color: var(--muted); }
+.pill.ok { background: var(--ok-dim); color: var(--ok); border-color: rgba(26, 122, 86, .25); }
+.pill.warn { background: var(--warn-dim); color: var(--warn); border-color: rgba(180, 83, 9, .25); }
+.pill.err { background: var(--err-dim); color: var(--err); border-color: rgba(192, 57, 43, .25); }
+.pill.neutral { background: var(--surface-2); color: var(--ink); }
+.date-filter-strip { display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 11px; }
+.scope-bar-label { display: inline-flex; align-items: center; gap: 6px; font-size: 9px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.period-pulse-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ok); display: inline-block; box-shadow: 0 0 0 2px var(--ok-dim); animation: pulseDot 2s infinite; }
+@keyframes pulseDot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .4; transform: scale(.85); } }`,
 
     generatedOutput: `/* ── Generated Output & Message Panel (Incident/SLA Canonical) ── */
 .message-panel, .gen-output {
@@ -646,6 +659,7 @@ details[open] summary::before, .calc-toggle[open] summary::before { content: '�
 }`,
 
     multiSelectFilter: `/* ── Multi-Select Filter Dropdown ── */
+.filter-btn-wrap { position: relative; display: inline-block; }
 .scope-bar-btn {
   position: relative; height: 25px; padding: 0 8px; border-radius: 4px;
   background: #F8FAFC; border: 1px solid rgba(0,0,0,.08);
@@ -664,7 +678,7 @@ details[open] summary::before, .calc-toggle[open] summary::before { content: '�
   box-shadow: 0 8px 24px rgba(0,0,0,.08), 0 2px 6px rgba(0,0,0,.04);
   min-width: 200px; max-height: 280px; display: none;
 }
-.scope-bar-btn.open .filter-drop { display: block; }
+.filter-drop.open, .scope-bar-btn.open .filter-drop { display: block; }
 .filter-drop-head {
   display: flex; justify-content: space-between; align-items: center;
   padding: 8px 12px; border-bottom: 1px solid var(--line);
@@ -712,7 +726,7 @@ details[open] summary::before, .calc-toggle[open] summary::before { content: '�
     frame:
       "The full app grid, rail, header, and dashboard body remain within the viewport; use border-box sizing so border and padding do not cause overflow. The outer .app uses 12px padding and a 12px gap between rail and main.",
     sidebar:
-      "The MCP returns sidebarMarkupTemplate and sidebarCssTemplate as concrete implementation code. When creating a new app, copy both as the sidebar baseline, replacing only the brand content (logo letters, title, subtitle), scope label, and data-bound metric-card slot; retain class names, layout, styling, responsive behavior, and exact credit markup. When a project already has a reference sidebar, preserve its actual HTML/component and CSS verbatim and change only metric data bindings. Persistent dark rail (#151515) with brand, dataset snapshot/metrics, and footer; on narrow screens it collapses to the reference hamburger-triggered overlay. The exact author credit stays at the very bottom: 'built by Tanmay Kalbande', linked to https://linkedin.com/in/tanmay-kalbande with target=_blank and rel=noopener noreferrer, in small muted IBM Plex Mono with the staggered name animation. Never omit or relocate it.",
+      "The MCP returns sidebarMarkupTemplate and sidebarCssTemplate as concrete implementation code. When creating a new app, copy both as the sidebar baseline, replacing only the brand content (logo letters, title, subtitle), scope label, and data-bound metric-card slot; retain class names, layout, styling, responsive behavior, and credit markup. When a project already has a reference sidebar, preserve its actual HTML/component and CSS verbatim and change only metric data bindings. Persistent dark rail (#151515) with brand, dataset snapshot/metrics, and footer; on narrow screens it collapses to the reference hamburger-triggered overlay. By default, the author credit stays at the very bottom: 'built by Tanmay Kalbande', linked to https://linkedin.com/in/tanmay-kalbande with target=_blank and rel=noopener noreferrer, in small muted IBM Plex Mono with the staggered name animation. The credit is configurable via credit option ('default', 'none', or custom { text, url }). When configured, it remains pinned at the bottom with zero cut-off.",
     header:
       "Main viewport begins with the bordered header strip. Preserve its title/description area and right-hand upload column; reference header uses a 340px upload column on desktop with the 56px dashed upload box containing 8.5px uppercase mono kicker, 12.5px title, 9.5px mono filename, and a 28px action button.",
     upload:
@@ -734,7 +748,7 @@ details[open] summary::before, .calc-toggle[open] summary::before { content: '�
     sidebarTextIntegrity:
       "STRICT INVARIANT — ZERO SIDEBAR TEXT CUT-OFF: The left rail (.rail) must have a guaranteed width: 268px with min-width: 268px on desktop and box-sizing: border-box. All metric rows (.side-card) must use grid-template-columns: minmax(0, 1fr) auto with gap: 8px. Metric labels in column 1 truncate with text-overflow: ellipsis, while metric values (strong) in column 2 remain flex-shrink: 0, text-align: right, and 100% visible. Never allow numbers, counts, dates, or currency figures in the sidebar snapshot to be clipped or truncated at the right edge.",
     canonicalDayDrawer:
-      "STRICT INVARIANT — CANONICAL SLA-PULSE DAYWISE BREAKDOWN DRAWER: When drilling down into any day, date, month, or batch, NEVER dump a plain HTML table into a basic white slide drawer. ALWAYS open the canonical SLA-Pulse DayDrawer (.day-drawer, width: min(720px, 50vw)) featuring: (1) dark header (background: var(--rail-bg)) with back button ('← Back to Daily List'), close button ('✕'), date title, subtitle, and 4-7 compact KPI metric chips (.drawer-kpis); (2) Root Cause Breakdown card (.rc-card) with proportional 2-tone meter track (.rc-meter-track) and operational takeaway callout; (3) Active contributors/agents chips; (4) Cumulative/running progression SVG line chart (.cum-gos-wrap) with 80% (green) and 60% (amber) target dashed lines and hover probe tooltips (#chartTooltip); (5) Intraday hourly/time-slice clickable bar chart (.hourly-gos-chart); (6) Expandable .hour-detail panel displaying that hour's statistics grid and dynamic operational narrative explanation.",
+      "STRICT INVARIANT — CANONICAL DRILLDOWN PERIOD DRAWER: When drilling down into any day, date, month, or batch, NEVER dump a plain HTML table into a basic white slide drawer. ALWAYS open the canonical PeriodDrawer (.period-drawer / .day-drawer, width: min(720px, 50vw)) featuring: (1) dark header (background: var(--rail-bg)) with back button ('← Back to List'), close button ('✕'), date/period title, subtitle, and 4-7 compact KPI metric chips (.drawer-kpis); (2) Root Cause / Segment Breakdown card (.rc-card) with proportional 2-tone meter track (.rc-meter-track) and operational takeaway callout; (3) Active entity chips (.entity-pill); (4) Cumulative/running progression SVG line chart (.progress-wrap / .cum-gos-wrap) with dataset baseline target guidelines and hover probe tooltips (#chartTooltip); (5) Bucket/time-slice clickable bar chart (.bucket-chart / .hourly-gos-chart); (6) Expandable detail panel (.hour-detail) displaying that bucket's statistics grid and dynamic operational narrative explanation.",
     shellChangePolicy:
       "Do not rewrite or restyle the app root, rail, header, upload control, navigation, or shared overlay/drawer code. Make dataset-specific changes only below the fixed header inside the existing main content region, plus the data bindings and local CSV/Excel parsing needed for the existing sidebar snapshot and uploader.",
   },
@@ -746,7 +760,7 @@ details[open] summary::before, .calc-toggle[open] summary::before { content: '�
     "Do not move, remove, or restyle the left rail, header, upload control, outer frame, navigation, or overlay behavior for an individual dataset.",
     "Use the available body area to tell the dataset's clearest analytical story; do not force a fixed chart count or section template.",
     "Keep the workflow domain-agnostic. Let the user's question and the actual fields determine the analysis; do not limit dashboards to SLA, call centers, incidents, or any predefined industry, metric pack, or chart family. Blueprint heuristics are optional starting suggestions, not a whitelist or required template.",
-    "Every generated dashboard must keep the exact 'built by Tanmay Kalbande' credit linked to the supplied LinkedIn profile at the bottom of the sidebar, styled like the reference apps.",
+    "Generated dashboards include the configured credit (by default 'built by Tanmay Kalbande' linked to LinkedIn, or custom/none if configured) at the bottom of the sidebar, styled like the reference apps.",
     "Keep responsive behavior and accessible keyboard/focus semantics when adapting the content region.",
     "Use the complete component patterns (header, upload, nav tabs, KPI cards, panels, tables, overlays, drawers, heatmaps, horizontal bars, badges, generated output, multi-select filters, validation chips, buttons) provided in componentPatterns as the baseline for every generated dashboard. These are copy-ready CSS blocks.",
     "Pure SVG charts are strongly preferred over third-party charting libraries. Render lines, bars, areas, heatmaps, and distributions using procedural SVG with the design token palette. This ensures the dashboard works as a standalone HTML file with zero external dependencies.",
@@ -777,7 +791,7 @@ export const SECTION_LAYOUT_CSS = `
   gap: 12px; overflow: hidden;
 }
 .kpi-panel {
-  display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 8px;
+  display: grid; grid-template-rows: auto minmax(0, 1fr) auto auto; gap: 8px;
   height: 100%; min-height: 0; overflow: hidden;
 }
 .kpis {
@@ -813,12 +827,6 @@ details[open] summary::before, .calc-toggle[open] summary::before { content: '�
 .chart-container { min-height: 200px; }
 .chart-container svg { width: 100%; height: 100%; }
 .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 300px; color: var(--muted); font-family: var(--mono); font-size: 12px; text-align: center; gap: 8px; }
-.finding-card { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; border-left: 3px solid var(--accent); margin-bottom: 8px; }
-.finding-card.positive { border-left-color: var(--ok); }
-.finding-card.caution { border-left-color: var(--warn); }
-.finding-card.note { border-left-color: var(--chart-indigo); }
-.finding-title { font-size: 12px; font-weight: 600; color: var(--ink); margin: 0 0 4px; }
-.finding-body { font-size: 11px; color: var(--muted); margin: 0; line-height: 1.5; }
 .filter-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; position: relative; z-index: 20; }
 .filter-label { font-family: var(--mono); font-size: 9.5px; color: var(--muted); letter-spacing: .07em; text-transform: uppercase; font-weight: 700; }
 .store-search { height: 28px; padding: 0 10px; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); font-family: var(--mono); font-size: 11px; color: var(--ink); min-width: 180px; }
@@ -887,10 +895,6 @@ export const HTML_SNIPPETS = {
   <strong>{{VALUE}}</strong>
 </div>`,
   badge: `<span class="badge {{STATUS}}">{{TEXT}}</span>`,
-  findingCard: `<div class="finding-card {{TYPE}}">
-  <p class="finding-title">{{TITLE}}</p>
-  <p class="finding-body">{{BODY}}</p>
-</div>`,
   genOutput: `<div class="panel message-panel gen-output">
   <div class="panel-head" style="margin-bottom:4px;">
     <h2 class="panel-title">{{TITLE}}</h2>
@@ -1182,16 +1186,6 @@ export function getComponentPatterns(componentNames: string[]): Record<string, {
       html: HTML_SNIPPETS.navTab + '\n\n/* Active variant: */\n' + HTML_SNIPPETS.navTabActive,
       usage: "Already included in wireframe. Segmented track tabs. 28px height, 10.5px mono. Active = white with shadow lift. ARIA: role=tablist/tab, aria-selected."
     },
-    findingCards: {
-      css: `.finding-card { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; border-left: 3px solid var(--accent); margin-bottom: 8px; }
-.finding-card.positive { border-left-color: var(--ok); }
-.finding-card.caution { border-left-color: var(--warn); }
-.finding-card.note { border-left-color: var(--chart-indigo); }
-.finding-title { font-size: 12px; font-weight: 600; color: var(--ink); margin: 0 0 4px; }
-.finding-body { font-size: 11px; color: var(--muted); margin: 0; line-height: 1.5; }`,
-      html: HTML_SNIPPETS.findingCard,
-      usage: "STRICT ANTI-PATTERN WARNING: Do NOT generate stacks or lists of text cards (e.g. piles of cards under a 'Key Findings' tab). Executive summaries and written briefings must be consolidated inside the Generated Output panel (.gen-output). Data insights must be communicated visually through interactive KPI cards, horizontal comparison bars (.hbar-row), procedural SVG charts, heatmaps, and data tables with drilldown drawers."
-    },
     chartContainer: {
       css: `.chart-container { min-height: 200px; }\n.chart-container svg { width: 100%; height: 100%; }`,
       html: HTML_SNIPPETS.chartSvgContainer,
@@ -1250,3 +1244,23 @@ export function getAvailableComponents(): string[] {
 export function getDashboardShellContract(): string {
   return JSON.stringify(DASHBOARD_SHELL_CONTRACT, null, 2);
 }
+
+export type CreditConfig = 'default' | 'none' | { text: string; url?: string };
+
+export const DEFAULT_CREDIT_MARKUP = `<section class="credit">built by <b><a href="https://linkedin.com/in/tanmay-kalbande" target="_blank" rel="noopener noreferrer" class="credit-link" title="Connect on LinkedIn" aria-label="Tanmay Kalbande"><span class="name-letter">T</span><span class="name-letter">a</span><span class="name-letter">n</span><span class="name-letter">m</span><span class="name-letter">a</span><span class="name-letter">y</span><span class="name-space">&nbsp;</span><span class="name-letter">K</span><span class="name-letter">a</span><span class="name-letter">l</span><span class="name-letter">b</span><span class="name-letter">a</span><span class="name-letter">n</span><span class="name-letter">d</span><span class="name-letter">e</span></a></b></section>`;
+
+export function renderCreditMarkup(credit?: CreditConfig): string {
+  if (credit === 'none') {
+    return '';
+  }
+  if (typeof credit === 'object' && credit !== null && credit.text) {
+    const escText = credit.text.replace(/[&<>"']/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m] || m));
+    if (credit.url) {
+      const escUrl = credit.url.replace(/[&<>"']/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m] || m));
+      return `<section class="credit"><a href="${escUrl}" target="_blank" rel="noopener noreferrer" class="credit-link"><b>${escText}</b></a></section>`;
+    }
+    return `<section class="credit"><b>${escText}</b></section>`;
+  }
+  return DEFAULT_CREDIT_MARKUP;
+}
+
