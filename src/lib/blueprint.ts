@@ -193,7 +193,7 @@ export function buildDashboardBlueprint(input: {
   if (timeFields.length) recommendedComponents.push("chartContainer", "dayDrawer", "dayComparator", "chartTooltip");
   if (ids.length || categories.length) recommendedComponents.push("dataTables", "drawers");
   if (timeFields.length && categories.length) recommendedComponents.push("heatmap");
-  recommendedComponents.push("findingCards", "badges", "accessibility");
+  recommendedComponents.push("badges", "accessibility");
 
   return {
     blueprintVersion: "1.1",
@@ -211,6 +211,7 @@ export function buildDashboardBlueprint(input: {
     metricRecipes,
     chartPlan,
     implementationPriorities: [
+      "STRICT RULE — ZERO TEXT CARD PILES: Never generate piles, stacks, or lists of cards filled with text (no 'Key Findings' text card piles). All written executive briefings and operational updates must be placed inside the Generated Output panel (.gen-output) on Tab 1. All analytical findings must be rendered visually through interactive KPI cards, sorted horizontal bars (.hbar-row), SVG trend charts, heatmaps, and detail tables with drawers.",
       "Use the shared dataset only to choose field mappings, formulas, labels, and insight-generation rules; do not embed source rows, calculated totals, chart points, or fixed findings in the generated HTML.",
       "Deliver a reusable, downloadable HTML application that opens to an empty upload state and locally parses CSV, XLSX, and XLS files.",
       "Recompute every visible metric, chart, narrative insight, filter option, validation status, and detail row from the currently uploaded file. Replacing the file must discard all old data and derived state.",

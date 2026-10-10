@@ -522,11 +522,11 @@ function renderDashboard() {
 
   // {{VALIDATION_CHECKS}} - Run data quality checks
 
-  // {{FINDINGS}} - Generate insight cards
+  // {{CHARTS_AND_VISUALS}} - Draw SVG charts and horizontal comparison bars (NEVER generate piles of text cards)
 
   // {{CHARTS}} - Draw SVG charts
 
-  // {{GENERATED_REPORT}} - Generate text report
+  // {{GENERATED_REPORT}} - Generate text report into textarea.summary-textarea
 
   // {{TABLES}} - Populate data tables
 }
@@ -548,13 +548,16 @@ export function getFullDashboardTemplate(): string {
     1. Replace {{PLACEHOLDER}} markers with your brand/dataset values
     2. Call get_component_patterns with the components you need:
        - kpiCards, panels, validation → for KPI summary
-       - horizontalBars → for categorical comparisons  
+       - healthBar → for operational score gauge
+       - horizontalBars → for categorical comparisons
        - dataTables → for detail/explorer views
        - heatmap → for date×hour density
-       - generatedOutput → for text narrative panels
+       - generatedOutput → for text narrative panels (all briefing text belongs here; NEVER generate piles of text cards)
        - multiSelectFilter → for scope filter dropdowns
-       - findingCards → for insight display
        - chartContainer → for SVG chart wrappers
+       - dayDrawer → for intraday breakdown & root cause
+       - dayComparator → for day-over-day comparisons
+       - chartTooltip → for interactive chart hover probe
        - badges, buttons → for status and actions
        - overlays → for full-screen deep-dive layers
     3. Call get_js_utilities for pre-wired JS (parser, animations, filters, drawer)

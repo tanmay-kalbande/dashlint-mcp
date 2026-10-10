@@ -152,9 +152,9 @@ const handler = createMcpHandler((server) => {
     "get_component_patterns",
     {
       description:
-        "Returns CSS, HTML snippets, and usage notes for specific dashboard components. Call this AFTER get_full_dashboard_template to get only the components your dataset needs. Available components: kpiCards, panels, horizontalBars, dataTables, validation, badges, buttons, generatedOutput, multiSelectFilter, heatmap, overlays, drawers, findingCards, chartContainer, sectionLayouts, accessibility, healthBar, dayDrawer, dayComparator, chartTooltip. Pass an array of component names to get targeted CSS+HTML for each.",
+        "Returns CSS, HTML snippets, and usage notes for specific dashboard components. Call this AFTER get_full_dashboard_template to get only the components your dataset needs. Available components: kpiCards, panels, horizontalBars, dataTables, validation, badges, buttons, generatedOutput, multiSelectFilter, heatmap, overlays, drawers, chartContainer, sectionLayouts, accessibility, healthBar, dayDrawer, dayComparator, chartTooltip. Pass an array of component names to get targeted CSS+HTML for each. Never generate piles of text cards.",
       inputSchema: z.object({
-        components: z.array(z.string().trim().min(1).max(50)).min(1).max(25).describe("Array of component names to retrieve. Choose from: kpiCards, panels, horizontalBars, dataTables, validation, badges, buttons, generatedOutput, multiSelectFilter, heatmap, overlays, drawers, findingCards, chartContainer, sectionLayouts, accessibility, healthBar, dayDrawer, dayComparator, chartTooltip"),
+        components: z.array(z.string().trim().min(1).max(50)).min(1).max(25).describe("Array of component names to retrieve. Choose from: kpiCards, panels, horizontalBars, dataTables, validation, badges, buttons, generatedOutput, multiSelectFilter, heatmap, overlays, drawers, chartContainer, sectionLayouts, accessibility, healthBar, dayDrawer, dayComparator, chartTooltip"),
       }).strict(),
     },
     async (input) => {

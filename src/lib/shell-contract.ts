@@ -719,6 +719,8 @@ details[open] summary::before, .calc-toggle[open] summary::before { content: '�
       "KPI values: clamp(20px, 2.2vw, 30px) mono 700 with -0.02em tracking. Panel kickers: 10.5px mono 700 uppercase with 0.07em tracking. Table headers: 8.5px mono 700 uppercase with 0.07em tracking. KPI labels: 9.5px mono 600 uppercase with 0.09em tracking. Body text: 13px sans. All numeric displays use font-variant-numeric: tabular-nums.",
     animations:
       "Number count-ups: 600ms with easeOutCubic (1 - Math.pow(1 - t, 3)). Typewriter effects for generated output: 20-55ms per character with 180ms pause at punctuation. All animations must respect prefers-reduced-motion by skipping to final state.",
+    noTextCardPiles:
+      "STRICT ANTI-PATTERN: Never generate piles, stacks, or lists of text cards (such as repeated .finding-card blocks under 'Key Findings'). Executive summaries and written takeaways belong exclusively in the Generated Output panel (.gen-output). Data insights must be communicated visually through interactive KPI cards, horizontal bars, procedural SVG trend charts, heatmaps, and tables.",
     shellChangePolicy:
       "Do not rewrite or restyle the app root, rail, header, upload control, navigation, or shared overlay/drawer code. Make dataset-specific changes only below the fixed header inside the existing main content region, plus the data bindings and local CSV/Excel parsing needed for the existing sidebar snapshot and uploader.",
   },
@@ -1169,7 +1171,7 @@ export function getComponentPatterns(componentNames: string[]): Record<string, {
 .finding-title { font-size: 12px; font-weight: 600; color: var(--ink); margin: 0 0 4px; }
 .finding-body { font-size: 11px; color: var(--muted); margin: 0; line-height: 1.5; }`,
       html: HTML_SNIPPETS.findingCard,
-      usage: "Insight/finding cards with colored left border indicating severity. Classes: .positive (green/ok — positive findings), .caution (amber/warn — warnings), .note (indigo — data notes/info). .finding-title (12px, 600 weight, var(--ink)) states the finding as a claim (e.g. 'P1 incidents dropped 18% this month'). .finding-body (11px, var(--muted), 1.5 line-height) provides supporting evidence with delta, baseline, and sample size. Reference: InsightFeed component renders cards in a CSS grid (.insight-grid) with severity chip filtering (Critical=red, Warning=amber, Info=blue, Positive=green) and search. Each card shows icon, category tag, claim title, and key metrics. Cards adapt styling based on severity level. Use claim-style titles that state the finding directly — never generic headings like 'Distribution Analysis'. Support drilling into related data on card click."
+      usage: "STRICT ANTI-PATTERN WARNING: Do NOT generate stacks or lists of text cards (e.g. piles of cards under a 'Key Findings' tab). Executive summaries and written briefings must be consolidated inside the Generated Output panel (.gen-output). Data insights must be communicated visually through interactive KPI cards, horizontal comparison bars (.hbar-row), procedural SVG charts, heatmaps, and data tables with drilldown drawers."
     },
     chartContainer: {
       css: `.chart-container { min-height: 200px; }\n.chart-container svg { width: 100%; height: 100%; }`,
@@ -1222,7 +1224,7 @@ export function getAvailableComponents(): string[] {
     'kpiCards', 'healthBar', 'panels', 'horizontalBars', 'dataTables', 'validation',
     'badges', 'buttons', 'generatedOutput', 'multiSelectFilter', 'heatmap',
     'overlays', 'drawers', 'dayDrawer', 'dayComparator', 'header', 'navTabs',
-    'findingCards', 'chartContainer', 'chartTooltip', 'sectionLayouts', 'accessibility'
+    'chartContainer', 'chartTooltip', 'sectionLayouts', 'accessibility'
   ];
 }
 
