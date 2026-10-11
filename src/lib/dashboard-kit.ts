@@ -64,6 +64,7 @@ export function buildDashboardKit(input: DashboardKitInput): DashboardKitOutput 
             "openDrawer(title, htmlContent) / closeDrawer()",
             "openDayDrawer(title, stats) / closeDayDrawer()",
             "openAnalyticsOverlay(subtabId) / closeAnalyticsOverlay()",
+            "openAnalysisStudio() / closeAnalysisStudio()",
             "showChartTooltip(x, y, html) / hideChartTooltip()",
             "applyFilters() / resetAll()",
           ],

@@ -271,6 +271,7 @@ const handler = createMcpHandler((server) => {
               "Use openDrawer(title, htmlContent) and closeDrawer() for detail drill-downs.",
               "Use openDayDrawer(dayTitle, stats) and closeDayDrawer() for intraday laboratory and root-cause breakdown.",
               "Use openAnalyticsOverlay(subtabId), closeAnalyticsOverlay(), and switchOverlayTab(tabId) for analytics layers.",
+              "Use openAnalysisStudio() and closeAnalysisStudio() for the Analysis Studio pivot workbench overlay. It auto-detects categorical vs numeric columns from S.columns and builds an interactive pivot table with metric chips, shelf controls, in-cell distribution bars, CSV export, and cell-click drilldown.",
               "Use showChartTooltip(x, y, html) and hideChartTooltip() for interactive chart hover probes.",
               "All utilities respect prefers-reduced-motion automatically.",
             ],

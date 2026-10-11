@@ -83,7 +83,7 @@ export const SECTION_TEMPLATES = {
               <button class="btn" id="copyBtn">Copy msg</button>
               <button class="btn info" id="insightsBtn">Insights</button>
               <button class="btn secondary" id="downloadBtn">.txt</button>
-              <button class="btn ghost" id="overlayBtn">Deep Dive</button>
+              <button class="btn secondary" id="analyzeBtn">Analyze data ✦</button>
             </div>
           </div>
         </div>`,
@@ -708,6 +708,7 @@ function resetAll() {
   closeDrawer();
   closeDayDrawer();
   closeAnalyticsOverlay();
+  closeAnalysisStudio();
   hideChartTooltip();
   S.filters = {};
   S.filtered = [...S.raw];
@@ -838,7 +839,7 @@ function switchOverlayTab(tabId) {
 }
 
 document.getElementById('insightsBtn')?.addEventListener('click', () => openAnalyticsOverlay('trends'));
-document.getElementById('overlayBtn')?.addEventListener('click', () => openAnalyticsOverlay());
+document.getElementById('analyzeBtn')?.addEventListener('click', () => openAnalysisStudio());
 document.querySelectorAll('.analytics-close, #closeOverlayBtn').forEach(btn => {
   btn.addEventListener('click', closeAnalyticsOverlay);
 });
@@ -847,9 +848,206 @@ document.getElementById('overlayTabs')?.addEventListener('click', e => {
   if (tab && tab.dataset.atab) switchOverlayTab(tab.dataset.atab);
 });
 
+// ── Analysis Studio: Universal Pivot Workbench ──
+function openAnalysisStudio() {
+  S.lastOpener = document.activeElement;
+  setModalInert(true);
+  const ov = document.getElementById('analysisStudioOverlay');
+  if (!ov) return;
+  initAnalysisWorkbench();
+  ov.classList.add('open');
+  document.getElementById('analysisStudioClose')?.focus();
+}
+function closeAnalysisStudio() {
+  const ov = document.getElementById('analysisStudioOverlay');
+  if (ov) ov.classList.remove('open');
+  setModalInert(false);
+  if (S.lastOpener && typeof S.lastOpener.focus === 'function') S.lastOpener.focus();
+}
+
+function initAnalysisWorkbench() {
+  if (!S.columns.length) return;
+  const numericCols = []; const catCols = [];
+  S.columns.forEach(col => {
+    const sample = S.filtered.slice(0, 50);
+    const numCount = sample.filter(r => r[col] !== '' && !isNaN(Number(r[col]))).length;
+    if (numCount > sample.length * 0.6 && sample.length > 0) numericCols.push(col);
+    else catCols.push(col);
+  });
+  const rowSel = document.getElementById('pivotRow');
+  const colSel = document.getElementById('pivotCol');
+  if (rowSel) {
+    rowSel.innerHTML = catCols.map(c => '<option value="' + esc(c) + '">' + esc(c) + '</option>').join('');
+    if (!catCols.length) rowSel.innerHTML = S.columns.map(c => '<option value="' + esc(c) + '">' + esc(c) + '</option>').join('');
+  }
+  if (colSel) {
+    colSel.innerHTML = '<option value="none">No split \\u2014 compare metrics</option>' + catCols.filter(c => c !== (rowSel ? rowSel.value : '')).map(c => '<option value="' + esc(c) + '">' + esc(c) + '</option>').join('');
+  }
+  const chipRow = document.getElementById('pivotMetricChips');
+  if (chipRow) {
+    chipRow.innerHTML = '<span class="metric-chip-label">METRICS</span>';
+    const defaultMetrics = [{key:'_count',label:'Count',active:true}];
+    numericCols.slice(0,7).forEach(c => defaultMetrics.push({key:c,label:c,active:false}));
+    defaultMetrics.forEach(m => {
+      const btn = document.createElement('button');
+      btn.className = 'metric-chip' + (m.active ? ' active' : '');
+      btn.dataset.metric = m.key;
+      btn.textContent = m.label;
+      btn.addEventListener('click', () => { btn.classList.toggle('active'); buildPivotTable(); });
+      chipRow.appendChild(btn);
+    });
+  }
+  document.getElementById('pivotRecordBadge').textContent = S.filtered.length.toLocaleString() + ' RECORDS';
+  document.getElementById('pivotScopeCount').textContent = S.filtered.length.toLocaleString();
+  ['pivotRow','pivotCol','pivotLimit','pivotSearch'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener(el.tagName === 'INPUT' ? 'input' : 'change', () => buildPivotTable());
+  });
+  document.getElementById('pivotSortBtn')?.addEventListener('click', function() {
+    this.dataset.desc = this.dataset.desc === '1' ? '0' : '1';
+    this.textContent = this.dataset.desc === '1' ? '\\u2193 High to low' : '\\u2191 Low to high';
+    buildPivotTable();
+  });
+  document.getElementById('pivotExport')?.addEventListener('click', exportPivotCsv);
+  buildPivotTable();
+}
+
+function buildPivotTable() {
+  const data = S.filtered;
+  const rowField = document.getElementById('pivotRow')?.value;
+  const colField = document.getElementById('pivotCol')?.value || 'none';
+  const limit = Number(document.getElementById('pivotLimit')?.value || 10);
+  const search = (document.getElementById('pivotSearch')?.value || '').trim().toLowerCase();
+  const desc = (document.getElementById('pivotSortBtn')?.dataset.desc || '1') === '1';
+  if (!rowField) return;
+  const activeChips = document.querySelectorAll('#pivotMetricChips .metric-chip.active');
+  const metrics = Array.from(activeChips).map(b => b.dataset.metric);
+  if (!metrics.length) return;
+  const isMulti = colField === 'none';
+  // Group by row field
+  const groups = {};
+  data.forEach(r => {
+    const key = String(r[rowField] || '').trim() || 'Unspecified';
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(r);
+  });
+  // Compute metric values
+  function metricVal(rows, metric) {
+    if (metric === '_count') return rows.length;
+    const nums = rows.map(r => Number(r[metric])).filter(n => !isNaN(n));
+    return nums.length ? nums.reduce((a,b) => a+b, 0) / nums.length : 0;
+  }
+  function fmtVal(v, metric) {
+    if (metric === '_count') return v.toLocaleString();
+    return Number.isInteger(v) ? v.toLocaleString() : v.toFixed(2);
+  }
+  let pivotRows = Object.entries(groups)
+    .filter(([key]) => !search || key.toLowerCase().includes(search))
+    .map(([key, rows]) => {
+      const vals = {};
+      metrics.forEach(m => { vals[m] = metricVal(rows, m); });
+      return { label: key, rows, vals, sortVal: vals[metrics[0]] || 0 };
+    })
+    .sort((a, b) => desc ? b.sortVal - a.sortVal : a.sortVal - b.sortVal);
+  const totalRows = pivotRows.length;
+  if (limit > 0) pivotRows = pivotRows.slice(0, limit);
+  // Compute column values for split mode
+  let colValues = [];
+  if (!isMulti) {
+    const colCounts = {};
+    data.forEach(r => { const v = String(r[colField] || '').trim() || 'Unspecified'; colCounts[v] = (colCounts[v]||0)+1; });
+    colValues = Object.entries(colCounts).sort((a,b) => b[1]-a[1]).slice(0,8).map(e => e[0]);
+  }
+  // Compute max for bar widths
+  const metricMax = {};
+  metrics.forEach(m => { metricMax[m] = Math.max(1, ...pivotRows.map(r => r.vals[m])); });
+  // Update header
+  const sortMetricLabel = metrics.length ? (metrics[0] === '_count' ? 'Count' : metrics[0]) : '';
+  document.getElementById('pivotResultTitle').textContent = (isMulti ? metrics.length + ' metrics' : sortMetricLabel) + ' by ' + rowField + (isMulti ? '' : ' × ' + colField);
+  document.getElementById('pivotRowCount').textContent = totalRows.toLocaleString() + ' rows';
+  // Render table
+  const wrap = document.getElementById('pivotTableWrap');
+  if (!wrap) return;
+  if (!data.length) { wrap.innerHTML = '<div class="analysis-empty">No records match the current filters.</div>'; return; }
+  let html = '<table class="pivot-table">';
+  if (isMulti) {
+    html += '<thead><tr><th>' + esc(rowField) + '</th>';
+    metrics.forEach(m => { html += '<th>' + esc(m === '_count' ? 'Count' : m) + '</th>'; });
+    html += '</tr></thead><tbody>';
+    pivotRows.forEach(pr => {
+      html += '<tr><th><button title="Open matching records">' + esc(pr.label) + '</button><small>' + pr.rows.length.toLocaleString() + ' records</small></th>';
+      metrics.forEach(m => {
+        const v = pr.vals[m];
+        const w = Math.min(100, (v / metricMax[m]) * 100);
+        html += '<td class="pivot-cell-metric"><button><span class="pivot-bar accent-neutral" style="width:' + w + '%"></span><span class="pivot-value">' + fmtVal(v, m) + '</span></button></td>';
+      });
+      html += '</tr>';
+    });
+    html += '</tbody>';
+  } else {
+    html += '<thead><tr><th>' + esc(rowField) + '</th>';
+    colValues.forEach(cv => { html += '<th>' + esc(cv) + '</th>'; });
+    html += '<th>Total</th></tr></thead><tbody>';
+    pivotRows.forEach(pr => {
+      html += '<tr><th><button title="Open matching records">' + esc(pr.label) + '</button><small>' + pr.rows.length.toLocaleString() + ' records</small></th>';
+      const metric = metrics[0];
+      colValues.forEach(cv => {
+        const cell = pr.rows.filter(r => (String(r[colField]||'').trim()||'Unspecified') === cv);
+        html += '<td><button>' + fmtVal(metricVal(cell, metric), metric) + '</button></td>';
+      });
+      html += '<td style="font-weight:700"><button>' + fmtVal(pr.vals[metrics[0]], metrics[0]) + '</button></td></tr>';
+    });
+    html += '</tbody>';
+  }
+  html += '</table>';
+  wrap.innerHTML = html;
+  // Wire cell click → openDrawer
+  wrap.querySelectorAll('th button, td button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const label = btn.textContent.trim();
+      const matching = data.filter(r => String(r[rowField]||'').includes(label.split(' ')[0]));
+      if (typeof openDrawer === 'function' && matching.length) {
+        const preview = matching.slice(0, 20);
+        let drawerHtml = '<p style="color:var(--muted);font-size:10px;margin-bottom:8px">' + matching.length + ' matching records</p>';
+        drawerHtml += '<div style="overflow:auto"><table class="data-table" style="font-size:10px"><thead><tr>';
+        S.columns.slice(0,6).forEach(c => { drawerHtml += '<th>' + esc(c) + '</th>'; });
+        drawerHtml += '</tr></thead><tbody>';
+        preview.forEach(r => { drawerHtml += '<tr>'; S.columns.slice(0,6).forEach(c => { drawerHtml += '<td>' + esc(String(r[c]||'')) + '</td>'; }); drawerHtml += '</tr>'; });
+        drawerHtml += '</tbody></table></div>';
+        if (matching.length > 20) drawerHtml += '<p style="color:var(--muted);font-size:10px;margin-top:6px">Showing 20 of ' + matching.length + '</p>';
+        openDrawer(label, drawerHtml);
+      }
+    });
+  });
+}
+
+function exportPivotCsv() {
+  const table = document.querySelector('#pivotTableWrap table');
+  if (!table) return;
+  const rows = [];
+  table.querySelectorAll('tr').forEach(tr => {
+    const cells = [];
+    tr.querySelectorAll('th, td').forEach(cell => {
+      let text = cell.textContent.trim().replace(/\\n.*/s, '');
+      if (/[",\\n]/.test(text)) text = '"' + text.replace(/"/g, '""') + '"';
+      cells.push(text);
+    });
+    rows.push(cells.join(','));
+  });
+  const csv = rows.join('\\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'analysis-studio-' + Date.now() + '.csv'; a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+document.getElementById('analysisStudioClose')?.addEventListener('click', closeAnalysisStudio);
+
 // Escape key closes modals in stacking order (A16)
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
+    const studio = document.querySelector('.analysis-studio-overlay.open');
+    if (studio) { closeAnalysisStudio(); return; }
     const overlay = document.querySelector('.analytics-overlay.open');
     if (overlay) { closeAnalyticsOverlay(); return; }
     const dayDrawer = document.querySelector('.day-drawer.open, .period-drawer.open');
@@ -955,6 +1153,7 @@ export function getFullDashboardTemplate(options?: { brandTitle?: string; brandS
        - chartTooltip → for interactive chart hover probe
        - badges, buttons → for status and actions
        - overlays → for full-screen deep-dive layers
+       - analysisStudio → for Analysis Studio pivot workbench (Analyze data ✦)
     3. Call get_js_utilities for pre-wired JS (parser, animations, filters, drawer)
     4. Implement renderDashboard() with your data bindings
   -->
@@ -1537,6 +1736,45 @@ ${creditCss}
     <div class="a-tab-pane active" id="atab-trends"></div>
     <div class="a-tab-pane" id="atab-breakdown"></div>
     <div class="a-tab-pane" id="atab-details"></div>
+  </div>
+</section>
+
+<!-- Analysis Studio: Universal Pivot Workbench -->
+<section class="analysis-studio-overlay" id="analysisStudioOverlay" role="dialog" aria-modal="true">
+  <div class="analytics-topbar">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div><p style="margin:0 0 3px;color:#8D96A3;font:700 8.5px var(--mono);letter-spacing:.09em">DATA LAB / INTERACTIVE</p><h2>Analysis Studio &middot; Pivot Table</h2></div>
+    </div>
+    <span class="badge" id="pivotRecordBadge">0 RECORDS</span>
+    <button class="analytics-close" id="analysisStudioClose">Back to Dashboard</button>
+  </div>
+  <div class="analysis-studio-body">
+    <div class="analysis-workbench">
+      <section class="analysis-header panel">
+        <div><p class="analysis-kicker">FLEXIBLE DATA WORKBENCH</p><h2>Analysis Studio</h2><span>Build a pivot view &mdash; every control changes the data, not just the display.</span></div>
+        <div class="studio-tabs"><button class="active">Pivot Workbench</button><div class="analysis-scope"><b id="pivotScopeCount">0</b><span>records</span></div></div>
+      </section>
+      <section class="analysis-builder panel">
+        <div class="builder-heading"><div><p class="analysis-kicker">PIVOT BUILDER</p><h3>Drag-free, spreadsheet-style analysis</h3></div><span>Combine any row, column, and one or more measures</span></div>
+        <div class="builder-shelves-wrap">
+          <div class="field-shelves shelf-primary">
+            <label><span>ROWS</span><select id="pivotRow"></select></label>
+            <label><span>COLUMNS</span><select id="pivotCol"><option value="none">No split &mdash; compare metrics</option></select></label>
+            <label><span>SHOW</span><select id="pivotLimit"><option value="10">Top 10</option><option value="5">Top 5</option><option value="25">Top 25</option><option value="0">All rows</option></select></label>
+            <label><span>SEARCH ROWS</span><input id="pivotSearch" placeholder="Search..."></label>
+          </div>
+        </div>
+        <div class="metric-chip-row" id="pivotMetricChips"><span class="metric-chip-label">METRICS</span></div>
+      </section>
+      <section class="analysis-result panel">
+        <div class="analysis-result-head">
+          <div><p class="analysis-kicker">LIVE PIVOT RESULT</p><h3 id="pivotResultTitle">&mdash;</h3></div>
+          <div><button class="analysis-export" id="pivotExport">Export CSV</button><button class="analysis-sort" id="pivotSortBtn" data-desc="1">&darr; High to low</button><span class="badge" id="pivotRowCount">0 rows</span></div>
+        </div>
+        <div class="pivot-wrap" id="pivotTableWrap"></div>
+        <div class="analysis-footnote">Click any row or cell to investigate that segment in the detail drawer. Current global filters are always preserved.</div>
+      </section>
+    </div>
   </div>
 </section>
 
