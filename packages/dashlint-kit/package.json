@@ -1,0 +1,36 @@
+{
+  "name": "dashlint-kit",
+  "version": "2.0.0",
+  "description": "Starter files and utilities for building reusable, upload-driven HTML dashboards with DashLint.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "bin": {
+    "dashlint-kit": "bin/dashlint-kit.mjs"
+  },
+  "files": [
+    "bin/",
+    "src/lib/dashboard-kit.ts",
+    "src/lib/dashboard-template.ts",
+    "src/lib/shell-contract.ts",
+    "src/lib/domain-packs.ts",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "sync-source": "node scripts/sync-source.mjs",
+    "prepack": "npm run sync-source"
+  },
+  "dependencies": {
+    "tsx": "^4.20.0"
+  },
+  "keywords": [
+    "dashboard",
+    "dashlint",
+    "ai",
+    "csv",
+    "html"
+  ]
+}

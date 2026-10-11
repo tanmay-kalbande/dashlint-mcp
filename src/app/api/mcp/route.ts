@@ -53,7 +53,7 @@ const dashboardKitInput = z.object({
       url: z.string().url().max(300).optional(),
     }).strict(),
   ]).optional(),
-  mode: z.enum(["cli", "inline"]).default("inline"),
+  mode: z.enum(["cli", "inline"]).default("cli"),
 }).strict();
 
 const handler = createMcpHandler((server) => {
@@ -87,7 +87,7 @@ const handler = createMcpHandler((server) => {
     "get_dashboard_kit",
     {
       description:
-        "Primary dashboard assembly tool. In 'cli' mode, returns commands for npx dashlint-kit (init, build, profile, lint) and runtime API docs. In 'inline' mode, returns deduplicated wireframe, component patterns, domain packs, and JS utilities within a 35 KB budget.",
+        "Primary dashboard assembly tool. Defaults to npm package instructions for npx dashlint-kit and runtime API docs. If npm is unavailable or package installation/commands fail, call again with mode 'inline' for the regular starter code, domain packs, and JS utilities. Inline output targets a 35 KB budget.",
       inputSchema: dashboardKitInput,
     },
     async (input) => {

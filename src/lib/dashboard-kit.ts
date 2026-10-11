@@ -40,7 +40,7 @@ export interface DashboardKitOutput {
 export function buildDashboardKit(input: DashboardKitInput): DashboardKitOutput {
   const version = "2.0.0";
   const stamp = `<!-- dashlint-kit v${version} -->`;
-  const mode = input.mode || "inline";
+  const mode = input.mode || "cli";
 
   if (mode === "cli") {
     return {
@@ -49,9 +49,8 @@ export function buildDashboardKit(input: DashboardKitInput): DashboardKitOutput 
       stamp,
       cli: {
         commands: {
-          init: `npx dashlint-kit init [project-name] --domain ${input.domain || 'generic'}`,
+          init: `npx dashlint-kit init --domain ${input.domain || 'generic'}`,
           build: "npx dashlint-kit build",
-          profile: "npx dashlint-kit profile dataset.csv",
           lint: "npx dashlint-kit lint dashboard.html",
         },
         runtimeApi: {
@@ -69,7 +68,7 @@ export function buildDashboardKit(input: DashboardKitInput): DashboardKitOutput 
             "applyFilters() / resetAll()",
           ],
         },
-        instructions: "Run `npx dashlint-kit init` to set up the project. You only need to write `app.js` with your dataset calculations and renderDashboard() logic. Run `npx dashlint-kit build` to compile the single-file dashboard, and `npx dashlint-kit lint` to verify invariants.",
+        instructions: "Use the npm package first: run `npx dashlint-kit init` to set up the project, then write only `app.js` with dataset-specific calculations and renderDashboard() logic. Run `npx dashlint-kit build` to compile and `npx dashlint-kit lint` to verify invariants. If npm is unavailable, installation fails, or the package command is not recognized, call get_dashboard_kit again with mode `inline` and continue with the returned starter code.",
       },
     };
   }

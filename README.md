@@ -22,8 +22,9 @@ No API keys or installation are required.
 2. The AI assistant reads the user's data directly from the message or project, profiles it, and calculates defensible insights locally. **Do not send the dataset to DashLint MCP.**
 3. Call `build_dashboard_blueprint()` with only column names, inferred types, optional null/distinct counts, audience, and business question. **Never send rows or sample values.** Verify the returned suggestions locally.
 4. Inspect the existing project and the SLA Pulse / Incident Pulse references. Use the supplied app shell code as the source of truth.
-5. Build a reusable downloadable HTML dashboard. Use the shared dataset to design defensible field mappings, formulas, and insight-generation rules, but never embed its rows or precomputed results. The opened app starts in an upload state and recalculates all views from the end user's local CSV or Excel upload.
-6. Use the focused playbooks as needed and finish with `get_dashboard_completion_checklist()`.
+5. Call `get_dashboard_kit()` and try its default `npx dashlint-kit` setup path first. If npm is unavailable or the package cannot be installed or run, call `get_dashboard_kit(mode: "inline")` and use the returned kit directly through MCP.
+6. Build a reusable downloadable HTML dashboard. Use the shared dataset to design defensible field mappings, formulas, and insight-generation rules, but never embed its rows or precomputed results. The opened app starts in an upload state and recalculates all views from the end user's local CSV or Excel upload.
+7. Use the focused playbooks as needed and finish with `get_dashboard_completion_checklist()`.
 
 The MCP is an orchestration layer with a schema-aware blueprint tool: it accepts only column metadata to tailor the implementation plan, never file rows. It does not calculate dataset findings or write project files. The AI coding assistant owns analysis and implementation. The generated downloadable HTML app parses CSV and Excel files locally in the browser and does not send their contents to DashLint or another service.
 
@@ -33,7 +34,7 @@ The MCP is an orchestration layer with a schema-aware blueprint tool: it accepts
 |------|--------|---------|
 | `get_dashboard_creation_workflow()` | Active | Start here; returns the end-to-end workflow and all playbooks in one response. |
 | `build_dashboard_blueprint(fields, businessQuestion?, audience?, rowCount?)` | Active (v2.0) | Schema-aware implementation blueprint: single justified roles per field, additivity classes, default aggregations, grain detection, ratio formulas, local checks, and askUser questions. Accepts no row data or sample values. |
-| `get_dashboard_kit(components?, domain?, brand?, credit?, mode?)` | Active (v2.0) | Primary dashboard assembly tool. In CLI mode, returns `npx dashlint-kit` commands and API reference. In inline mode, returns deduplicated wireframe, component patterns, domain packs, and JS utilities within a 35 KB budget. |
+| `get_dashboard_kit(components?, domain?, brand?, credit?, mode?)` | Active (v2.0) | Defaults to the npm package workflow (`npx dashlint-kit`). If npm or the package is unavailable, request `mode: "inline"` for the regular MCP-only kit, targeted to a 35 KB budget. |
 | `get_version()` | Active (v2.0) | Returns DashLint MCP server version (2.0.0), supported features, and compatibility matrix. |
 | `get_data_insight_playbook()` | Active | Local data profiling, metric, insight, and uncertainty instructions. |
 | `get_dashboard_composition_playbook()` | Active | Adaptive narrative, layout, chart selection, and visual hierarchy. |
