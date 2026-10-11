@@ -11,6 +11,5 @@ src/lib/rulebook-compiled.json
 next-env.d.ts
 incident-pulse/
 SLA-Pulse/
-dump/incident-pulse/
-dump/SLA-Pulse/
 public/samples/
+dump/
