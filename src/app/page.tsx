@@ -608,7 +608,7 @@ export default function Home() {
             >
               <span className="npm-option-mark" aria-hidden="true">npm</span>
               <span className="npm-option-copy">
-                <span className="npm-option-title">Standalone dashboard kit <span className="npm-option-badge">NPM</span></span>
+                <span className="npm-option-title">Standalone kit</span>
                 <code className="npm-option-command">npx dashlint-kit init</code>
               </span>
               <svg className="npm-option-arrow" viewBox="0 0 16 16" fill="none" aria-hidden="true">
@@ -865,7 +865,7 @@ export default function Home() {
                   >
                     <span className="npm-option-mark" aria-hidden="true">npm</span>
                     <span className="npm-option-copy">
-                      <span className="npm-option-title">Standalone dashboard kit <span className="npm-option-badge">NPM</span></span>
+                      <span className="npm-option-title">Standalone kit</span>
                       <code className="npm-option-command">npx dashlint-kit init</code>
                     </span>
                     <svg className="npm-option-arrow" viewBox="0 0 16 16" fill="none" aria-hidden="true">

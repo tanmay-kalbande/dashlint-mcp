@@ -34,8 +34,8 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0b0c0e;
-    --sf: #1a1a1a;
+    --bg: #151515;
+    --sf: #111111;
     --s2: #1d2026;
     --s3: #111316;
     --ink: #e8eaee;
@@ -52,8 +52,8 @@
 }
 
 :root[data-theme="dark"] {
-  --bg: #0b0c0e;
-  --sf: #1a1a1a;
+  --bg: #151515;
+  --sf: #111111;
   --s2: #1d2026;
   --s3: #111316;
   --ink: #e8eaee;
@@ -320,78 +320,71 @@ button {
 
 .rail .npm-option-link,
 .npm-option-link {
-  position: relative;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 9px;
   width: 100%;
-  min-height: 58px;
+  min-height: 42px;
   height: auto;
-  padding: 8px 10px;
-  overflow: hidden;
-  border: 1px solid #363b45;
-  border-radius: 6px;
-  background: linear-gradient(135deg, #202329 0%, #17191d 100%);
-  color: #eef0f4;
+  padding: 7px 9px;
+  border: 1px solid #242424;
+  border-radius: 5px;
+  background: #111111;
+  color: #e8eaee;
   text-align: left;
   text-decoration: none;
-  transition: border-color .18s ease, background .18s ease, transform .18s ease;
+  transition: border-color .18s ease, background .18s ease;
 }
 
 .npm-option-link:hover {
-  transform: translateY(-1px);
-  border-color: #596273;
-  background: linear-gradient(135deg, #252a33 0%, #1b1e23 100%);
+  border-color: #454545;
+  background: #171717;
+}
+
+.npm-option-link:focus-visible {
+  outline: 2px solid #aeb5c1;
+  outline-offset: 2px;
 }
 
 .npm-option-mark {
   display: grid;
   place-items: center;
-  flex: 0 0 38px;
-  height: 38px;
-  border: 1px solid #3a404b;
-  border-radius: 5px;
-  background: #111316;
-  color: #d7dbe3;
-  font: 700 10px var(--mono);
-  letter-spacing: -.06em;
+  flex: 0 0 24px;
+  height: 24px;
+  border: 1px solid #292929;
+  border-radius: 4px;
+  background: #151515;
+  color: #c6c9cf;
+  font: 700 8px var(--mono);
+  letter-spacing: -.04em;
 }
 
 .npm-option-copy {
   display: grid;
   min-width: 0;
-  gap: 4px;
+  gap: 2px;
 }
 
 .npm-option-title {
   display: flex;
   align-items: center;
   gap: 6px;
-  color: #eef0f4;
-  font-size: 11px;
-  font-weight: 600;
-}
-
-.npm-option-badge {
-  padding: 2px 5px;
-  border: 1px solid #3a404b;
-  border-radius: 3px;
-  color: #9aa3b2;
-  font: 700 7px var(--mono);
-  letter-spacing: .07em;
+  color: #d8dbe1;
+  font: 600 9px var(--mono);
+  letter-spacing: .01em;
 }
 
 .npm-option-command {
-  color: #8D96A3;
-  font: 9px var(--mono);
+  color: #858b96;
+  font: 8px var(--mono);
 }
 
 .npm-option-arrow {
   flex: 0 0 auto;
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
   margin-left: auto;
-  color: #9aa3b2;
+  color: #858b96;
 }
 
 @media (max-height: 560px) and (min-width: 1101px) {
