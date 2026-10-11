@@ -347,21 +347,10 @@ button {
 }
 
 .npm-option-mark {
-  display: grid;
-  place-items: center;
-  flex: 0 0 24px;
-  height: 24px;
-  border: 1px solid #292929;
-  border-radius: 4px;
-  background: #151515;
-  color: #c6c9cf;
-}
-
-.npm-option-mark svg {
-  display: block;
-  width: 16px;
-  height: 16px;
-  color: #cb3837;
+  flex: 0 0 25px;
+  color: #9aa1ad;
+  font: 700 9px var(--mono);
+  letter-spacing: -.06em;
 }
 
 .npm-option-copy {

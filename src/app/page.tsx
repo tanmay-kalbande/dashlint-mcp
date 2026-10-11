@@ -462,11 +462,7 @@ export default function Home() {
               target="_blank"
               rel="noopener noreferrer"
             >
-              <span className="npm-option-mark" aria-hidden="true">
-                <svg viewBox="0 0 24 24" focusable="false">
-                  <path fill="currentColor" fillRule="evenodd" d="M0 0v24h8v-4h4v4h12V0H0zm4 4h4v12H4V4zm8 0h8v12h-4v4h-4V4zm4 8h-4v4h4v-4z" />
-                </svg>
-              </span>
+              <span className="npm-option-mark" aria-hidden="true">npm</span>
               <span className="npm-option-copy">
                 <span className="npm-option-title">Standalone kit</span>
                 <code className="npm-option-command">npx dashlint-kit init</code>
@@ -723,11 +719,7 @@ export default function Home() {
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    <span className="npm-option-mark" aria-hidden="true">
-                      <svg viewBox="0 0 24 24" focusable="false">
-                        <path fill="currentColor" fillRule="evenodd" d="M0 0v24h8v-4h4v4h12V0H0zm4 4h4v12H4V4zm8 0h8v12h-4v4h-4V4zm4 8h-4v4h4v-4z" />
-                      </svg>
-                    </span>
+                    <span className="npm-option-mark" aria-hidden="true">npm</span>
                     <span className="npm-option-copy">
                       <span className="npm-option-title">Standalone kit</span>
                       <code className="npm-option-command">npx dashlint-kit init</code>
