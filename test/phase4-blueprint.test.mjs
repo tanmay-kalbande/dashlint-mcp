@@ -23,6 +23,12 @@ test('Phase 4: Blueprint v2 classifies sales_distribution fields correctly', () 
       { name: 'delivery_issue_reason', type: 'category', distinctCount: 6, nullablePercent: 62 },
       { name: 'delivery_duration_hours', type: 'number', distinctCount: 35, nullablePercent: 0 },
       { name: 'customer_rating', type: 'number', distinctCount: 5, nullablePercent: 12 },
+      { name: 'Estimated_Product_Cost_INR', type: 'currency', distinctCount: 485, nullablePercent: 0 },
+      { name: 'Gross_Margin_INR', type: 'currency', distinctCount: 481, nullablePercent: 0 },
+      { name: 'Delivery_Days', type: 'number', distinctCount: 28, nullablePercent: 0 },
+      { name: 'Delivery_On_Time', type: 'boolean', distinctCount: 2, nullablePercent: 0 },
+      { name: 'Sales_Route', type: 'category', distinctCount: 5, nullablePercent: 0 },
+      { name: 'Pack_Weight_KG', type: 'number', distinctCount: 3, nullablePercent: 0 },
     ],
   };
 
@@ -55,6 +61,15 @@ test('Phase 4: Blueprint v2 classifies sales_distribution fields correctly', () 
   assert.equal(byName.customer_rating.role, 'measure');
   assert.equal(byName.customer_rating.additivity, 'non_additive');
   assert.equal(byName.customer_rating.defaultAggregation, 'avg', 'Rating must default to avg, never sum');
+
+  assert.equal(byName.Estimated_Product_Cost_INR.role, 'measure');
+  assert.equal(byName.Estimated_Product_Cost_INR.additivity, 'additive');
+  assert.equal(byName.Gross_Margin_INR.role, 'measure');
+  assert.equal(byName.Gross_Margin_INR.additivity, 'additive');
+  assert.equal(byName.Delivery_Days.role, 'measure');
+  assert.equal(byName.Delivery_On_Time.role, 'status');
+  assert.equal(byName.Sales_Route.role, 'dimension');
+  assert.equal(byName.Pack_Weight_KG.role, 'dimension');
 
   assert.equal(byName.delivery_duration_hours.role, 'measure');
   assert.equal(byName.delivery_duration_hours.additivity, 'non_additive');

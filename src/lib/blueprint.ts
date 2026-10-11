@@ -76,11 +76,13 @@ export function classifyField(field: DashboardFieldInput, rowCount?: number): Cl
   const normName = normalize(field.name);
   const tokens = new Set(normName.split(" ").filter(Boolean));
   const distinctRatio = (rowCount && field.distinctCount != null) ? (field.distinctCount / rowCount) : 0;
+  const numeric = ["number", "currency", "percentage"].includes(field.type);
 
   // 1. Identifier check
   const idSuffixes = ["id", "code", "no", "number", "key", "ref", "reference", "uuid", "guid"];
   const isIdName = idSuffixes.some(s => normName === s || normName.endsWith(" " + s) || normName.endsWith("_" + s));
-  if (field.type === "identifier" || isIdName || distinctRatio >= 0.90) {
+  const idByRatio = !numeric && ["text", "unknown", "category", "identifier"].includes(field.type) && distinctRatio >= 0.90;
+  if (field.type === "identifier" || (isIdName && !numeric) || idByRatio) {
     return {
       name: field.name,
       inferredType: field.type,
@@ -96,10 +98,10 @@ export function classifyField(field: DashboardFieldInput, rowCount?: number): Cl
   }
 
   // 2. Time check (calendar dates and timestamps; durations are measures)
-  const isDurationToken = ["duration", "elapsed", "lead_time", "latency", "wait_time"].some(t => normName.includes(t));
   const timeTokens = ["date", "time", "timestamp", "opened", "created", "resolved", "closed", "updated", "period", "month", "week", "day", "year", "quarter"];
-  const isTimeMatch = !isDurationToken && timeTokens.some(t => tokens.has(t) || normName.includes(t));
-  if ((["date", "datetime"].includes(field.type) || isTimeMatch) && !isDurationToken) {
+  const isTemporalType = ["date", "datetime"].includes(field.type);
+  const isTimeByName = !numeric && field.type !== "boolean" && timeTokens.some(t => tokens.has(t));
+  if (isTemporalType || isTimeByName) {
     return {
       name: field.name,
       inferredType: field.type,
@@ -152,9 +154,10 @@ export function classifyField(field: DashboardFieldInput, rowCount?: number): Cl
   }
 
   // 5. Rates & Percentages (NON-ADDITIVE)
-  const rateTokens = ["percent", "pct", "ratio", "rate", "fulfilment", "fulfillment", "share", "margin", "compliance"];
+  const rateTokens = ["percent", "pct", "ratio", "rate"];
   const isRateMatch = rateTokens.some(t => t.includes(" ") ? normName.includes(t) : tokens.has(t));
-  if (field.type === "percentage" || isRateMatch) {
+  const isFulfillmentRate = ["fulfilment", "fulfillment"].some(t => tokens.has(t));
+  if (field.type === "percentage" || (field.type !== "currency" && (isRateMatch || isFulfillmentRate))) {
     return {
       name: field.name,
       inferredType: field.type,
@@ -241,10 +244,25 @@ export function classifyField(field: DashboardFieldInput, rowCount?: number): Cl
     };
   }
 
+  if (numeric && field.type !== "currency" && (field.distinctCount ?? 99) <= 6) {
+    return {
+      name: field.name,
+      inferredType: field.type,
+      distinctCount: field.distinctCount,
+      nullablePercent: field.nullablePercent,
+      role: "dimension",
+      additivity: "none",
+      defaultAggregation: "none",
+      confidence: 0.6,
+      reason: "Few distinct numeric values; likely a descriptor rather than an additive measure.",
+      guardrail: "Confirm whether this numeric field is a category, flag, or genuinely additive quantity before summing it."
+    };
+  }
+
   // 10. Additive Quantities and Monetary Values
   const additiveTokens = ["units", "qty", "quantity", "count", "volume", "total", "amount", "revenue", "sales", "cost", "spend", "margin", "profit", "value", "delivered", "ordered", "calls", "tickets", "orders", "records", "clicks"];
   const isAdditiveMatch = additiveTokens.some(t => tokens.has(t) || normName.includes(t));
-  if (["currency", "number"].includes(field.type) || isAdditiveMatch) {
+  if (numeric && (isAdditiveMatch || ["currency", "number"].includes(field.type))) {
     return {
       name: field.name,
       inferredType: field.type,
@@ -348,6 +366,7 @@ export function buildDashboardBlueprint(input: {
   const nonAdditiveMeasures = classified.filter(f => f.role === "measure" && f.additivity === "non_additive");
   const rateFields = classified.filter(f => f.role === "rate").map(f => f.name);
   const unknownFields = classified.filter(f => f.role === "unknown").map(f => f.name);
+  const ambiguousNumericDimensions = classified.filter(f => f.role === "dimension" && ["number", "percentage"].includes(f.inferredType) && f.confidence === 0.6).map(f => f.name);
 
   // Grain Determination
   let grainGuess = "Single transaction record per row";
@@ -504,6 +523,9 @@ export function buildDashboardBlueprint(input: {
   const askUser: string[] = [];
   if (unknownFields.length) {
     askUser.push(`What is the operational meaning and preferred aggregation for column(s): ${unknownFields.slice(0, 3).join(", ")}?`);
+  }
+  if (ambiguousNumericDimensions.length && askUser.length < 3) {
+    askUser.push(`Are low-cardinality numeric field(s) ${ambiguousNumericDimensions.slice(0, 3).join(", ")} category labels, flags, or additive measures?`);
   }
   if (!input.businessQuestion) {
     askUser.push("What primary decision or operational question should this dashboard answer for executives?");

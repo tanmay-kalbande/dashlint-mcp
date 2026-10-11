@@ -3,13 +3,17 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { loadTsModule } from './utils.mjs';
 
+const serverPackage = JSON.parse(readFileSync('package.json', 'utf8'));
+const kitPackage = JSON.parse(readFileSync('packages/dashlint-kit/package.json', 'utf8'));
+
 const kit = loadTsModule('src/lib/dashboard-kit.ts');
+const versions = loadTsModule('src/lib/versions.ts');
 
 test('Phase 7: tools.manifest.json is well-formed and lists all tools', () => {
   const raw = readFileSync('src/lib/tools.manifest.json', 'utf8');
   const manifest = JSON.parse(raw);
   
-  assert.equal(manifest.version, '2.0.0');
+  assert.equal(manifest.version, serverPackage.version);
   assert.ok(Array.isArray(manifest.tools), 'Manifest must contain tools array');
   assert.equal(manifest.tools.length, 12, 'Manifest must declare exactly 12 tools');
 
@@ -71,7 +75,23 @@ test('Phase 7: get_dashboard_kit inline mode returns within byte budget', () => 
   });
   
   assert.equal(inlineOutput.mode, 'inline');
-  assert.ok(inlineOutput.inline.wireframe.includes('<!-- dashlint-kit v2.0.0 -->'));
+  assert.equal(inlineOutput.version, kitPackage.version);
+  assert.ok(inlineOutput.inline.wireframe.includes(`<!-- dashlint-kit v${kitPackage.version} -->`));
   assert.equal(inlineOutput.inline.budget.status, 'within_budget');
   assert.ok(inlineOutput.inline.budget.totalKb <= 35, `Inline response exceeded budget: ${inlineOutput.inline.budget.totalKb} KB`);
+});
+
+test('Phase 7: reported package versions match their package metadata', () => {
+  assert.equal(versions.SERVER_VERSION, serverPackage.version);
+  assert.equal(versions.DASHBOARD_KIT_VERSION, kitPackage.version);
+  assert.equal(kit.buildDashboardKit({ mode: 'cli' }).version, kitPackage.version);
+});
+
+test('Phase 7: core utility stripping preserves upload and tooltip runtime', () => {
+  const output = kit.buildDashboardKit({ mode: 'inline', components: ['kpiCards'] });
+  for (const helper of ['function handleFile(', 'function loadData(', 'function resetAll(', 'function showChartTooltip(', 'function hideChartTooltip(']) {
+    assert.ok(output.inline.utilities.includes(helper), `Core runtime must preserve ${helper}`);
+  }
+  assert.ok(!output.inline.utilities.includes('function openDayDrawer('));
+  assert.ok(!output.inline.utilities.includes('function openAnalyticsOverlay('));
 });

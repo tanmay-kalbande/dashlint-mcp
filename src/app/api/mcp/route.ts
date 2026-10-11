@@ -13,6 +13,7 @@ import { getComponentPatterns, getAvailableComponents } from "@/lib/shell-contra
 import { incrementCounter } from "@/lib/counter";
 import { buildDashboardBlueprint } from "@/lib/blueprint";
 import { buildDashboardKit } from "@/lib/dashboard-kit";
+import { DASHBOARD_KIT_VERSION, SERVER_VERSION } from "@/lib/versions";
 
 const noInput = z.object({}).strict();
 
@@ -109,7 +110,8 @@ const handler = createMcpHandler((server) => {
         content: [{
           type: "text" as const,
           text: JSON.stringify({
-            serverVersion: "2.0.0",
+            serverVersion: SERVER_VERSION,
+            dashboardKitVersion: DASHBOARD_KIT_VERSION,
             minKitVersion: "2.0.0",
             protocolVersion: "2024-11-05",
             features: [

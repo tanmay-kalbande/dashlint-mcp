@@ -14,6 +14,7 @@
     "bin/",
     "src/lib/dashboard-kit.ts",
     "src/lib/dashboard-template.ts",
+    "src/lib/versions.ts",
     "src/lib/shell-contract.ts",
     "src/lib/domain-packs.ts",
     "README.md",

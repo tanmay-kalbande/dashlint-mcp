@@ -1,6 +1,7 @@
 import { getFullDashboardTemplate, JS_UTILITIES } from "./dashboard-template";
 import { getComponentPatterns, CreditConfig } from "./shell-contract";
 import { getDomainPack, DomainPack } from "./domain-packs";
+import { DASHBOARD_KIT_VERSION } from "./versions";
 
 export interface DashboardKitInput {
   components?: string[];
@@ -38,7 +39,7 @@ export interface DashboardKitOutput {
 }
 
 export function buildDashboardKit(input: DashboardKitInput): DashboardKitOutput {
-  const version = "2.0.0";
+  const version = DASHBOARD_KIT_VERSION;
   const stamp = `<!-- dashlint-kit v${version} -->`;
   const mode = input.mode || "cli";
 
@@ -88,10 +89,10 @@ export function buildDashboardKit(input: DashboardKitInput): DashboardKitOutput 
 
   let utilities = JS_UTILITIES;
   if (!requestedComponents.includes('dayDrawer')) {
-    utilities = utilities.replace(/\/\/\s*──\s*Period \/ Day Drilldown Drawer[\s\S]*?(?=\/\/\s*──\s*Chart Hover Tooltip|$)/, '');
+    utilities = stripSection(utilities, 'dayDrawer');
   }
   if (!requestedComponents.includes('overlays')) {
-    utilities = utilities.replace(/\/\/\s*──\s*Analytics Overlay[\s\S]*?(?=\/\/\s*──|$)/, '');
+    utilities = stripSection(utilities, 'overlays');
   }
 
   const cssSize = Object.values(componentsMap).reduce((sum, c) => sum + c.css.length, 0);
@@ -117,4 +118,16 @@ export function buildDashboardKit(input: DashboardKitInput): DashboardKitOutput 
       },
     },
   };
+}
+
+function stripSection(source: string, name: string): string {
+  const start = `// @section:${name}`;
+  const end = `// @endsection:${name}`;
+  const startIndex = source.indexOf(start);
+  const endIndex = source.indexOf(end, startIndex + start.length);
+  if (startIndex < 0 || endIndex < 0) {
+    throw new Error(`Section markers for '${name}' not found`);
+  }
+  const afterEnd = endIndex + end.length;
+  return source.slice(0, startIndex) + source.slice(afterEnd).replace(/^\r?\n/, '');
 }

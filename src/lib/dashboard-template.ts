@@ -452,6 +452,7 @@ function closeDrawer() {
 document.getElementById('drawerBackdrop')?.addEventListener('click', closeDrawer);
 document.getElementById('drawerClose')?.addEventListener('click', closeDrawer);
 
+// @section:dayDrawer
 // ── Period / Day Drilldown Drawer (F2: No fabricated defaults, A8: data-tip, A17: dynamic chips) ──
 function openDayDrawer(dayTitle, config = {}) {
   const drawer = document.getElementById('dayDrawer') || document.querySelector('.day-drawer') || document.querySelector('.period-drawer');
@@ -654,6 +655,7 @@ function closeDayDrawer() {
 document.getElementById('dayDrawerClose')?.addEventListener('click', closeDayDrawer);
 document.getElementById('dayDrawerBack')?.addEventListener('click', closeDayDrawer);
 document.getElementById('dayDrawerOverlay')?.addEventListener('click', closeDayDrawer);
+// @endsection:dayDrawer
 
 // ── Floating Chart Tooltip & Delegated Handler (A8) ──
 function showChartTooltip(x, y, html) {
@@ -706,8 +708,8 @@ document.addEventListener('focusout', e => {
 // ── Reset All State (A13) ──
 function resetAll() {
   closeDrawer();
-  closeDayDrawer();
-  closeAnalyticsOverlay();
+  if (typeof closeDayDrawer === 'function') closeDayDrawer();
+  if (typeof closeAnalyticsOverlay === 'function') closeAnalyticsOverlay();
   closeAnalysisStudio();
   hideChartTooltip();
   S.filters = {};
@@ -813,6 +815,7 @@ if (exportBtn) {
   });
 }
 
+// @section:overlays
 // ── Analytics Overlay & Sub-tab Switching (A16) ──
 function openAnalyticsOverlay(subtabId) {
   S.lastOpener = document.activeElement;
@@ -847,6 +850,7 @@ document.getElementById('overlayTabs')?.addEventListener('click', e => {
   const tab = e.target.closest('.a-tab');
   if (tab && tab.dataset.atab) switchOverlayTab(tab.dataset.atab);
 });
+// @endsection:overlays
 
 // ── Analysis Studio: Universal Pivot Workbench ──
 function openAnalysisStudio() {
@@ -1049,9 +1053,9 @@ document.addEventListener('keydown', e => {
     const studio = document.querySelector('.analysis-studio-overlay.open');
     if (studio) { closeAnalysisStudio(); return; }
     const overlay = document.querySelector('.analytics-overlay.open');
-    if (overlay) { closeAnalyticsOverlay(); return; }
+    if (overlay && typeof closeAnalyticsOverlay === 'function') { closeAnalyticsOverlay(); return; }
     const dayDrawer = document.querySelector('.day-drawer.open, .period-drawer.open');
-    if (dayDrawer) { closeDayDrawer(); return; }
+    if (dayDrawer && typeof closeDayDrawer === 'function') { closeDayDrawer(); return; }
     if (S.drawerOpen) { closeDrawer(); return; }
     document.querySelectorAll('.scope-bar-btn.open').forEach(b => b.classList.remove('open'));
     document.querySelectorAll('.filter-drop.open').forEach(d => d.classList.remove('open'));
