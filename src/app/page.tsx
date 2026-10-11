@@ -143,7 +143,7 @@ export default function Home() {
   const [connectOpen, setConnectOpen] = useState(false);
   const [callsCount, setCallsCount] = useState<number | null>(null);
   const [statusText, setStatusText] = useState("0 dashboard creation calls");
-  const [mapHint, setMapHint] = useState("Hover or tap a node for details");
+  const [mapHint, setMapHint] = useState("Hover, tap, or focus a node for details");
   const [caption, setCaption] = useState("1 · Share data + question");
   const [captionFade, setCaptionFade] = useState(false);
 
@@ -250,7 +250,7 @@ export default function Home() {
     const updateHint = () => {
       if (!mvRef.current) return;
       const v = mvRef.current;
-      setMapHint(v.scrollWidth > v.clientWidth + 4 ? "Swipe to explore, tap a node" : "Hover or tap a node for details");
+      setMapHint(v.scrollWidth > v.clientWidth + 4 ? "Swipe to explore; tap or focus a node" : "Hover, tap, or focus a node for details");
     };
     updateHint();
     window.addEventListener("resize", updateHint);
@@ -271,7 +271,7 @@ export default function Home() {
 
   // Hover card logic
   const showCard = (nodeId: string) => {
-    if (nodeId.startsWith("t") || nodeId === "hub") return;
+    if (nodeId === "hub") return;
     const item = ALL_NODES.find((a) => a.id === nodeId);
     if (!item || !svRef.current || !mvsRef.current) return;
 
@@ -474,7 +474,7 @@ export default function Home() {
         pan(1);
         lit("hub", true);
 
-        setCapText("2 · AI calls the 7 DashLint tools");
+        setCapText("2 · AI calls 7 core DashLint workflow tools");
         await Promise.all(
           TL.map(async (_, i) => {
             await sleep(i * 260);
@@ -1179,7 +1179,7 @@ export default function Home() {
                             />
                           ))}
                           <rect className="k" x="54" y="437" width="124" height="9" rx="3" fill="#1a1a19" stroke="#20201f" />
-                          <text className="k" x="58" y="444" fill="#9aa3af" fontSize="6" style={{ fontFamily: "'IBM Plex Mono', monospace", letterSpacing: "0.06em", fontWeight: 600 }}>REUSABLE DASHBOARD</text>
+                          <text className="k" x="58" y="444" fill="#9aa3af" fontSize="6" style={{ fontFamily: "'IBM Plex Mono', monospace", letterSpacing: "0.06em", fontWeight: 600 }}>DASHBOARD</text>
                           {[0, 1, 2].map((i) => (
                             <rect
                               key={i}
@@ -1201,7 +1201,7 @@ export default function Home() {
                               className="b"
                               style={{ transitionDelay: `${0.25 + i * 0.06}s` }}
                               x={56 + i * 15}
-                              y={562 - v}
+                              y={558 - v}
                               width="10"
                               height={v}
                               rx="2"
@@ -1263,8 +1263,11 @@ export default function Home() {
                       <text x="264" y="68" style={{ font: "600 13.5px Inter, sans-serif" }}>
                         DashLint MCP
                       </text>
-                      <text x="264" y="81" className="sub" style={{ fontSize: "10.5px" }}>
+                      <text x="264" y="81" className="sub" style={{ fontSize: "9.5px" }}>
                         remote · no API key
+                      </text>
+                      <text x="264" y="91" className="sub" style={{ fontSize: "7.5px" }}>
+                        7 core tools shown · 12 total
                       </text>
                       <g className="eq">
                         {[8, 14, 10, 16].map((v, i) => (
@@ -1290,7 +1293,14 @@ export default function Home() {
                           key={n.id}
                           className="nd row"
                           data-i={n.id}
-                          aria-label={n.n}
+                          role="group"
+                          aria-label={`${n.t}: ${n.d}`}
+                          tabIndex={0}
+                          onMouseEnter={() => showCard(n.id)}
+                          onFocus={() => showCard(n.id)}
+                          onClick={() => showCard(n.id)}
+                          onMouseLeave={hideCard}
+                          onBlur={hideCard}
                           style={{
                             "--c": "#e5e7eb",
                             animationDelay: `${(i + 4) * 70}ms`,
