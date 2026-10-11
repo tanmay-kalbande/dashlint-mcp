@@ -348,8 +348,8 @@ button {
 
 .npm-option-mark {
   flex: 0 0 25px;
-  color: #9aa1ad;
-  font: 700 9px var(--mono);
+  color: #cb3837;
+  font: 700 10px var(--mono);
   letter-spacing: -.06em;
 }
 
