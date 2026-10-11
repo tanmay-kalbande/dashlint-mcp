@@ -462,7 +462,13 @@ export default function Home() {
               target="_blank"
               rel="noopener noreferrer"
             >
-              <span className="npm-option-mark" aria-hidden="true">npm</span>
+              <img
+                className="npm-option-mark"
+                src="https://raw.githubusercontent.com/npm/logos/master/npm%20logo/npm-logo-red.svg"
+                alt="npm"
+                width="34"
+                height="18"
+              />
               <span className="npm-option-copy">
                 <span className="npm-option-title">Standalone kit</span>
                 <code className="npm-option-command">npx dashlint-kit init</code>
@@ -719,7 +725,13 @@ export default function Home() {
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    <span className="npm-option-mark" aria-hidden="true">npm</span>
+                    <img
+                      className="npm-option-mark"
+                      src="https://raw.githubusercontent.com/npm/logos/master/npm%20logo/npm-logo-red.svg"
+                      alt="npm"
+                      width="34"
+                      height="18"
+                    />
                     <span className="npm-option-copy">
                       <span className="npm-option-title">Standalone kit</span>
                       <code className="npm-option-command">npx dashlint-kit init</code>
