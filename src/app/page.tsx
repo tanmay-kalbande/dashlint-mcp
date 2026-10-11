@@ -601,14 +601,20 @@ export default function Home() {
           </button>
           <div className="npm-option">
             <a
-              className="btn g sm npm-option-link"
+              className="npm-option-link"
               href="https://www.npmjs.com/package/dashlint-kit"
               target="_blank"
               rel="noopener noreferrer"
             >
-              Use standalone npm kit ↗
+              <span className="npm-option-mark" aria-hidden="true">npm</span>
+              <span className="npm-option-copy">
+                <span className="npm-option-title">Standalone dashboard kit <span className="npm-option-badge">NPM</span></span>
+                <code className="npm-option-command">npx dashlint-kit init</code>
+              </span>
+              <svg className="npm-option-arrow" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M4 12 12 4M5 4h7v7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
             </a>
-            <code>npx dashlint-kit init</code>
           </div>
         </div>
       </aside>
@@ -852,14 +858,20 @@ export default function Home() {
                 </button>
                 <div className="npm-option">
                   <a
-                    className="btn g sm npm-option-link"
+                    className="npm-option-link"
                     href="https://www.npmjs.com/package/dashlint-kit"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    Use standalone npm kit ↗
+                    <span className="npm-option-mark" aria-hidden="true">npm</span>
+                    <span className="npm-option-copy">
+                      <span className="npm-option-title">Standalone dashboard kit <span className="npm-option-badge">NPM</span></span>
+                      <code className="npm-option-command">npx dashlint-kit init</code>
+                    </span>
+                    <svg className="npm-option-arrow" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                      <path d="M4 12 12 4M5 4h7v7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
                   </a>
-                  <code>npx dashlint-kit init</code>
                 </div>
                 <a
                   className="btn g sm"
