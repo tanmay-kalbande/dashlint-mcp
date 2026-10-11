@@ -18,21 +18,19 @@ const CLIENT_KEYS = ["Claude", "Cursor", "ChatGPT", "Other"] as const;
 type ClientKey = (typeof CLIENT_KEYS)[number];
 
 const TL = [
-  ["build_dashboard_blueprint", "blueprint", "Schema in, tailored plan out: fields, metrics, charts, caveats."],
-  ["get_dashboard_creation_workflow", "workflow", "End-to-end build steps for your assistant."],
-  ["get_shell_preservation_spec", "shell spec", "Keeps the rail, header and upload control consistent."],
-  ["get_data_insight_playbook", "insights", "Lead with evidence, explain what changed."],
-  ["get_dashboard_composition_playbook", "composition", "Layout and chart selection."],
-  ["get_dashboard_interaction_playbook", "interaction", "Filters and right-side drill-down drawers."],
-  ["get_dashboard_completion_checklist", "checklist", "Final review before shipping."],
+  ["build_dashboard_blueprint", "blueprint"],
+  ["get_dashboard_creation_workflow", "workflow"],
+  ["get_shell_preservation_spec", "shell spec"],
+  ["get_data_insight_playbook", "insights"],
+  ["get_dashboard_composition_playbook", "composition"],
+  ["get_dashboard_interaction_playbook", "interaction"],
+  ["get_dashboard_completion_checklist", "checklist"],
 ] as const;
 
 const P = ["#e5e7eb", "#e5e7eb", "#e5e7eb", "#e5e7eb", "#e5e7eb", "#e5e7eb", "#e5e7eb"];
 const RY0 = 108;
 const RP = 46;
 const rowY = (i: number) => RY0 + i * RP;
-const RX0 = 226;
-
 const ICON = [
   "M4 4h12v12H4zM4 10h12M10 4v12",
   "M4 16v-6h6V5h6",
@@ -45,68 +43,9 @@ const ICON = [
 
 const T = TL.map((t, i) => ({
   id: "t" + i,
-  x: RX0,
-  y: rowY(i) + 20,
-  row: 1,
   t: t[1],
-  c: "#e5e7eb",
-  d: t[2],
   n: t[0],
-  k: "MCP TOOL " + (i + 1) + " OF 7",
 }));
-
-interface NodeInfo {
-  id?: string;
-  t: string;
-  d: string;
-  k: string;
-  c: string;
-  x: number;
-  y: number;
-  row?: number;
-  n?: string;
-}
-
-const INFO: Record<string, NodeInfo> = {
-  data: {
-    t: "Your data",
-    d: "Your CSV or Excel file. Rows stay on your machine; only column names and types are shared.",
-    k: "YOUR MACHINE",
-    c: "#e5e7eb",
-    x: 172,
-    y: 86,
-  },
-  ai: {
-    t: "AI assistant",
-    d: "Any MCP client. It calls DashLint tools and writes the dashboard.",
-    k: "MCP CLIENT",
-    c: "#e5e7eb",
-    x: 172,
-    y: 218,
-  },
-  out: {
-    t: "Reusable dashboard",
-    d: "A complete, self-contained and reusable interactive dashboard you own and can run, share or update with fresh data anytime.",
-    k: "REUSABLE DASHBOARD",
-    c: "#e5e7eb",
-    x: 172,
-    y: 372,
-  },
-  hub: {
-    t: "DashLint MCP",
-    d: "The server your assistant calls. It returns plans and playbooks for the build.",
-    k: "REMOTE MCP",
-    c: "#e5e7eb",
-    x: 216,
-    y: 71,
-    row: 1,
-  },
-};
-
-const ALL_NODES: NodeInfo[] = [
-  ...T,
-  ...Object.entries(INFO).map(([id, v]) => ({ id, ...v })),
-];
 
 function copyToClipboard(text: string): Promise<boolean> {
   if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -143,32 +82,12 @@ export default function Home() {
   const [connectOpen, setConnectOpen] = useState(false);
   const [callsCount, setCallsCount] = useState<number | null>(null);
   const [statusText, setStatusText] = useState("0 dashboard creation calls");
-  const [mapHint, setMapHint] = useState("Hover, tap, or focus a node for details");
   const [caption, setCaption] = useState("1 · Share data + question");
   const [captionFade, setCaptionFade] = useState(false);
-
-  const [hoverCard, setHoverCard] = useState<{
-    on: boolean;
-    title: string;
-    desc: string;
-    category: string;
-    color: string;
-    left: number;
-    top: number;
-  }>({
-    on: false,
-    title: "",
-    desc: "",
-    category: "",
-    color: "",
-    left: 0,
-    top: 0,
-  });
 
   const segRef = useRef<HTMLDivElement>(null);
   const indRef = useRef<HTMLElement>(null);
   const mvRef = useRef<HTMLDivElement>(null);
-  const mvsRef = useRef<HTMLDivElement>(null);
   const svRef = useRef<SVGSVGElement>(null);
 
   // Theme initialization
@@ -245,21 +164,6 @@ export default function Home() {
     setTimeout(() => setConfigSwitched(false), 300);
   };
 
-  // Map hint update
-  useEffect(() => {
-    const updateHint = () => {
-      if (!mvRef.current) return;
-      const v = mvRef.current;
-      setMapHint(v.scrollWidth > v.clientWidth + 4 ? "Swipe to explore; tap or focus a node" : "Hover, tap, or focus a node for details");
-    };
-    updateHint();
-    window.addEventListener("resize", updateHint);
-    if (document.fonts && document.fonts.ready) {
-      document.fonts.ready.then(updateHint);
-    }
-    return () => window.removeEventListener("resize", updateHint);
-  }, []);
-
   // Escape key for connect drawer
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -268,54 +172,6 @@ export default function Home() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
-
-  // Hover card logic
-  const showCard = (nodeId: string) => {
-    if (nodeId === "hub") return;
-    const item = ALL_NODES.find((a) => a.id === nodeId);
-    if (!item || !svRef.current || !mvsRef.current) return;
-
-    const r = svRef.current.getBoundingClientRect();
-    const m = mvsRef.current.getBoundingClientRect();
-    const sc = Math.min(r.width / 536, r.height / 440);
-    const ox = (r.width - 536 * sc) / 2;
-    const oy = (r.height - 440 * sc) / 2;
-
-    const nx = r.left - m.left + ox + item.x * sc;
-    const ny = r.top - m.top + oy + item.y * sc;
-    const sv = mvsRef.current.parentElement;
-    const sl = sv ? sv.scrollLeft : 0;
-    const hcEl = document.getElementById("hc");
-    const hh = hcEl ? hcEl.offsetHeight : 80;
-
-    let x: number, y: number;
-    if (item.row) {
-      x = nx;
-      y = ny + 28 * sc + 8;
-      if (y + hh > m.height - 8) y = ny - 28 * sc - 8 - hh;
-    } else {
-      x = nx + 28;
-      y = ny - 30;
-      if (x + 268 > m.width) x = nx - 28 - 262;
-    }
-
-    x = Math.max(sl + 8, Math.min(x, sl + (sv ? sv.clientWidth : 0) - 268));
-    y = Math.max(8, Math.min(y, m.height - hh - 8));
-
-    setHoverCard({
-      on: true,
-      title: item.n || item.t,
-      desc: item.d,
-      category: item.k,
-      color: item.c,
-      left: x,
-      top: y,
-    });
-  };
-
-  const hideCard = () => {
-    setHoverCard((prev) => (prev.on ? { ...prev, on: false } : prev));
-  };
 
   // Animation loop
   useEffect(() => {
@@ -606,7 +462,11 @@ export default function Home() {
               target="_blank"
               rel="noopener noreferrer"
             >
-              <span className="npm-option-mark" aria-hidden="true">npm</span>
+              <span className="npm-option-mark" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false">
+                  <path fill="currentColor" fillRule="evenodd" d="M0 0v24h8v-4h4v4h12V0H0zm4 4h4v12H4V4zm8 0h8v12h-4v4h-4V4zm4 8h-4v4h4v-4z" />
+                </svg>
+              </span>
               <span className="npm-option-copy">
                 <span className="npm-option-title">Standalone kit</span>
                 <code className="npm-option-command">npx dashlint-kit init</code>
@@ -863,7 +723,11 @@ export default function Home() {
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    <span className="npm-option-mark" aria-hidden="true">npm</span>
+                    <span className="npm-option-mark" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" focusable="false">
+                        <path fill="currentColor" fillRule="evenodd" d="M0 0v24h8v-4h4v4h12V0H0zm4 4h4v12H4V4zm8 0h8v12h-4v4h-4V4zm4 8h-4v4h4v-4z" />
+                      </svg>
+                    </span>
                     <span className="npm-option-copy">
                       <span className="npm-option-title">Standalone kit</span>
                       <code className="npm-option-command">npx dashlint-kit init</code>
@@ -902,21 +766,10 @@ export default function Home() {
                     {caption}
                   </span>
                 </span>
-                <span className="mh2" id="mh">
-                  {mapHint}
-                </span>
               </div>
 
               <div className="mv" id="mv" ref={mvRef}>
-                <div
-                  className="mvs"
-                  id="mvs"
-                  ref={mvsRef}
-                  onClick={(e) => {
-                    const target = e.target as HTMLElement;
-                    if (!target.closest(".nd")) hideCard();
-                  }}
-                >
+                <div className="mvs" id="mvs">
                   <svg
                     id="sv"
                     ref={svRef}
@@ -1031,13 +884,7 @@ export default function Home() {
                     <g
                       className="nd"
                       data-i="data"
-                      tabIndex={0}
                       style={{ animationDelay: "0ms" }}
-                      onMouseEnter={() => showCard("data")}
-                      onFocus={() => showCard("data")}
-                      onClick={() => showCard("data")}
-                      onMouseLeave={hideCard}
-                      onBlur={hideCard}
                     >
                       <rect
                         className="box"
@@ -1082,13 +929,7 @@ export default function Home() {
                     <g
                       className="nd"
                       data-i="ai"
-                      tabIndex={0}
                       style={{ animationDelay: "70ms" }}
-                      onMouseEnter={() => showCard("ai")}
-                      onFocus={() => showCard("ai")}
-                      onClick={() => showCard("ai")}
-                      onMouseLeave={hideCard}
-                      onBlur={hideCard}
                     >
                       <rect
                         className="box"
@@ -1133,13 +974,7 @@ export default function Home() {
                     <g
                       className="nd out"
                       data-i="out"
-                      tabIndex={0}
                       style={{ animationDelay: "140ms" }}
-                      onMouseEnter={() => showCard("out")}
-                      onFocus={() => showCard("out")}
-                      onClick={() => showCard("out")}
-                      onMouseLeave={hideCard}
-                      onBlur={hideCard}
                     >
                       <rect
                         className="box"
@@ -1293,14 +1128,6 @@ export default function Home() {
                           key={n.id}
                           className="nd row"
                           data-i={n.id}
-                          role="group"
-                          aria-label={`${n.t}: ${n.d}`}
-                          tabIndex={0}
-                          onMouseEnter={() => showCard(n.id)}
-                          onFocus={() => showCard(n.id)}
-                          onClick={() => showCard(n.id)}
-                          onMouseLeave={hideCard}
-                          onBlur={hideCard}
                           style={{
                             "--c": "#e5e7eb",
                             animationDelay: `${(i + 4) * 70}ms`,
@@ -1350,15 +1177,6 @@ export default function Home() {
                     <g id="pk"></g>
                   </svg>
 
-                  <div
-                    className={`hc ${hoverCard.on ? "on" : ""}`}
-                    id="hc"
-                    style={{ left: hoverCard.left, top: hoverCard.top }}
-                  >
-                    <b>{hoverCard.title}</b>
-                    <span>{hoverCard.desc}</span>
-                    <em style={{ color: hoverCard.color }}>{hoverCard.category}</em>
-                  </div>
                 </div>
               </div>
             </div>
