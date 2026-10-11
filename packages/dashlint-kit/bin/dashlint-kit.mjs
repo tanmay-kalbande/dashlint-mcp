@@ -23,20 +23,70 @@ function printHelp() {
     "dashlint-kit — scaffold a reusable, upload-driven dashboard",
     "",
     "Usage:",
-    "  npx dashlint-kit init [project-name] [--domain generic|service-ops|sales-distribution]",
+    "  npx dashlint-kit components",
+    "  npx dashlint-kit init [project-name] [--domain generic|service-ops|sales-distribution] [--components core,heatmap]",
     "  npx dashlint-kit build [project-directory]",
     "  npx dashlint-kit lint [html-file]",
     "",
-    "The init command writes the fixed shell, runtime utilities, component reference, and an app.js starter.",
+    "Use 'components' to browse the small pattern catalog. Init embeds only the selected component styles.",
   ].join("\n"));
 }
 
+const CORE_COMPONENTS = [
+  "kpiCards", "panels", "horizontalBars", "dataTables", "validation",
+  "badges", "buttons", "generatedOutput", "multiSelectFilter",
+  "chartContainer", "chartTooltip", "accessibility", "sectionLayouts",
+];
+
+const COMPONENT_CATALOG = {
+  kpiCards: "KPI cards with optional drill-down behavior",
+  panels: "Consistent content panels and panel headings",
+  horizontalBars: "Ranked horizontal bar charts",
+  dataTables: "Scrollable tables with sorting and drill-down guidance",
+  validation: "Data quality and validation indicators",
+  badges: "Compact status and count badges",
+  buttons: "Shared button styles",
+  generatedOutput: "Dataset upload and generated dashboard output panel",
+  multiSelectFilter: "Searchable multi-select filters",
+  chartContainer: "Responsive chart containers and chart styling",
+  chartTooltip: "Dark chart and heatmap tooltips",
+  accessibility: "Focus, keyboard, and reduced-motion patterns",
+  sectionLayouts: "Responsive dashboard section layouts",
+  heatmap: "Time, category, or cross-tab density heatmaps",
+  overlays: "Dark full-screen analysis overlays",
+  analysisStudio: "Pivot workbench with filters, metric chips, and result table",
+  drawers: "Right-side detail and drill-down drawers",
+  dayDrawer: "Daily metric detail drawer with hourly drill-down",
+  dayComparator: "Side-by-side date comparison view",
+  healthBar: "Compact health and threshold indicators",
+  header: "Dashboard header and dataset context",
+  navTabs: "Dashboard navigation tabs",
+  trendCharts: "Responsive SVG time-series and multi-series trends",
+  flowDiagram: "Three-stage categorical flow/Sankey diagram",
+  periodComparison: "Compare two dates, cohorts, or dataset scopes",
+  scenarioLab: "Formula-backed what-if controls and result comparison",
+  insightFeed: "Searchable, severity-filtered evidence rows",
+  leaderboard: "Ranked entities against a selected measure",
+  geoInsights: "Coordinate-based map and location ranking when geography exists",
+  scopeFilters: "Date range and dataset-scope controls",
+};
+
 function getRequestedComponents() {
-  return [
-    "kpiCards", "panels", "horizontalBars", "dataTables", "validation",
-    "badges", "buttons", "generatedOutput", "multiSelectFilter",
-    "chartContainer", "chartTooltip", "accessibility", "sectionLayouts",
-  ];
+  const requested = option("--components", "core").split(",").map((name) => name.trim()).filter(Boolean);
+  const expanded = [...CORE_COMPONENTS, ...requested.filter((name) => name !== "core")];
+  const unknown = expanded.filter((name) => !Object.hasOwn(COMPONENT_CATALOG, name));
+  if (unknown.length) {
+    throw new Error(`Unknown component(s): ${unknown.join(", ")}. Run 'npx dashlint-kit components' to see choices.`);
+  }
+  return [...new Set(expanded)];
+}
+
+function listComponents() {
+  process.stdout.write("Component catalog (use --components name,name with init):\n");
+  for (const [name, description] of Object.entries(COMPONENT_CATALOG)) {
+    process.stdout.write(`  ${name.padEnd(20)} ${description}\n`);
+  }
+  process.stdout.write("\nDefault: core. Example: npx dashlint-kit init my-dashboard --components core,analysisStudio,heatmap\n");
 }
 
 function buildIndex(kit) {
@@ -67,7 +117,7 @@ async function init() {
   }
 
   const target = resolve(process.cwd(), projectName);
-  const files = ["index.html", "runtime.js", "app.js", "components.json", "domain.json", "DASHLINT_KIT.md"];
+  const files = ["index.html", "runtime.js", "app.js", "components.json", "catalog.json", "domain.json", "DASHLINT_KIT.md"];
   await mkdir(target, { recursive: true });
   for (const file of files) {
     try {
@@ -97,7 +147,8 @@ async function init() {
     "- Keep the app shell and upload control in `index.html`.",
     "- Add dashboard-specific calculations and `renderDashboard()` in `app.js`.",
     "- Runtime state is the global `S`; uploaded rows are parsed locally in the browser.",
-    "- Use `components.json` for component markup and integration guidance.",
+    "- Use `catalog.json` to browse patterns; `components.json` contains details only for selected patterns.",
+    "- Select additional patterns when scaffolding with `--components core,analysisStudio,heatmap`.",
     "- Build a standalone file with `npx dashlint-kit build`.",
     "",
   ].join("\n");
@@ -107,6 +158,7 @@ async function init() {
     ["runtime.js", kit.inline.utilities],
     ["app.js", "/* Add dashboard-specific calculations and rendering here. */\nfunction renderDashboard() {\n  const rows = S.filtered;\n  const body = document.getElementById('dashboardBody');\n  if (!body) return;\n\n  // Build dataset-specific markup from rows. Escape any values inserted into HTML.\n}\n"],
     ["components.json", JSON.stringify(componentDocs, null, 2) + "\n"],
+    ["catalog.json", JSON.stringify(COMPONENT_CATALOG, null, 2) + "\n"],
     ["domain.json", JSON.stringify(kit.inline.domainPack, null, 2) + "\n"],
     ["DASHLINT_KIT.md", readme],
   ]);
@@ -152,6 +204,7 @@ async function lint() {
 
 try {
   if (command === "init") await init();
+  else if (command === "components") listComponents();
   else if (command === "build") await build();
   else if (command === "lint") await lint();
   else printHelp();

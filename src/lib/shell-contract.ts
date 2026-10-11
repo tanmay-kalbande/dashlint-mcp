@@ -1152,6 +1152,145 @@ export function getCompleteStylesheet(): string {
   ].join('\n\n');
 }
 
+type ComponentPattern = { css: string; html: string; usage: string };
+
+/**
+ * Generic HTML/CSS patterns ported from the Incident Pulse and SLA Pulse
+ * references. They contain no service- or SLA-specific fields or formulas.
+ */
+const EXTENDED_COMPONENT_PATTERNS: Record<string, ComponentPattern> = {
+  trendCharts: {
+    css: `.trend-panel { min-width:0; overflow:hidden; }
+.trend-head,.trend-legend,.trend-summary { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+.trend-visual { position:relative; min-height:180px; overflow:hidden; }
+.trend-svg { display:block; width:100%; height:auto; min-height:150px; overflow:visible; }
+.trend-grid-line { stroke:var(--line); stroke-width:1; vector-effect:non-scaling-stroke; }
+.trend-series { fill:none; stroke:var(--series-color,var(--chart-blue)); stroke-width:2.25; stroke-linecap:round; stroke-linejoin:round; vector-effect:non-scaling-stroke; }
+.trend-area { fill:var(--series-color,var(--chart-blue)); opacity:.12; }
+.trend-point { fill:var(--series-color,var(--chart-blue)); stroke:var(--surface); stroke-width:2; cursor:pointer; vector-effect:non-scaling-stroke; }
+.trend-axis-label,.trend-legend-item,.trend-summary-item { color:var(--muted); font:9px var(--mono); }
+.trend-legend-swatch { display:inline-block; width:14px; height:3px; margin-right:5px; vertical-align:middle; background:var(--series-color,var(--chart-blue)); }
+.trend-summary { justify-content:flex-start; border-top:1px solid var(--line); padding-top:8px; }
+@media(max-width:640px){.trend-visual{min-height:145px}.trend-svg{min-height:125px}.trend-summary{gap:6px 12px}}`,
+    html: `<section class="panel trend-panel">
+  <div class="panel-head trend-head"><h3 class="panel-title">{{CHART_TITLE}}</h3><div class="trend-legend" aria-label="Chart series legend"></div></div>
+  <figure class="trend-visual"><svg class="trend-svg" viewBox="0 0 720 220" role="img" aria-label="{{CHART_DESCRIPTION}}" preserveAspectRatio="xMidYMid meet"><g class="trend-grid"></g><g class="trend-series-layer"></g><g class="trend-axis"></g></svg><figcaption class="sr-only">{{CHART_DESCRIPTION}}</figcaption></figure>
+  <div class="trend-summary" aria-live="polite"></div>
+</section>`,
+    usage: "Use for ordered time or sequence data (VolumeChart, MTTRTrend, and inflow/outflow velocity patterns). Map the dataset's own date/time field and one or more numeric measures; choose line, area, or bar encoding based on density. Generate SVG points/paths from the uploaded rows, use ResizeObserver for width, shared --chart-* tokens for colors, #chartTooltip for hover details, and clickable marks only when they can filter or drill. Do not assume calls, SLA, or resolution fields. Include a tabular data alternative and handle empty/invalid dates.",
+  },
+  flowDiagram: {
+    css: `.flow-panel { min-width:0; overflow:hidden; }
+.flow-toolbar { display:flex; align-items:end; gap:8px; flex-wrap:wrap; }
+.flow-toolbar label { display:grid; gap:3px; color:var(--muted); font:700 8px var(--mono); letter-spacing:.07em; text-transform:uppercase; }
+.flow-toolbar select { min-width:130px; height:30px; border:1px solid var(--line); border-radius:5px; padding:0 8px; color:var(--ink); background:var(--surface); font:10px var(--mono); }
+.flow-canvas { min-height:220px; overflow:auto; }
+.flow-svg { display:block; width:100%; min-width:560px; height:auto; }
+.flow-link { fill:none; stroke:var(--flow-color,var(--chart-blue)); stroke-opacity:.2; stroke-width:var(--flow-width,2px); cursor:pointer; transition:stroke-opacity .15s ease; }
+.flow-link:hover,.flow-link.active { stroke-opacity:.65; }
+.flow-node { fill:var(--node-color,var(--chart-blue)); stroke:var(--surface); stroke-width:1; rx:3; cursor:pointer; }
+.flow-node-label { fill:var(--ink); font:10px var(--mono); }
+.flow-stage-label { fill:var(--muted); font:700 8px var(--mono); letter-spacing:.08em; text-transform:uppercase; }
+.flow-legend { display:flex; flex-wrap:wrap; gap:6px 14px; padding-top:8px; border-top:1px solid var(--line); }
+.flow-legend-item { display:inline-flex; align-items:center; gap:5px; color:var(--muted); font:9px var(--mono); }
+.flow-legend-swatch { width:8px; height:8px; border-radius:2px; background:var(--node-color,var(--chart-blue)); }
+@media(max-width:640px){.flow-canvas{min-height:180px}.flow-svg{min-width:480px}}`,
+    html: `<section class="panel flow-panel"><div class="panel-head"><h3 class="panel-title">{{FLOW_TITLE}}</h3><div class="flow-toolbar"><label>{{STAGE_A_LABEL}}<select data-flow-stage="0"></select></label><label>{{STAGE_B_LABEL}}<select data-flow-stage="1"></select></label><label>{{STAGE_C_LABEL}}<select data-flow-stage="2"></select></label></div></div><div class="flow-canvas"><svg class="flow-svg" viewBox="0 0 900 360" role="img" aria-label="Three-stage category flow"><g class="flow-links"></g><g class="flow-nodes"></g><g class="flow-labels"></g></svg></div><div class="flow-legend"></div><div class="sr-only flow-table-alternative"></div></section>`,
+    usage: "Use for transitions across three categorical dimensions (Sankey/alluvial flow), such as source → type → outcome. Populate the three selectors from categorical columns; field names and labels must come from the dataset. Aggregate link weights from row counts or a justified numeric measure, cap each stage to a readable top N plus Other, scale link width consistently, and provide hover tooltips, node/link highlighting, an accessible text/table alternative, and a graceful state for empty data. Do not hard-code incident or call categories.",
+  },
+  periodComparison: {
+    css: `.period-compare { min-width:0; }
+.period-controls { display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); align-items:end; gap:10px; padding:12px 14px; border-bottom:1px solid var(--line); }
+.period-select { display:grid; gap:4px; color:var(--muted); font:700 8px var(--mono); letter-spacing:.08em; text-transform:uppercase; }
+.period-select select { width:100%; min-width:0; height:32px; border:1px solid var(--line); border-radius:5px; padding:0 8px; color:var(--ink); background:var(--surface); font:10px var(--mono); }
+.period-vs { color:var(--muted); font:700 9px var(--mono); }
+.period-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:8px; padding:12px; }
+.period-metric { min-width:0; padding:10px 12px; border:1px solid var(--line); border-radius:6px; background:var(--surface); }
+.period-metric-head,.period-values { display:flex; justify-content:space-between; align-items:center; gap:8px; }
+.period-metric-label { color:var(--muted); font:700 8px var(--mono); letter-spacing:.07em; text-transform:uppercase; }
+.period-value { color:var(--ink); font:700 14px var(--mono); font-variant-numeric:tabular-nums; }
+.period-delta { padding:2px 6px; border-radius:4px; color:var(--ink); background:var(--surface-2); font:700 9px var(--mono); }
+.period-delta.up { color:var(--ok); background:var(--ok-dim); }.period-delta.down { color:var(--err); background:var(--err-dim); }
+.period-direction-neutral .period-delta { color:var(--muted); background:var(--surface-2); }
+@media(max-width:520px){.period-controls{grid-template-columns:1fr}.period-vs{display:none}}`,
+    html: `<section class="panel period-compare"><div class="panel-head"><h3 class="panel-title">{{COMPARISON_TITLE}}</h3><button class="btn btn-sm" type="button" data-export="period-comparison">Export CSV</button></div><div class="period-controls"><label class="period-select">{{PERIOD_A_LABEL}}<select data-period="a"></select></label><span class="period-vs" aria-hidden="true">VS</span><label class="period-select">{{PERIOD_B_LABEL}}<select data-period="b"></select></label></div><div class="period-grid" aria-live="polite"></div></section>`,
+    usage: "Use for two dates, cohorts, regions, or user-selected scopes. Populate both selectors from available dataset groups and compare only measures with a defensible aggregation. Render each measure as A, B, absolute/relative delta, and a neutral/up/down state. Directionality is metric-specific and must be explicitly declared (higher-is-better, lower-is-better, or neutral); never imply improvement from arithmetic sign alone. Export the currently displayed comparison when an export action is present.",
+  },
+  scenarioLab: {
+    css: `.scenario-lab { min-width:0; }
+.scenario-intro { margin:0; color:var(--muted); font-size:10px; line-height:1.5; }
+.scenario-grid { display:grid; grid-template-columns:minmax(220px,.8fr) minmax(0,1.2fr); gap:12px; padding:14px; }
+.scenario-controls { display:grid; align-content:start; gap:10px; }
+.scenario-control { display:grid; gap:5px; color:var(--muted); font:700 8px var(--mono); letter-spacing:.06em; text-transform:uppercase; }
+.scenario-control input[type=range] { width:100%; accent-color:var(--chart-teal); }
+.scenario-control output { color:var(--ink); font:600 10px var(--mono); letter-spacing:0; text-transform:none; }
+.scenario-results { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:8px; align-content:start; }
+.scenario-result { padding:10px; border:1px solid var(--line); border-radius:6px; background:var(--surface); }
+.scenario-result-label { color:var(--muted); font:700 8px var(--mono); letter-spacing:.07em; text-transform:uppercase; }
+.scenario-result-value { display:block; margin-top:5px; color:var(--ink); font:700 17px var(--mono); font-variant-numeric:tabular-nums; }
+.scenario-result-delta { margin-top:4px; color:var(--muted); font:9px var(--mono); }
+.scenario-note { grid-column:1/-1; padding-top:8px; border-top:1px solid var(--line); color:var(--muted); font:9px var(--mono); }
+@media(max-width:680px){.scenario-grid{grid-template-columns:1fr}}`,
+    html: `<section class="panel scenario-lab"><div class="panel-head"><div><h3 class="panel-title">{{SCENARIO_TITLE}}</h3><p class="scenario-intro">Adjust assumptions to compare modeled outcomes with the current baseline.</p></div><button class="btn btn-sm" type="button" data-scenario-reset>Reset</button></div><div class="scenario-grid"><div class="scenario-controls"></div><div class="scenario-results" aria-live="polite"><div class="scenario-result"><span class="scenario-result-label">Baseline</span><strong class="scenario-result-value" data-scenario-baseline>—</strong></div><div class="scenario-result"><span class="scenario-result-label">Scenario</span><strong class="scenario-result-value" data-scenario-value>—</strong></div><div class="scenario-result"><span class="scenario-result-label">Change</span><strong class="scenario-result-value" data-scenario-delta>—</strong></div><p class="scenario-note">{{MODEL_ASSUMPTIONS}}</p></div></div></section>`,
+    usage: "Use for a user-controlled what-if analysis only when the dataset supports a clear baseline and formula. Build slider controls from explicit assumptions and recalculate outputs from the uploaded rows; show baseline, modeled result, and delta with the formula/assumptions visible. Do not invent staffing, capacity, cost, or causal effects from correlations. Keep the component useful outside operations dashboards by naming controls and outcomes from the user's data/domain.",
+  },
+  insightFeed: {
+    css: `.insight-feed { min-width:0; }
+.insight-toolbar { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.insight-chip { min-height:26px; padding:3px 8px; border:1px solid var(--line); border-radius:5px; color:var(--muted); background:var(--surface); cursor:pointer; font:600 9px var(--mono); }
+.insight-chip.active { border-color:var(--accent-line); color:var(--ink); background:var(--accent-dim); }
+.insight-search { min-width:160px; height:29px; border:1px solid var(--line); border-radius:5px; padding:0 8px; color:var(--ink); background:var(--surface); font:10px var(--mono); }
+.insight-list { display:grid; max-height:420px; overflow:auto; }
+.insight-row { display:grid; grid-template-columns:68px minmax(0,1fr) auto; align-items:start; gap:9px; padding:9px 12px; border-bottom:1px solid var(--line); }
+.insight-severity { color:var(--muted); font:700 8px var(--mono); letter-spacing:.07em; text-transform:uppercase; }
+.insight-row[data-severity=high] .insight-severity { color:var(--err); }.insight-row[data-severity=medium] .insight-severity { color:var(--warn); }
+.insight-title { color:var(--ink); font-size:10px; font-weight:700; }.insight-detail { margin-top:3px; color:var(--muted); font-size:9px; line-height:1.45; }
+.insight-action { color:var(--accent); background:transparent; border:0; cursor:pointer; font:600 9px var(--mono); }
+@media(max-width:520px){.insight-row{grid-template-columns:58px minmax(0,1fr)}.insight-action{grid-column:2;justify-self:start}.insight-search{flex:1}}`,
+    html: `<section class="panel insight-feed"><div class="panel-head"><div><h3 class="panel-title">{{INSIGHT_TITLE}}</h3><span class="badge" data-insight-count>0</span></div><div class="insight-toolbar"><div class="insight-filters" role="group" aria-label="Filter insights"></div><input class="insight-search" type="search" placeholder="Search insights" aria-label="Search insights"></div></div><div class="insight-list" aria-live="polite"></div></section>`,
+    usage: "Use for a short, ranked set of data-supported findings with severity, category, title, evidence, and an optional drill action. Derive findings from the uploaded rows and label the rule/threshold used; let users filter/search the list. Render compact rows rather than a vertical stack of text cards. If nothing qualifies, show a concise empty state; do not fabricate narrative or severity.",
+  },
+  leaderboard: {
+    css: `.rank-panel { min-width:0; }
+.rank-list { display:grid; gap:3px; }
+.rank-row { display:grid; grid-template-columns:28px minmax(100px,1fr) minmax(80px,1.2fr) 74px; align-items:center; gap:8px; min-height:34px; padding:4px 8px; border-bottom:1px solid var(--line); }
+.rank-position { color:var(--muted); font:700 9px var(--mono); text-align:center; }
+.rank-name { min-width:0; overflow:hidden; color:var(--ink); font:600 10px var(--mono); text-overflow:ellipsis; white-space:nowrap; }
+.rank-track { height:6px; overflow:hidden; border-radius:4px; background:var(--surface-2); }
+.rank-fill { height:100%; width:var(--rank-width,0%); border-radius:inherit; background:var(--rank-color,var(--chart-teal)); }
+.rank-value { color:var(--ink); font:700 10px var(--mono); text-align:right; font-variant-numeric:tabular-nums; }
+.rank-row[tabindex],.rank-row[data-clickable=true] { cursor:pointer; }.rank-row[data-clickable=true]:hover { background:var(--surface-3); }
+@media(max-width:480px){.rank-row{grid-template-columns:24px minmax(70px,1fr) 1fr 58px;gap:5px}.rank-name,.rank-value{font-size:9px}}`,
+    html: `<section class="panel rank-panel"><div class="panel-head"><h3 class="panel-title">{{RANK_TITLE}}</h3><label class="sr-only">Rank by<select data-rank-metric></select></label></div><div class="rank-list" role="list"></div></section>`,
+    usage: "Use to compare entities (teams, products, locations, people, or segments) against one selected metric. Aggregate using a defensible rule, disclose sample size/minimum-volume exclusions, and avoid combining metrics into an opaque score unless the user approved its formula. Label whether high or low ranks first; allow row drill-down only when it filters the dashboard or opens details.",
+  },
+  geoInsights: {
+    css: `.geo-panel { min-width:0; }
+.geo-layout { display:grid; grid-template-columns:minmax(0,1.4fr) minmax(200px,.8fr); gap:10px; min-height:220px; }
+.geo-canvas { position:relative; min-height:220px; overflow:hidden; border:1px solid var(--line); border-radius:6px; background:var(--rail-bg); }
+.geo-svg { display:block; width:100%; height:100%; min-height:220px; }
+.geo-land { fill:#1b1b1a; stroke:#303236; stroke-width:1; }
+.geo-marker { fill:var(--geo-color,var(--chart-blue)); stroke:#fff; stroke-width:1.5; opacity:.88; cursor:pointer; vector-effect:non-scaling-stroke; }
+.geo-marker:hover { stroke-width:2.5; opacity:1; }
+.geo-rank { min-width:0; max-height:300px; overflow:auto; }
+.geo-row { display:grid; grid-template-columns:minmax(0,1fr) 54px; gap:8px; padding:7px 6px; border-bottom:1px solid var(--line); color:var(--ink); font:9px var(--mono); }
+.geo-row-label { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }.geo-row-value{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+.geo-legend { display:flex; flex-wrap:wrap; gap:8px 14px; padding-top:8px; color:var(--muted); font:9px var(--mono); }
+@media(max-width:650px){.geo-layout{grid-template-columns:1fr}.geo-canvas,.geo-svg{min-height:180px}.geo-rank{max-height:180px}}`,
+    html: `<section class="panel geo-panel"><div class="panel-head"><h3 class="panel-title">{{GEO_TITLE}}</h3><label class="rank-filter">Color by<select data-geo-measure></select></label></div><div class="geo-layout"><div class="geo-canvas"><svg class="geo-svg" viewBox="0 0 700 360" role="img" aria-label="Location overview"><g class="geo-background"></g><g class="geo-markers"></g></svg></div><div class="geo-rank" aria-label="Location ranking"></div></div><div class="geo-legend"></div></section>`,
+    usage: "Use only when the data contains usable coordinates or a trustworthy precomputed geographic geometry. Map points/regions in SVG with a measure-driven size/color encoding and keep a ranked location list beside it. If the dataset has only place names without coordinates or boundaries, omit the map and use the ranked list or location-by-category heatmap instead; do not geocode or invent map positions. Map content stays in the browser and uses no external tile service.",
+  },
+  scopeFilters: {
+    css: `.scope-filters { display:flex; align-items:end; gap:8px; flex-wrap:wrap; padding:8px 10px; border:1px solid var(--line); border-radius:6px; background:var(--surface); }
+.scope-filter { display:grid; gap:3px; color:var(--muted); font:700 8px var(--mono); letter-spacing:.07em; text-transform:uppercase; }
+.scope-filter input,.scope-filter select { min-width:120px; height:30px; border:1px solid var(--line); border-radius:4px; padding:0 7px; color:var(--ink); background:var(--surface); font:10px var(--mono); }
+.scope-filter-actions { display:flex; gap:5px; margin-left:auto; }
+@media(max-width:520px){.scope-filter{flex:1}.scope-filter input,.scope-filter select{width:100%;min-width:0}.scope-filter-actions{margin-left:0}}`,
+    html: `<form class="scope-filters" aria-label="Dataset scope filters"><label class="scope-filter">{{FILTER_LABEL}}<select data-scope-field></select></label><label class="scope-filter">From<input type="date" data-scope-from></label><label class="scope-filter">To<input type="date" data-scope-to></label><div class="scope-filter-actions"><button class="btn btn-sm" type="submit">Apply</button><button class="btn btn-sm btn-ghost" type="reset">Clear</button></div></form>`,
+    usage: "Use when time-window or scope filtering is central to the analysis. Populate field options from actual date/category columns and apply the controls to the same filtered data state used by charts, KPIs, tables, and comparisons. Respect local date parsing, validate from/to order, provide a clear/reset action, and never add a filter whose field cannot be mapped.",
+  },
+};
+
 export function getComponentPatterns(componentNames: string[]): Record<string, { css: string; html: string; usage: string }> {
   const allComponents: Record<string, { css: string; html: string; usage: string }> = {
     kpiCards: {
@@ -1187,7 +1326,7 @@ export function getComponentPatterns(componentNames: string[]): Record<string, {
     buttons: {
       css: DASHBOARD_SHELL_CONTRACT.componentPatterns.buttons,
       html: '<button class="btn">Primary</button>\n<button class="btn info">Info Action</button>\n<button class="btn secondary">Secondary</button>\n<button class="btn ghost">Ghost</button>',
-      usage: "Action buttons in 4 variants. .btn: primary dark fill (var(--accent) bg, #fff text, 36px height, 12px mono 600, 4px radius, inline-flex center). .btn.info: ink fill (var(--ink) bg, #fff text). .btn.secondary: outlined (white bg, var(--ink) text, 1px solid var(--line-strong), hover var(--surface-2)). .btn.ghost: minimal (no background, var(--muted) text). Hover: opacity .88, active: scale(.98). Smaller variant for .output-actions: height 32px, 11px font, 0 14px padding, flex:1 0 auto. Reference: ActionBar provides Copy, Insights, Improve, Download buttons — adapt to domain. Export CSV button pattern: .btn.secondary in .panel-head. Download buttons (.lb-dl-btn) for agent/group reports. ImprovementLab uses scenario comparison cards with button triggers. Toast notifications (.toast with .show transition) for copy/export confirmations — use structured .toast-title + .toast-msg. Always pair dangerous actions with secondary variant."
+      usage: "Action buttons in 4 variants. .btn: primary dark fill (var(--accent) bg, #fff text, 36px height, 12px mono 600, 4px radius, inline-flex center). .btn.info: ink fill (var(--ink) bg, #fff text). .btn.secondary: outlined (white bg, var(--ink) text, 1px solid var(--line-strong), hover var(--surface-2)). .btn.ghost: minimal (no background, var(--muted) text). Hover: opacity .88, active: scale(.98). Smaller variant for .output-actions: height 32px, 11px font, 0 14px padding, flex:1 0 auto. Reference: ActionBar provides Copy, Insights, Improve, Download buttons — adapt to domain. Export CSV button pattern: .btn.secondary in .panel-head. Download buttons (.lb-dl-btn) for agent/group reports. ImprovementLab uses scenario comparison cards with button triggers. Always pair dangerous actions with secondary variant."
     },
     generatedOutput: {
       css: DASHBOARD_SHELL_CONTRACT.componentPatterns.generatedOutput,
@@ -1266,6 +1405,27 @@ export function getComponentPatterns(componentNames: string[]): Record<string, {
     },
   };
 
+  Object.assign(allComponents, EXTENDED_COMPONENT_PATTERNS);
+
+  // Keep the npm/MCP pivot surface aligned with the Incident Pulse workbench.
+  // The stronger table selectors prevent generic light-table rules from leaking
+  // into this intentionally dark Analysis Studio surface.
+  allComponents.analysisStudio.css += `
+/* Incident Pulse Analysis Studio table surface */
+.analysis-studio-overlay .pivot-table th, .analysis-studio-overlay .pivot-table td { border-color:rgba(255,255,255,.06) !important; border-right:1px solid rgba(255,255,255,.06) !important; border-bottom:1px solid rgba(255,255,255,.06) !important; }
+.analysis-studio-overlay .pivot-table thead th { background:#111 !important; color:#8D96A3 !important; border-bottom:1px solid rgba(255,255,255,.1) !important; }
+.analysis-studio-overlay .pivot-table th:first-child { background:#151515 !important; color:#E5E7EB !important; border-right:1px solid rgba(255,255,255,.08) !important; }
+.analysis-studio-overlay .pivot-table thead th:first-child { background:#111 !important; color:#8D96A3 !important; }
+.analysis-studio-overlay .pivot-table tbody tr { background:#151515; }
+.analysis-studio-overlay .pivot-table tbody tr:hover td { background:rgba(255,255,255,.04) !important; }
+.analysis-studio-overlay .pivot-table tbody tr:hover th:first-child { background:#212121 !important; }
+.analysis-studio-overlay .pivot-table td { background:#1a1a1a; padding:0; }
+.analysis-studio-overlay .pivot-table .pivot-total, .analysis-studio-overlay .pivot-table tfoot td, .analysis-studio-overlay .pivot-table tfoot th { background:#151515 !important; color:#F3F4F6 !important; font-weight:700; border-top:1px solid rgba(255,255,255,.12) !important; }
+.analysis-studio-overlay .pivot-table-multi th[title] { cursor:pointer; user-select:none; }
+.analysis-studio-overlay .pivot-table-multi th.active-sort { color:#fff !important; }
+.analysis-studio-overlay .pivot-table-multi th.active-sort::after { content:' ▾'; }
+`;
+
   const result: Record<string, { css: string; html: string; usage: string }> = {};
   for (const name of componentNames) {
     if (allComponents[name]) {
@@ -1280,7 +1440,9 @@ export function getAvailableComponents(): string[] {
     'kpiCards', 'healthBar', 'panels', 'horizontalBars', 'dataTables', 'validation',
     'badges', 'buttons', 'generatedOutput', 'multiSelectFilter', 'heatmap',
     'overlays', 'analysisStudio', 'drawers', 'dayDrawer', 'dayComparator', 'header', 'navTabs',
-    'chartContainer', 'chartTooltip', 'sectionLayouts', 'accessibility'
+    'chartContainer', 'chartTooltip', 'sectionLayouts', 'accessibility',
+    'trendCharts', 'flowDiagram', 'periodComparison', 'scenarioLab', 'insightFeed',
+    'leaderboard', 'geoInsights', 'scopeFilters'
   ];
 }
 

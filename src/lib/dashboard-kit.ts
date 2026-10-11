@@ -49,7 +49,8 @@ export function buildDashboardKit(input: DashboardKitInput): DashboardKitOutput 
       stamp,
       cli: {
         commands: {
-          init: `npx dashlint-kit init --domain ${input.domain || 'generic'}`,
+          components: "npx dashlint-kit components",
+          init: `npx dashlint-kit init --domain ${input.domain || 'generic'} --components core`,
           build: "npx dashlint-kit build",
           lint: "npx dashlint-kit lint dashboard.html",
         },
@@ -68,7 +69,7 @@ export function buildDashboardKit(input: DashboardKitInput): DashboardKitOutput 
             "applyFilters() / resetAll()",
           ],
         },
-        instructions: "Use the npm package first: run `npx dashlint-kit init` to set up the project, then write only `app.js` with dataset-specific calculations and renderDashboard() logic. Run `npx dashlint-kit build` to compile and `npx dashlint-kit lint` to verify invariants. If npm is unavailable, installation fails, or the package command is not recognized, call get_dashboard_kit again with mode `inline` and continue with the returned starter code.",
+        instructions: "Use the npm package first. Run `npx dashlint-kit components` for the compact catalog, choose only patterns supported by the dataset, and scaffold with `npx dashlint-kit init --components core` plus selected names (for example, `--components core,analysisStudio,trendCharts,periodComparison`). Prefer data-driven generic patterns; include `geoInsights` only when valid coordinates/geography exist, and `scenarioLab` only when a defensible formula can be stated. These markup/CSS patterns come from the same canonical source used by MCP inline output; write the dataset-specific aggregation and interactions in app.js. Run `npx dashlint-kit build` to compile and `npx dashlint-kit lint` to verify invariants. If npm is unavailable, installation fails, or the package command is not recognized, call get_dashboard_kit again with mode `inline` and continue with the returned starter code.",
       },
     };
   }

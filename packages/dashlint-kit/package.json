@@ -1,6 +1,6 @@
 {
   "name": "dashlint-kit",
-  "version": "2.0.0",
+  "version": "2.2.0",
   "description": "Starter files and utilities for building reusable, upload-driven HTML dashboards with DashLint.",
   "license": "MIT",
   "type": "module",

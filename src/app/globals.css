@@ -314,6 +314,28 @@ button {
   border-color: #fff;
 }
 
+.npm-option {
+  display: grid;
+  gap: 5px;
+  text-align: center;
+}
+
+.rail .npm-option-link,
+.npm-option-link {
+  background: transparent;
+  color: #D1D5DB;
+  border-color: #454B55;
+}
+
+.npm-option-link:hover {
+  background: rgba(255,255,255,.06);
+}
+
+.npm-option code {
+  color: #8D96A3;
+  font: 9px var(--mono);
+}
+
 @media (max-height: 560px) and (min-width: 1101px) {
   .rail {
     gap: 12px;

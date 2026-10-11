@@ -227,7 +227,7 @@ const handler = createMcpHandler((server) => {
     "get_component_patterns",
     {
       description:
-        "[DEPRECATED: Prefer get_dashboard_kit] Returns CSS, HTML snippets, and usage notes for specific dashboard components. Available components: kpiCards, panels, horizontalBars, dataTables, validation, badges, buttons, generatedOutput, multiSelectFilter, heatmap, overlays, drawers, chartContainer, sectionLayouts, accessibility, healthBar, dayDrawer, dayComparator, chartTooltip. Never generate piles of text cards.",
+        "[DEPRECATED: Prefer get_dashboard_kit] Returns CSS, HTML snippets, and usage notes for specific dashboard components. Available components: kpiCards, panels, horizontalBars, dataTables, validation, badges, buttons, generatedOutput, multiSelectFilter, heatmap, overlays, drawers, chartContainer, sectionLayouts, accessibility, healthBar, dayDrawer, dayComparator, chartTooltip, trendCharts, flowDiagram, periodComparison, scenarioLab, insightFeed, leaderboard, geoInsights, scopeFilters. These are generic patterns: map labels and calculations to the dataset; geoInsights needs real coordinates/geography and scenarioLab needs a defensible formula. Never generate piles of text cards.",
       inputSchema: z.object({
         components: z.array(z.string().trim().min(1).max(50)).min(1).max(25).describe("Array of component names to retrieve."),
       }).strict(),

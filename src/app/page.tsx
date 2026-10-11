@@ -599,6 +599,17 @@ export default function Home() {
           <button className="btn cp" onClick={handleCopyUrl}>
             {copiedUrl ? "Copied ✓" : "Copy MCP URL"}
           </button>
+          <div className="npm-option">
+            <a
+              className="btn g sm npm-option-link"
+              href="https://www.npmjs.com/package/dashlint-kit"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Use standalone npm kit ↗
+            </a>
+            <code>npx dashlint-kit init</code>
+          </div>
         </div>
       </aside>
 
@@ -839,6 +850,17 @@ export default function Home() {
                 <button className="btn cp" onClick={handleCopyUrl} style={{ width: "100%" }}>
                   {copiedUrl ? "Copied ✓" : "Copy MCP URL"}
                 </button>
+                <div className="npm-option">
+                  <a
+                    className="btn g sm npm-option-link"
+                    href="https://www.npmjs.com/package/dashlint-kit"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Use standalone npm kit ↗
+                  </a>
+                  <code>npx dashlint-kit init</code>
+                </div>
                 <a
                   className="btn g sm"
                   href="https://linkedin.com/in/tanmay-kalbande"
