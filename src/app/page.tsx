@@ -1189,7 +1189,7 @@ export default function Home() {
 
         <footer className="mf">
           <span>Free · open source · MIT</span>
-          <span>Built by Tanmay Kalbande</span>
+          <span>Built with DashLint</span>
         </footer>
       </div>
 
