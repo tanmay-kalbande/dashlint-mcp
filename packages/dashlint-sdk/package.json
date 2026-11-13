@@ -1,0 +1,41 @@
+{
+  "name": "dashlint-sdk",
+  "version": "1.0.0",
+  "description": "Lightweight TypeScript client for the DashLint MCP server. Call DashLint tools programmatically without an MCP client.",
+  "license": "MIT",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist/",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0"
+  },
+  "keywords": [
+    "dashlint",
+    "dashboard",
+    "mcp",
+    "ai",
+    "sdk"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tanmay-kalbande/dashlint-mcp"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

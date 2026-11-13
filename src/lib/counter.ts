@@ -1,10 +1,12 @@
 /**
- * Redis usage counter supporting both standard Redis (ioredis) and Upstash REST.
+ * Redis usage counter with circuit breaker and in-memory retry queue.
  *
  * Increments a counter keyed by tool name + date on every MCP tool call.
  * Key format: "dashlint:v2:calls:{toolName}:{YYYY-MM-DD}".
- * The v2 namespace starts clean after the dashboard-creation MCP redesign;
- * historical calls to retired tools remain stored but are excluded from stats.
+ *
+ * Circuit Breaker: After 5 consecutive failures, opens the circuit for 60s.
+ * During open state, increments are queued in memory (max 500 entries).
+ * When the circuit half-opens, queued increments are flushed first.
  *
  * Falls back gracefully if Redis is not configured (local dev).
  */
@@ -17,6 +19,8 @@ interface RedisAdapter {
   scan(cursor: string, pattern: string): Promise<[string, string[]]>;
   get(key: string): Promise<number | null>;
 }
+
+// ── Redis Client ────────────────────────────────────────────────────────────
 
 let cachedAdapter: RedisAdapter | null = null;
 let ioRedisInstance: IoRedis | null = null;
@@ -86,19 +90,104 @@ function getClient(): RedisAdapter | null {
   return null;
 }
 
+// ── Circuit Breaker ─────────────────────────────────────────────────────────
+
+const FAILURE_THRESHOLD = 5;
+const COOLDOWN_MS = 60_000; // 60 seconds
+const MAX_QUEUE_SIZE = 500;
+
+let consecutiveFailures = 0;
+let circuitOpenedAt = 0;
+let lastSuccessAt = 0;
+const retryQueue: string[] = [];
+
+type CircuitState = "closed" | "open" | "half-open";
+
+function getCircuitState(): CircuitState {
+  if (consecutiveFailures < FAILURE_THRESHOLD) return "closed";
+  const elapsed = Date.now() - circuitOpenedAt;
+  if (elapsed < COOLDOWN_MS) return "open";
+  return "half-open";
+}
+
+function recordSuccess(): void {
+  consecutiveFailures = 0;
+  lastSuccessAt = Date.now();
+}
+
+function recordFailure(): void {
+  consecutiveFailures++;
+  if (consecutiveFailures >= FAILURE_THRESHOLD && circuitOpenedAt < lastSuccessAt) {
+    circuitOpenedAt = Date.now();
+    console.warn(
+      `[dashlint] Circuit breaker OPEN — ${consecutiveFailures} consecutive Redis failures. Cooling down for ${COOLDOWN_MS / 1000}s.`
+    );
+  }
+}
+
+async function flushRetryQueue(): Promise<void> {
+  const client = getClient();
+  if (!client || retryQueue.length === 0) return;
+
+  const batch = retryQueue.splice(0, 50); // flush up to 50 at a time
+  for (const key of batch) {
+    try {
+      await client.incr(key);
+    } catch {
+      // Re-queue failed items if under limit
+      if (retryQueue.length < MAX_QUEUE_SIZE) {
+        retryQueue.push(key);
+      }
+      return; // stop flushing on first failure
+    }
+  }
+}
+
+// ── Public API ──────────────────────────────────────────────────────────────
+
 /**
  * Increment the call counter for a tool.
  * Safe to call in any environment — silently no-ops if Redis isn't wired up.
+ * Uses circuit breaker to avoid hammering a dead Redis.
  */
 export async function incrementCounter(toolName: string): Promise<void> {
   try {
     const client = getClient();
     if (!client) return;
+
     const today = new Date().toISOString().slice(0, 10);
     const key = `dashlint:v2:calls:${toolName}:${today}`;
+    const state = getCircuitState();
+
+    if (state === "open") {
+      // Circuit is open — queue the increment for later
+      if (retryQueue.length < MAX_QUEUE_SIZE) {
+        retryQueue.push(key);
+      }
+      return;
+    }
+
+    if (state === "half-open") {
+      // Try flushing queued items first
+      await flushRetryQueue();
+    }
+
     await client.incr(key);
+    recordSuccess();
+
+    // If we recovered, flush any remaining queued items
+    if (retryQueue.length > 0) {
+      // Fire-and-forget flush
+      flushRetryQueue().catch(() => {});
+    }
   } catch {
-    console.warn("[dashlint] Redis counter increment failed (non-fatal)");
+    recordFailure();
+    // Queue the failed increment
+    const today = new Date().toISOString().slice(0, 10);
+    const key = `dashlint:v2:calls:${toolName}:${today}`;
+    if (retryQueue.length < MAX_QUEUE_SIZE) {
+      retryQueue.push(key);
+    }
   }
 }
 
@@ -112,6 +201,9 @@ export async function getCallCount(
   try {
     const client = getClient();
     if (!client) return {};
+
+    const state = getCircuitState();
+    if (state === "open") return {};
 
     const pattern = toolName
       ? date
@@ -133,9 +225,32 @@ export async function getCallCount(
       if (val !== null) result[key] = val;
     }
 
+    recordSuccess();
     return result;
   } catch {
-    console.warn("[dashlint] Redis read failed (non-fatal)");
+    recordFailure();
     return {};
   }
+}
+
+/**
+ * Returns the current health status of the Redis counter system.
+ * Used by the /api/health endpoint.
+ */
+export function getCounterHealth(): {
+  status: "healthy" | "degraded" | "unavailable";
+  circuitState: CircuitState;
+  consecutiveFailures: number;
+  queuedIncrements: number;
+  configured: boolean;
+} {
+  const client = getClient();
+  const state = getCircuitState();
+  return {
+    status: !client ? "unavailable" : state === "open" ? "degraded" : "healthy",
+    circuitState: state,
+    consecutiveFailures,
+    queuedIncrements: retryQueue.length,
+    configured: client !== null,
+  };
 }
