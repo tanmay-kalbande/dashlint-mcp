@@ -73,8 +73,8 @@ function getClient(): RedisAdapter | null {
       cachedAdapter = {
         incr: (key: string) => upstash.incr(key),
         scan: async (cursor: string, pattern: string) => {
-          const [next, keys] = await upstash.scan(cursor, { match: pattern, count: 100 });
-          return [next, keys];
+          const res = await upstash.scan(cursor as unknown as number, { match: pattern, count: 100 });
+          return [String(res[0]), res[1]];
         },
         get: async (key: string) => {
           const val = await upstash.get<number>(key);

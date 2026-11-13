@@ -147,12 +147,12 @@ export async function listWebhooks(): Promise<WebhookSubscription[]> {
     const keys: string[] = [];
     let cursor = 0;
     do {
-      const [next, batch] = await redis.scan(cursor, {
+      const res = await redis.scan(cursor, {
         match: KEY_PREFIX + "*",
         count: 100,
       });
-      cursor = next;
-      keys.push(...batch);
+      cursor = Number(res[0]);
+      keys.push(...res[1]);
     } while (cursor !== 0);
 
     const subs: WebhookSubscription[] = [];
