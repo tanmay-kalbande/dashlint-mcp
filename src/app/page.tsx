@@ -545,6 +545,12 @@ export default function Home() {
             </button>
             <a
               className="btn g sm d-only"
+              href="/docs"
+            >
+              {"Docs ↗"}
+            </a>
+            <a
+              className="btn g sm d-only"
               href="https://linkedin.com/in/tanmay-kalbande"
               target="_blank"
               rel="noopener noreferrer"
@@ -743,12 +749,19 @@ export default function Home() {
                 </div>
                 <a
                   className="btn g sm"
+                  href="/docs"
+                  style={{ width: "100%", marginBottom: "8px" }}
+                >
+                  {"Docs ↗"}
+                </a>
+                <a
+                  className="btn g sm"
                   href="https://linkedin.com/in/tanmay-kalbande"
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{ width: "100%" }}
                 >
-                  LinkedIn ↗
+                  {"LinkedIn ↗"}
                 </a>
                 <button
                   className="btn g sm m-close-btn"
