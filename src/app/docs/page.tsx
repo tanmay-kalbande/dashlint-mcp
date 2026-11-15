@@ -17,7 +17,7 @@ const tools = (manifest as { tools: Tool[] }).tools;
 function SchemaView({ schema, depth = 0 }: { schema: Record<string, unknown>; depth?: number }) {
   const props = schema.properties as Record<string, Record<string, unknown>> | undefined;
   const required = (schema.required as string[]) || [];
-  if (!props) return <span style={{ color: "#6b7280", fontSize: 13 }}>No parameters</span>;
+  if (!props) return <span className="docs-muted" style={{ fontSize: 13 }}>No parameters</span>;
 
   return (
     <div style={{ paddingLeft: depth > 0 ? 16 : 0 }}>
@@ -28,15 +28,15 @@ function SchemaView({ schema, depth = 0 }: { schema: Record<string, unknown>; de
         const nested = val.properties ? val : val.items && typeof val.items === "object" && (val.items as Record<string, unknown>).properties ? val.items : null;
 
         return (
-          <div key={key} style={{ marginBottom: 10, borderLeft: "2px solid #2d3748", paddingLeft: 12 }}>
+          <div key={key} style={{ marginBottom: 10, borderLeft: "2px solid var(--ln)", paddingLeft: 12 }}>
             <div>
-              <code style={{ color: "#93c5fd", fontSize: 13 }}>{key}</code>
-              <span style={{ color: "#6b7280", fontSize: 12, marginLeft: 8 }}>{type}{(val.type === "array") ? "[]" : ""}</span>
-              {isRequired && <span style={{ color: "#f87171", fontSize: 11, marginLeft: 6, fontWeight: 600 }}>required</span>}
+              <code className="docs-code-key">{key}</code>
+              <span className="docs-muted" style={{ fontSize: 12, marginLeft: 8 }}>{type}{(val.type === "array") ? "[]" : ""}</span>
+              {isRequired && <span className="docs-required">required</span>}
             </div>
             {enumVals && (
-              <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 2 }}>
-                Values: {enumVals.map((v, i) => <code key={i} style={{ background: "#1f2937", padding: "1px 5px", borderRadius: 3, marginRight: 4, fontSize: 11 }}>{v}</code>)}
+              <div style={{ fontSize: 12, color: "var(--mu)", marginTop: 2 }}>
+                Values: {enumVals.map((v, i) => <code key={i} className="docs-enum-val">{v}</code>)}
               </div>
             )}
             {nested && <SchemaView schema={nested as Record<string, unknown>} depth={depth + 1} />}
@@ -56,101 +56,286 @@ export default function DocsPage() {
   const filtered = filter === "all" ? tools : filter === "active" ? activeTools : deprecatedTools;
 
   return (
-    <main style={{ maxWidth: 860, margin: "0 auto", padding: "48px 24px 80px", fontFamily: "Inter, system-ui, sans-serif", color: "#e5e7eb" }}>
-      <a href="/" style={{ color: "#9ca3af", textDecoration: "none", fontSize: 14 }}>← Back to DashLint</a>
+    <>
+      <style>{`
+        .docs-page {
+          max-width: 860px;
+          margin: 0 auto;
+          padding: 48px 24px 80px;
+          font-family: var(--sans);
+          color: var(--ink);
+          min-height: 100vh;
+        }
+        .docs-back {
+          color: var(--mu);
+          text-decoration: none;
+          font-size: 14px;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          transition: color 0.2s;
+        }
+        .docs-back:hover { color: var(--ink); }
+        .docs-header { margin-top: 24px; margin-bottom: 32px; }
+        .docs-h1 {
+          font-size: 28px;
+          font-weight: 700;
+          color: var(--ink);
+          margin: 0 0 4px;
+          font-family: var(--sans);
+        }
+        .docs-subtitle {
+          color: var(--mu);
+          font-size: 15px;
+          line-height: 1.6;
+          margin: 0;
+        }
+        .docs-subtitle code {
+          background: var(--s2);
+          padding: 2px 6px;
+          border-radius: 4px;
+          font-size: 13px;
+          font-family: var(--mono);
+          color: var(--ink);
+        }
+        .docs-filters {
+          display: flex;
+          gap: 8px;
+          margin-bottom: 24px;
+          flex-wrap: wrap;
+        }
+        .docs-filter-btn {
+          padding: 6px 14px;
+          border-radius: 6px;
+          border: 1px solid var(--ln);
+          background: transparent;
+          color: var(--mu);
+          cursor: pointer;
+          font-size: 13px;
+          font-weight: 500;
+          font-family: var(--sans);
+          text-transform: capitalize;
+          transition: all 0.2s;
+        }
+        .docs-filter-btn:hover { border-color: var(--ls); color: var(--ink); }
+        .docs-filter-btn.active {
+          border-color: var(--ls);
+          background: var(--s2);
+          color: var(--ink);
+        }
+        .docs-tool-list {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+        .docs-tool-card {
+          border: 1px solid var(--ln);
+          border-radius: 8px;
+          overflow: hidden;
+          transition: border-color 0.2s;
+        }
+        .docs-tool-card:hover { border-color: var(--ls); }
+        .docs-tool-card.open { background: var(--s2); }
+        .docs-tool-btn {
+          width: 100%;
+          padding: 14px 16px;
+          display: flex;
+          align-items: flex-start;
+          gap: 10px;
+          background: none;
+          border: none;
+          cursor: pointer;
+          text-align: left;
+          color: var(--ink);
+          font-family: var(--sans);
+        }
+        .docs-tool-btn:hover { background: var(--s2); }
+        .docs-chevron {
+          color: var(--mu);
+          font-size: 14px;
+          margin-top: 2px;
+          flex-shrink: 0;
+          transition: transform 0.2s;
+        }
+        .docs-chevron.open { transform: rotate(90deg); }
+        .docs-tool-name {
+          font-size: 14px;
+          font-weight: 600;
+          color: var(--ac);
+          font-family: var(--mono);
+        }
+        .docs-badge-deprecated {
+          font-size: 10px;
+          font-weight: 600;
+          padding: 2px 6px;
+          border-radius: 4px;
+          background: #7f1d1d;
+          color: #fca5a5;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+        .docs-badge-no-params {
+          font-size: 10px;
+          padding: 2px 6px;
+          border-radius: 4px;
+          background: var(--s2);
+          color: var(--ac);
+        }
+        .docs-tool-desc {
+          font-size: 13px;
+          color: var(--mu);
+          margin-top: 4px;
+          line-height: 1.5;
+        }
+        .docs-detail-panel {
+          padding: 0 16px 16px 40px;
+          border-top: 1px solid var(--ln);
+        }
+        .docs-section-label {
+          font-size: 12px;
+          font-weight: 600;
+          color: var(--mu);
+          text-transform: uppercase;
+          letter-spacing: 1px;
+          margin-bottom: 8px;
+        }
+        .docs-full-desc {
+          font-size: 13px;
+          color: var(--ink);
+          line-height: 1.6;
+          opacity: 0.85;
+        }
+        .docs-pre {
+          background: var(--sf);
+          border: 1px solid var(--ln);
+          border-radius: 6px;
+          padding: 12px;
+          font-size: 12px;
+          overflow-x: auto;
+          color: var(--ink);
+          font-family: var(--mono);
+          line-height: 1.5;
+        }
+        .docs-deprecated-warn {
+          margin-top: 12px;
+          padding: 8px 12px;
+          background: rgba(127, 29, 29, 0.13);
+          border: 1px solid #7f1d1d;
+          border-radius: 6px;
+          font-size: 13px;
+          color: #fca5a5;
+        }
+        .docs-code-key {
+          color: var(--ac);
+          font-size: 13px;
+          font-family: var(--mono);
+        }
+        .docs-muted { color: var(--mu); }
+        .docs-required {
+          color: #f87171;
+          font-size: 11px;
+          margin-left: 6px;
+          font-weight: 600;
+        }
+        .docs-enum-val {
+          background: var(--s2);
+          padding: 1px 5px;
+          border-radius: 3px;
+          margin-right: 4px;
+          font-size: 11px;
+          font-family: var(--mono);
+        }
+        .docs-footer {
+          margin-top: 48px;
+          padding-top: 24px;
+          border-top: 1px solid var(--ln);
+          text-align: center;
+          font-size: 13px;
+          color: var(--mu);
+        }
+        .docs-footer a {
+          color: var(--ac);
+          transition: color 0.2s;
+        }
+        .docs-footer a:hover { color: var(--ink); }
+        @media (max-width: 640px) {
+          .docs-page { padding: 24px 16px 64px; }
+          .docs-h1 { font-size: 22px; }
+          .docs-detail-panel { padding: 0 12px 12px 28px; }
+        }
+      `}</style>
 
-      <div style={{ marginTop: 24, marginBottom: 32 }}>
-        <h1 style={{ fontSize: 28, fontWeight: 700, color: "#f9fafb", marginBottom: 4 }}>API Documentation</h1>
-        <p style={{ color: "#9ca3af", fontSize: 15, lineHeight: 1.6 }}>
-          DashLint MCP Server — {activeTools.length} active tools, {deprecatedTools.length} deprecated.
-          Connect via <code style={{ background: "#1f2937", padding: "2px 6px", borderRadius: 4, fontSize: 13 }}>{MCP_URL}</code>
-        </p>
-      </div>
+      <main className="docs-page">
+        <a href="/" className="docs-back">
+          {"\u2190"} Back to DashLint
+        </a>
 
-      <div style={{ display: "flex", gap: 8, marginBottom: 24, flexWrap: "wrap" }}>
-        {(["all", "active", "deprecated"] as const).map(f => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            style={{
-              padding: "6px 14px",
-              borderRadius: 6,
-              border: "1px solid " + (filter === f ? "#4b5563" : "#2d3748"),
-              background: filter === f ? "#1f2937" : "transparent",
-              color: filter === f ? "#f9fafb" : "#9ca3af",
-              cursor: "pointer",
-              fontSize: 13,
-              fontWeight: 500,
-              textTransform: "capitalize",
-            }}
-          >
-            {f} ({f === "all" ? tools.length : f === "active" ? activeTools.length : deprecatedTools.length})
-          </button>
-        ))}
-      </div>
+        <div className="docs-header">
+          <h1 className="docs-h1">API Documentation</h1>
+          <p className="docs-subtitle">
+            DashLint MCP Server {"\u2014"} {activeTools.length} active tools, {deprecatedTools.length} deprecated.
+            Connect via <code>{MCP_URL}</code>
+          </p>
+        </div>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        {filtered.map(tool => {
-          const isOpen = expanded === tool.name;
-          const hasParams = tool.inputSchema.properties && Object.keys(tool.inputSchema.properties as object).length > 0;
-
-          return (
-            <div
-              key={tool.name}
-              style={{
-                border: "1px solid #2d3748",
-                borderRadius: 8,
-                overflow: "hidden",
-                background: isOpen ? "#111827" : "transparent",
-              }}
+        <div className="docs-filters">
+          {(["all", "active", "deprecated"] as const).map(f => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`docs-filter-btn ${filter === f ? "active" : ""}`}
             >
-              <button
-                onClick={() => setExpanded(isOpen ? null : tool.name)}
-                style={{
-                  width: "100%",
-                  padding: "14px 16px",
-                  display: "flex",
-                  alignItems: "flex-start",
-                  gap: 10,
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  textAlign: "left",
-                  color: "#e5e7eb",
-                }}
+              {f} ({f === "all" ? tools.length : f === "active" ? activeTools.length : deprecatedTools.length})
+            </button>
+          ))}
+        </div>
+
+        <div className="docs-tool-list">
+          {filtered.map(tool => {
+            const isOpen = expanded === tool.name;
+            const hasParams = tool.inputSchema.properties && Object.keys(tool.inputSchema.properties as object).length > 0;
+
+            return (
+              <div
+                key={tool.name}
+                className={`docs-tool-card ${isOpen ? "open" : ""}`}
               >
-                <span style={{ color: "#6b7280", fontSize: 14, marginTop: 2, flexShrink: 0, transition: "transform 0.2s", transform: isOpen ? "rotate(90deg)" : "none" }}>▶</span>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                    <code style={{ fontSize: 14, fontWeight: 600, color: "#93c5fd", fontFamily: "'IBM Plex Mono', monospace" }}>{tool.name}()</code>
-                    {tool.deprecated && (
-                      <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 6px", borderRadius: 4, background: "#7f1d1d", color: "#fca5a5", textTransform: "uppercase", letterSpacing: "0.5px" }}>deprecated</span>
-                    )}
-                    {!hasParams && (
-                      <span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 4, background: "#1e3a5f", color: "#93c5fd" }}>no params</span>
-                    )}
+                <button
+                  onClick={() => setExpanded(isOpen ? null : tool.name)}
+                  className="docs-tool-btn"
+                >
+                  <span className={`docs-chevron ${isOpen ? "open" : ""}`}>{"\u25B6"}</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                      <code className="docs-tool-name">{tool.name}()</code>
+                      {tool.deprecated && (
+                        <span className="docs-badge-deprecated">deprecated</span>
+                      )}
+                      {!hasParams && (
+                        <span className="docs-badge-no-params">no params</span>
+                      )}
+                    </div>
+                    <p className="docs-tool-desc">
+                      {tool.description.length > 160 && !isOpen ? tool.description.slice(0, 160) + "\u2026" : tool.description}
+                    </p>
                   </div>
-                  <p style={{ fontSize: 13, color: "#9ca3af", marginTop: 4, lineHeight: 1.5 }}>
-                    {tool.description.length > 160 && !isOpen ? tool.description.slice(0, 160) + "…" : tool.description}
-                  </p>
-                </div>
-              </button>
+                </button>
 
-              {isOpen && (
-                <div style={{ padding: "0 16px 16px 40px", borderTop: "1px solid #1f2937" }}>
-                  <div style={{ marginTop: 12 }}>
-                    <h4 style={{ fontSize: 12, fontWeight: 600, color: "#6b7280", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Full Description</h4>
-                    <p style={{ fontSize: 13, color: "#d1d5db", lineHeight: 1.6 }}>{tool.description}</p>
-                  </div>
+                {isOpen && (
+                  <div className="docs-detail-panel">
+                    <div style={{ marginTop: 12 }}>
+                      <h4 className="docs-section-label">Full Description</h4>
+                      <p className="docs-full-desc">{tool.description}</p>
+                    </div>
 
-                  <div style={{ marginTop: 16 }}>
-                    <h4 style={{ fontSize: 12, fontWeight: 600, color: "#6b7280", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Input Schema</h4>
-                    <SchemaView schema={tool.inputSchema} />
-                  </div>
+                    <div style={{ marginTop: 16 }}>
+                      <h4 className="docs-section-label">Input Schema</h4>
+                      <SchemaView schema={tool.inputSchema} />
+                    </div>
 
-                  <div style={{ marginTop: 16 }}>
-                    <h4 style={{ fontSize: 12, fontWeight: 600, color: "#6b7280", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Example Call</h4>
-                    <pre style={{ background: "#0d1117", border: "1px solid #2d3748", borderRadius: 6, padding: 12, fontSize: 12, overflowX: "auto", color: "#e5e7eb", fontFamily: "'IBM Plex Mono', monospace", lineHeight: 1.5 }}>
+                    <div style={{ marginTop: 16 }}>
+                      <h4 className="docs-section-label">Example Call</h4>
+                      <pre className="docs-pre">
 {hasParams
   ? `// MCP tool call\nawait client.callTool("${tool.name}", ${JSON.stringify(
       Object.fromEntries(
@@ -164,24 +349,25 @@ export default function DocsPage() {
       ), null, 2
     )});`
   : `// MCP tool call (no parameters)\nawait client.callTool("${tool.name}", {});`}
-                    </pre>
-                  </div>
-
-                  {tool.deprecated && (
-                    <div style={{ marginTop: 12, padding: "8px 12px", background: "#7f1d1d22", border: "1px solid #7f1d1d", borderRadius: 6, fontSize: 13, color: "#fca5a5" }}>
-                      ⚠️ This tool is deprecated. Use <code style={{ fontWeight: 600 }}>get_dashboard_kit()</code> instead.
+                      </pre>
                     </div>
-                  )}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
 
-      <footer style={{ marginTop: 48, paddingTop: 24, borderTop: "1px solid #1f2937", textAlign: "center", fontSize: 13, color: "#6b7280" }}>
-        <p>DashLint MCP v{(manifest as { version: string }).version} · <a href="/terms" style={{ color: "#60a5fa" }}>Terms</a> · <a href="/privacy" style={{ color: "#60a5fa" }}>Privacy</a> · <a href="https://linkedin.com/in/tanmay-kalbande" target="_blank" rel="noopener noreferrer" style={{ color: "#60a5fa" }}>LinkedIn</a></p>
-      </footer>
-    </main>
+                    {tool.deprecated && (
+                      <div className="docs-deprecated-warn">
+                        {"\u26A0\uFE0F"} This tool is deprecated. Use <code style={{ fontWeight: 600 }}>get_dashboard_kit()</code> instead.
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        <footer className="docs-footer">
+          <p>DashLint MCP v{(manifest as { version: string }).version} {"\u00B7"} <a href="/terms">Terms</a> {"\u00B7"} <a href="/privacy">Privacy</a> {"\u00B7"} <a href="https://linkedin.com/in/tanmay-kalbande" target="_blank" rel="noopener noreferrer">LinkedIn</a></p>
+        </footer>
+      </main>
+    </>
   );
 }

@@ -5,12 +5,12 @@ import { useEffect, useRef, useState } from "react";
 const URL_ = "https://dashlint.tanmaysk.in/mcp";
 const JSON_ = `{ "mcpServers": { "dashlint": { "url": "${URL_}" } } }`;
 const SAMPLE_PROMPT =
-  "Inspect the attached data and build an interactive dashboard following the DashLint MCP workflow. Call the MCP tools step-by-step â€” do not skip any playbooks or the completion checklist. Keep all raw data rows on my machine.";
+  "Inspect the attached data and build an interactive dashboard following the DashLint MCP workflow. Call the MCP tools step-by-step — do not skip any playbooks or the completion checklist. Keep all raw data rows on my machine.";
 
 const CL: Record<string, [string, string]> = {
-  Claude: [URL_, "Settings â†’ Connectors â†’ add a custom connector and paste the URL."],
-  Cursor: [JSON_, "Settings â†’ MCP â†’ paste this config."],
-  ChatGPT: [URL_, "Settings â†’ Connectors â†’ add a custom MCP with this URL."],
+  Claude: [URL_, "Settings → Connectors → add a custom connector and paste the URL."],
+  Cursor: [JSON_, "Settings → MCP → paste this config."],
+  ChatGPT: [URL_, "Settings → Connectors → add a custom MCP with this URL."],
   Other: [URL_, "Add a remote MCP server in your client and paste this URL."],
 };
 
@@ -82,7 +82,7 @@ export default function Home() {
   const [connectOpen, setConnectOpen] = useState(false);
   const [callsCount, setCallsCount] = useState<number | null>(null);
   const [statusText, setStatusText] = useState("0 dashboard creation calls");
-  const [caption, setCaption] = useState("1 Â· Share data + question");
+  const [caption, setCaption] = useState("1 · Share data + question");
   const [captionFade, setCaptionFade] = useState(false);
 
   const segRef = useRef<HTMLDivElement>(null);
@@ -301,7 +301,7 @@ export default function Home() {
           N("t" + i)?.classList.add("done");
         });
         N("out")?.classList.add("built");
-        setCapText("Your data â†’ AI assistant â†’ DashLint tools â†’ dashboard");
+        setCapText("Your data → AI assistant → DashLint tools → dashboard");
         return;
       }
 
@@ -309,7 +309,7 @@ export default function Home() {
         while (document.hidden && mounted) await sleep(400);
         if (!mounted) break;
 
-        setCapText("1 Â· Share data + question");
+        setCapText("1 · Share data + question");
         pan(0);
         lit("data", true);
         const lk = document.getElementById("lk");
@@ -323,14 +323,14 @@ export default function Home() {
         lit("data", false);
         lit("ai", true);
 
-        setCapText("2 Â· AI calls DashLint");
+        setCapText("2 · AI calls DashLint");
         pan(0.5);
         await fly("pa", "#e5e7eb", 1100);
         if (!mounted) break;
         pan(1);
         lit("hub", true);
 
-        setCapText("2 Â· AI calls 7 core DashLint workflow tools");
+        setCapText("2 · AI calls 7 core DashLint workflow tools");
         await Promise.all(
           TL.map(async (_, i) => {
             await sleep(i * 260);
@@ -345,7 +345,7 @@ export default function Home() {
         await sleep(450);
         if (!mounted) break;
 
-        setCapText("2 Â· DashLint returns plans and playbooks");
+        setCapText("2 · DashLint returns plans and playbooks");
         await Promise.all(
           [0, 1, 2].map(async (k) => {
             await sleep(k * 160);
@@ -360,7 +360,7 @@ export default function Home() {
           N("t" + i)?.classList.remove("done");
         });
 
-        setCapText("3 Â· Reusable interactive dashboard");
+        setCapText("3 · Reusable interactive dashboard");
         pan(0);
         await fly("po", "#e5e7eb", 1200);
         if (!mounted) break;
@@ -412,7 +412,7 @@ export default function Home() {
           <i>D/</i>
           <div>
             <b>DASHLINT</b>
-            <small>12 tools Â· remote MCP</small>
+            <small>12 tools · remote MCP</small>
           </div>
         </div>
 
@@ -449,11 +449,11 @@ export default function Home() {
           <div className="st">
             <span>
               <span className="dot"></span>
-              <b>reusable dashboard output Â· no API key</b>
+              <b>reusable dashboard output · no API key</b>
             </span>
           </div>
           <button className="btn cp" onClick={handleCopyUrl}>
-            {copiedUrl ? "Copied âœ“" : "Copy MCP URL"}
+            {copiedUrl ? "Copied ✓" : "Copy MCP URL"}
           </button>
           <div className="npm-option">
             <a
@@ -487,7 +487,7 @@ export default function Home() {
             <i>D/</i>
             <div>
               <b>DASHLINT</b>
-              <small>12 tools Â· remote MCP</small>
+              <small>12 tools · remote MCP</small>
             </div>
           </div>
           <span className="cr">
@@ -544,7 +544,7 @@ export default function Home() {
               How to use
             </button>
             <a className="btn g sm d-only" href="/docs">
-              Docs ↗
+              {"Docs ↗"}
             </a>
             <a
               className="btn g sm d-only"
@@ -552,7 +552,7 @@ export default function Home() {
               target="_blank"
               rel="noopener noreferrer"
             >
-              LinkedIn â†—
+              {"LinkedIn ↗"}
             </a>
             <button
               className="menu-btn"
@@ -580,7 +580,7 @@ export default function Home() {
             <section className="pn hero">
               <div className="hero-topline">
                 <span className="pill n" style={{ width: "fit-content" }}>
-                  MCP SERVER Â· 100% REUSABLE DASHBOARDS Â· OPEN SOURCE
+                  MCP SERVER · 100% REUSABLE DASHBOARDS · OPEN SOURCE
                 </span>
                 <span className="hero-calls">
                   <span className="dot" style={{ width: 6, height: 6 }}></span>
@@ -593,18 +593,18 @@ export default function Home() {
                 <em>Dashboard out.</em>
               </h1>
               <p>
-                <b>DashLint</b> gives your AI assistant the workflow, app shell, analysis playbook and review checklist to build a complete, <b>reusable interactive dashboard</b> from your data. Keep the code, run it anywhere, update it anytimeâ€”your rows stay on your machine.
+                <b>DashLint</b> gives your AI assistant the workflow, app shell, analysis playbook and review checklist to build a complete, <b>reusable interactive dashboard</b> from your data. Keep the code, run it anywhere, update it anytime—your rows stay on your machine.
               </p>
               <div className="steps">
                 {/* Desktop 2-row pipeline */}
                 <div className="steps-d">
                   <div className="steps-row">
                     <span className="step-pill">
-                      <b>1</b> <span className="dot-sep">Â·</span> Share data + question
+                      <b>1</b> <span className="dot-sep">·</span> Share data + question
                     </span>
-                    <span className="step-arrow" aria-hidden="true">â†’</span>
+                    <span className="step-arrow" aria-hidden="true">→</span>
                     <span className="step-pill">
-                      <b>2</b> <span className="dot-sep">Â·</span> AI calls DashLint
+                      <b>2</b> <span className="dot-sep">·</span> AI calls DashLint
                     </span>
                   </div>
                   <div className="steps-row-out">
@@ -615,7 +615,7 @@ export default function Home() {
                       </svg>
                     </span>
                     <span className="step-pill step-pill-target">
-                      <b>3</b> <span className="dot-sep">Â·</span> Reusable dashboard
+                      <b>3</b> <span className="dot-sep">·</span> Reusable dashboard
                     </span>
                   </div>
                 </div>
@@ -623,7 +623,7 @@ export default function Home() {
                 {/* Mobile clean vertical stepper */}
                 <div className="steps-m">
                   <span className="step-pill">
-                    <b>1</b> <span className="dot-sep">Â·</span> Share data + question
+                    <b>1</b> <span className="dot-sep">·</span> Share data + question
                   </span>
                   <div className="step-m-arrow" aria-hidden="true">
                     <svg width="11" height="13" viewBox="0 0 12 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -631,7 +631,7 @@ export default function Home() {
                     </svg>
                   </div>
                   <span className="step-pill">
-                    <b>2</b> <span className="dot-sep">Â·</span> AI calls DashLint
+                    <b>2</b> <span className="dot-sep">·</span> AI calls DashLint
                   </span>
                   <div className="step-m-arrow" aria-hidden="true">
                     <svg width="11" height="13" viewBox="0 0 12 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -639,7 +639,7 @@ export default function Home() {
                     </svg>
                   </div>
                   <span className="step-pill step-pill-target">
-                    <b>3</b> <span className="dot-sep">Â·</span> Reusable dashboard
+                    <b>3</b> <span className="dot-sep">·</span> Reusable dashboard
                   </span>
                 </div>
               </div>
@@ -678,7 +678,7 @@ export default function Home() {
                   <u>{CL[activeTab][0]}</u>
                 </code>
                 <button className="btn sm" id="cpc" onClick={handleCopyConfig}>
-                  {copiedConfig ? "Copied âœ“" : "Copy"}
+                  {copiedConfig ? "Copied ✓" : "Copy"}
                 </button>
               </div>
 
@@ -694,7 +694,7 @@ export default function Home() {
                 <div className="prompt-box">
                   <code>{SAMPLE_PROMPT}</code>
                   <button className="btn sm" type="button" onClick={handleCopyPrompt}>
-                    {copiedPrompt ? "Copied âœ“" : "Copy prompt"}
+                    {copiedPrompt ? "Copied ✓" : "Copy prompt"}
                   </button>
                 </div>
               </div>
@@ -719,7 +719,7 @@ export default function Home() {
 
               <div className="cn-actions">
                 <button className="btn cp" onClick={handleCopyUrl} style={{ width: "100%" }}>
-                  {copiedUrl ? "Copied âœ“" : "Copy MCP URL"}
+                  {copiedUrl ? "Copied ✓" : "Copy MCP URL"}
                 </button>
                 <div className="npm-option">
                   <a
@@ -751,7 +751,7 @@ export default function Home() {
                   rel="noopener noreferrer"
                   style={{ width: "100%" }}
                 >
-                  LinkedIn â†—
+                  LinkedIn ↗
                 </a>
                 <button
                   className="btn g sm m-close-btn"
@@ -973,7 +973,7 @@ export default function Home() {
                         your MCP client
                       </text>
                       <text x="24" y="240" className="sub" style={{ fontSize: "9.5px" }}>
-                        Claude Â· Cursor Â· ChatGPT
+                        Claude · Cursor · ChatGPT
                       </text>
                     </g>
 
@@ -1106,10 +1106,10 @@ export default function Home() {
                         DashLint MCP
                       </text>
                       <text x="264" y="81" className="sub" style={{ fontSize: "9.5px" }}>
-                        remote Â· no API key
+                        remote · no API key
                       </text>
                       <text x="264" y="91" className="sub" style={{ fontSize: "7.5px" }}>
-                        7 core tools shown Â· 12 total
+                        7 core tools shown · 12 total
                       </text>
                       <g className="eq">
                         {[8, 14, 10, 16].map((v, i) => (
@@ -1191,15 +1191,15 @@ export default function Home() {
         </div>
 
         <footer className="mf">
-          <span>Free Â· open source Â· MIT</span>
+          <span>{"Free · open source · MIT"}</span>
           <span>Built with DashLint</span>
           <span style={{ display: "inline-flex", gap: "12px", alignItems: "center" }}>
             <a href="/docs" style={{ color: "inherit", textDecoration: "none" }}>Docs</a>
-            <span>Â·</span>
+            <span>{"\u00B7"}</span>
             <a href="/terms" style={{ color: "inherit", textDecoration: "none" }}>Terms</a>
-            <span>Â·</span>
+            <span>{"\u00B7"}</span>
             <a href="/privacy" style={{ color: "inherit", textDecoration: "none" }}>Privacy</a>
-            <span>Â·</span>
+            <span>{"\u00B7"}</span>
             <a href="/admin" style={{ color: "inherit", textDecoration: "none" }}>Admin</a>
           </span>
         </footer>
