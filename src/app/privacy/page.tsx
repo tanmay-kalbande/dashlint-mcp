@@ -9,6 +9,15 @@ export default function PrivacyPage() {
   return (
     <>
       <style>{`
+        html, body {
+          display: block !important;
+          height: auto !important;
+          min-height: 100vh !important;
+          overflow-y: auto !important;
+          overflow-x: hidden !important;
+          padding: 0 !important;
+          grid-template-columns: none !important;
+        }
         .legal-page {
           max-width: 720px;
           margin: 0 auto;

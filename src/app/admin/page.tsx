@@ -166,8 +166,20 @@ export default function AdminPage() {
   const maxCalls = toolList.length > 0 ? toolList[0][1] : 1;
 
   return (
-    <main
-      className="subpage"
+    <>
+      <style>{`
+        html, body {
+          display: block !important;
+          height: auto !important;
+          min-height: 100vh !important;
+          overflow-y: auto !important;
+          overflow-x: hidden !important;
+          padding: 0 !important;
+          grid-template-columns: none !important;
+        }
+      `}</style>
+      <main
+        className="subpage"
       style={{
         maxWidth: 960,
         margin: "0 auto",
@@ -562,5 +574,6 @@ export default function AdminPage() {
         </div>
       </footer>
     </main>
+    </>
   );
 }

@@ -42,7 +42,7 @@ export async function middleware(request: NextRequest) {
   );
   response.headers.set(
     "Content-Security-Policy",
-    "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.sheetjs.com https://cdn.vercel-insights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://*.vercel-insights.com; font-src 'self' data:; frame-ancestors 'none'"
+    "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.sheetjs.com https://cdn.vercel-insights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https:; connect-src 'self' https://*.vercel-insights.com https://fonts.googleapis.com https://fonts.gstatic.com; frame-ancestors 'none'"
   );
 
   // ── CORS for /mcp and /api/mcp (MCP clients connect cross-origin) ────

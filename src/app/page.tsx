@@ -543,9 +543,6 @@ export default function Home() {
             >
               How to use
             </button>
-            <a className="btn g sm d-only" href="/docs">
-              {"Docs ↗"}
-            </a>
             <a
               className="btn g sm d-only"
               href="https://linkedin.com/in/tanmay-kalbande"
@@ -1191,16 +1188,15 @@ export default function Home() {
         </div>
 
         <footer className="mf">
-          <span>{"Free · open source · MIT"}</span>
-          <span>Built with DashLint</span>
-          <span style={{ display: "inline-flex", gap: "12px", alignItems: "center" }}>
+          <span>Free · open source · MIT</span>
+          <span>
             <a href="/docs" style={{ color: "inherit", textDecoration: "none" }}>Docs</a>
-            <span>{"\u00B7"}</span>
+            {" · "}
             <a href="/terms" style={{ color: "inherit", textDecoration: "none" }}>Terms</a>
-            <span>{"\u00B7"}</span>
+            {" · "}
             <a href="/privacy" style={{ color: "inherit", textDecoration: "none" }}>Privacy</a>
-            <span>{"\u00B7"}</span>
-            <a href="/admin" style={{ color: "inherit", textDecoration: "none" }}>Admin</a>
+            {" · "}
+            Built with DashLint
           </span>
         </footer>
       </div>

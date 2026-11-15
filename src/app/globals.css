@@ -149,12 +149,16 @@ body {
 }
 
 /* Subpages (docs, terms, privacy, admin) override the landing page grid */
-body:has(.subpage) {
-  display: block;
-  height: auto;
-  overflow: auto;
-  padding: 0;
-  grid-template-columns: none;
+body:has(.subpage),
+body:has(#docs-root),
+body.subpage-body {
+  display: block !important;
+  height: auto !important;
+  min-height: 100vh !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  padding: 0 !important;
+  grid-template-columns: none !important;
 }
 
 a {
@@ -213,7 +217,7 @@ button {
 }
 
 .logo b {
-  font: 700 15px Oswald;
+  font: 700 15px Oswald, var(--sans);
   letter-spacing: .14em;
 }
 
@@ -589,7 +593,7 @@ button {
 }
 
 .hero h1 {
-  font: 700 clamp(40px, 5.4vw, 72px)/.95 Oswald;
+  font: 700 clamp(40px, 5.4vw, 72px)/.95 Oswald, var(--sans);
   text-transform: uppercase;
   margin: 0;
 }
@@ -1293,7 +1297,7 @@ button {
   }
   .m-brand b {
     display: block;
-    font: 700 14px Oswald;
+    font: 700 14px Oswald, var(--sans);
     letter-spacing: .12em;
     color: #fff;
     line-height: 1.1;
