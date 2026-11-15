@@ -148,10 +148,11 @@ body {
   overflow: hidden;
 }
 
-/* Subpages (docs, terms, privacy, admin) override the landing page grid */
-body:has(.subpage),
-body:has(#docs-root),
-body.subpage-body {
+/* Standalone and fallback pages override the landing page grid */
+body.standalone-body,
+body:has(.standalone-page),
+body:has(.admin-page),
+body:has(.legal-page) {
   display: block !important;
   height: auto !important;
   min-height: 100vh !important;
@@ -217,7 +218,7 @@ button {
 }
 
 .logo b {
-  font: 700 15px Oswald, var(--sans);
+  font: 700 15px Oswald;
   letter-spacing: .14em;
 }
 
@@ -593,7 +594,7 @@ button {
 }
 
 .hero h1 {
-  font: 700 clamp(40px, 5.4vw, 72px)/.95 Oswald, var(--sans);
+  font: 700 clamp(40px, 5.4vw, 72px)/.95 Oswald;
   text-transform: uppercase;
   margin: 0;
 }
@@ -1297,7 +1298,7 @@ button {
   }
   .m-brand b {
     display: block;
-    font: 700 14px Oswald, var(--sans);
+    font: 700 14px Oswald;
     letter-spacing: .12em;
     color: #fff;
     line-height: 1.1;
@@ -1804,4 +1805,176 @@ html.tt * {
 }
 .btn-doc-tab:hover svg {
   opacity: 1;
+}
+
+/* Docs Page Shell Styling (Matching Landing Page Geometry) */
+.doc-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow: hidden;
+  height: calc(100dvh - 24px);
+}
+.doc-search-box {
+  width: 100%;
+  background: #151515;
+  border: 1px solid var(--rb);
+  border-radius: 6px;
+  padding: 8px 10px;
+  color: #fff;
+  font: 11px var(--mono);
+  outline: none;
+  box-sizing: border-box;
+}
+.doc-search-box::placeholder {
+  color: #6B7280;
+}
+.doc-search-box:focus {
+  border-color: #4b5563;
+}
+.doc-nav-tree {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-right: 4px;
+  margin-right: -4px;
+  scrollbar-width: thin;
+}
+.doc-nav-tree::-webkit-scrollbar {
+  width: 4px;
+}
+.doc-nav-tree::-webkit-scrollbar-thumb {
+  background: var(--rb);
+  border-radius: 4px;
+}
+.doc-nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  color: #9CA3AF;
+  padding: 6px 8px;
+  border-radius: 4px;
+  font: 12px/1.4 var(--sans);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-sizing: border-box;
+}
+.doc-nav-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+}
+.doc-nav-btn.active {
+  color: #fff;
+  background: #1f2024;
+  font-weight: 600;
+}
+.doc-nav-btn .dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #4B5563;
+  flex-shrink: 0;
+}
+.doc-nav-btn.active .dot {
+  background: #fff;
+}
+.doc-nav-btn.code .mono {
+  font-family: var(--mono);
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.doc-nav-btn .dep-pill {
+  font: 9px var(--mono);
+  text-transform: uppercase;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  margin-left: auto;
+}
+.doc-main-cluster {
+  min-height: 0;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 28px 32px 36px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  scrollbar-width: thin;
+}
+.doc-main-cluster::-webkit-scrollbar {
+  width: 5px;
+}
+.doc-main-cluster::-webkit-scrollbar-thumb {
+  background: var(--ls);
+  border-radius: 4px;
+}
+
+
+/* Legal and Terms/Privacy Card Components */
+.legal-card {
+  background: var(--sf);
+  border: 1px solid var(--ln);
+  border-radius: 8px;
+  padding: 22px 24px;
+  margin-bottom: 16px;
+  transition: border-color 0.15s ease;
+}
+.legal-card:hover {
+  border-color: var(--ls);
+}
+.legal-card h2 {
+  font-size: 17px;
+  font-weight: 600;
+  font-family: var(--sans);
+  color: var(--ink);
+  margin: 0 0 10px;
+}
+.legal-card p {
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--mu);
+  margin: 0 0 10px;
+}
+.legal-card p:last-child {
+  margin-bottom: 0;
+}
+.legal-card ul {
+  padding-left: 20px;
+  margin: 8px 0;
+  color: var(--mu);
+  font-size: 14px;
+  line-height: 1.65;
+}
+.legal-card li {
+  margin-bottom: 6px;
+}
+.legal-card code {
+  background: var(--s2);
+  border: 1px solid var(--ln);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 12px;
+  font-family: var(--mono);
+  color: var(--ink);
+}
+.legal-card a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-weight: 500;
+  transition: opacity 0.15s;
+}
+.legal-card a:hover {
+  opacity: 0.8;
 }

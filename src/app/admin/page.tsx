@@ -48,6 +48,7 @@ export default function AdminPage() {
 
   // Auto-login from session storage if previously entered
   useEffect(() => {
+    document.body.classList.add("standalone-body");
     const saved = sessionStorage.getItem("dl_admin_token");
     if (saved) {
       setToken(saved);
@@ -59,6 +60,9 @@ export default function AdminPage() {
         .then(setHealth)
         .catch(() => {});
     }
+    return () => {
+      document.body.classList.remove("standalone-body");
+    };
   }, []);
 
   async function loadDashboard(authToken: string) {
@@ -179,7 +183,7 @@ export default function AdminPage() {
         }
       `}</style>
       <main
-        className="subpage"
+        className="subpage admin-page standalone-page"
       style={{
         maxWidth: 960,
         margin: "0 auto",

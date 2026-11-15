@@ -145,8 +145,6 @@ const CONFIG_JSON = `{
   }
 }`;
 
-/* ---------- small pieces ---------- */
-
 function Console({
   label,
   body,
@@ -161,31 +159,76 @@ function Console({
   tabs?: { value: string; label: string; active: boolean; onClick: () => void }[];
 }) {
   return (
-    <div className="dl-console">
-      <div className="dl-console-head">
-        <div className="dl-console-left">
-          <span className="dl-dots">
-            <i />
-            <i />
-            <i />
-          </span>
+    <div style={{
+      border: "1px solid var(--ln)",
+      background: "#0c0d10",
+      borderRadius: "8px",
+      overflow: "hidden",
+      position: "sticky",
+      top: 0,
+      zIndex: 10,
+    }}>
+      <div style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: 10,
+        padding: "8px 12px",
+        borderBottom: "1px solid var(--ln)",
+        background: "var(--sf)",
+        flexWrap: "wrap",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ display: "flex", gap: 5, paddingLeft: 2 }}>
+            <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#ef4444", opacity: 0.85, display: "inline-block" }} />
+            <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#eab308", opacity: 0.85, display: "inline-block" }} />
+            <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#22c55e", opacity: 0.85, display: "inline-block" }} />
+          </div>
           {tabs ? (
-            <div className="dl-tabs">
+            <div style={{ display: "flex", gap: 2, background: "var(--bg)", border: "1px solid var(--ln)", borderRadius: 6, padding: 2 }}>
               {tabs.map((t) => (
-                <button key={t.value} className={`dl-tab ${t.active ? "on" : ""}`} onClick={t.onClick}>
+                <button
+                  key={t.value}
+                  style={{
+                    background: t.active ? "var(--sf)" : "none",
+                    border: "none",
+                    color: t.active ? "var(--ink)" : "var(--mu)",
+                    fontSize: 11,
+                    fontWeight: t.active ? 600 : 500,
+                    padding: "4px 8px",
+                    borderRadius: 4,
+                    cursor: "pointer",
+                    fontFamily: "var(--sans)",
+                  }}
+                  onClick={t.onClick}
+                >
                   {t.label}
                 </button>
               ))}
             </div>
           ) : (
-            <span className="dl-mono dl-console-label">{label}</span>
+            <span style={{ fontSize: 11, color: "var(--mu)", fontFamily: "var(--mono)" }}>{label}</span>
           )}
         </div>
-        <button className="dl-btn dl-btn-sm" onClick={onCopy}>
-          {copied ? "Copied \u2713" : "Copy"}
+        <button
+          className="btn g sm"
+          style={{ height: 26, padding: "0 8px", fontSize: 11 }}
+          onClick={onCopy}
+        >
+          {copied ? "Copied ✓" : "Copy"}
         </button>
       </div>
-      <pre className="dl-code">{body}</pre>
+      <pre style={{
+        margin: 0,
+        padding: 14,
+        fontFamily: "var(--mono)",
+        fontSize: 11.5,
+        lineHeight: 1.6,
+        color: "var(--ink)",
+        overflow: "auto",
+        maxHeight: 460,
+        whiteSpace: "pre",
+      }}>{body}</pre>
     </div>
   );
 }
@@ -197,11 +240,50 @@ export default function DocsPage() {
   const [copied, setCopied] = useState<string>("");
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [copiedUrl, setCopiedUrl] = useState<boolean>(false);
 
   useEffect(() => {
-    document.body.classList.add("subpage-body");
-    return () => document.body.classList.remove("subpage-body");
+    try {
+      const stored = localStorage.getItem("dl-theme") as "dark" | "light" | null;
+      if (stored === "light" || stored === "dark") {
+        setTheme(stored);
+        document.documentElement.dataset.theme = stored;
+      }
+    } catch {
+      /* ignore */
+    }
   }, []);
+
+  const toggleTheme = () => {
+    const next = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    try {
+      localStorage.setItem("dl-theme", next);
+      document.documentElement.dataset.theme = next;
+    } catch {
+      /* ignore */
+    }
+  };
+
+  const handleCopyUrl = async () => {
+    try {
+      await navigator.clipboard.writeText(MCP_URL);
+      setCopiedUrl(true);
+      setTimeout(() => setCopiedUrl(false), 1600);
+    } catch {
+      /* ignore */
+    }
+  };
+
+  const copy = (key: string, text: string) => {
+    try {
+      navigator.clipboard.writeText(text);
+    } catch {
+      /* ignore */
+    }
+    setCopied(key);
+    setTimeout(() => setCopied(""), 1800);
+  };
 
   const q = search.trim().toLowerCase();
   const match = (s: string) => !q || s.toLowerCase().includes(q);
@@ -217,29 +299,12 @@ export default function DocsPage() {
   const activeResource = RESOURCES.find((r) => r.name === selectedId);
   const activePrompt = PROMPTS.find((p) => p.name === selectedId);
 
-  const copy = (key: string, text: string) => {
-    try {
-      navigator.clipboard.writeText(text);
-    } catch {
-      /* ignore */
-    }
-    setCopied(key);
-    setTimeout(() => setCopied(""), 1800);
-  };
-
   const go = (id: string) => {
     setSelectedId(id);
     setMenuOpen(false);
-    if (typeof window !== "undefined") window.scrollTo({ top: 0 });
+    const mainEl = document.querySelector(".doc-main-cluster");
+    if (mainEl) mainEl.scrollTop = 0;
   };
-
-  const NavBtn = ({ id, children, legacy }: { id: string; children: React.ReactNode; legacy?: boolean }) => (
-    <button className={`dl-nav-item ${selectedId === id ? "on" : ""}`} onClick={() => go(id)}>
-      <span className="dl-nav-dot" />
-      <span className="dl-nav-text">{children}</span>
-      {legacy && <span className="dl-legacy">legacy</span>}
-    </button>
-  );
 
   const crumb =
     selectedId === "overview"
@@ -252,722 +317,630 @@ export default function DocsPage() {
 
   return (
     <>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap');
+      {/* ---------------- SIDEBAR (.rail - EXACT SIZE OF MAIN UI: 268px) ---------------- */}
+      <aside className="rail doc-rail">
+        <a href="/" className="logo" style={{ textDecoration: "none", color: "inherit" }}>
+          <i>D/</i>
+          <div>
+            <b>DASHLINT</b>
+            <small>{tools.length} tools · remote MCP</small>
+          </div>
+        </a>
 
-        html, body {
-          display: block !important;
-          height: auto !important;
-          min-height: 100vh !important;
-          overflow-y: auto !important;
-          overflow-x: hidden !important;
-          padding: 0 !important;
-          margin: 0 !important;
-          grid-template-columns: none !important;
-        }
-
-        .dl-root {
-          --bg: #0b0b0c;
-          --panel: #111113;
-          --panel-2: #151518;
-          --line: #232529;
-          --line-2: #2e3138;
-          --text: #f3f4f6;
-          --muted: #8b8f98;
-          --dim: #5b5f68;
-          --accent: #8b93a7;
-          --chip: #171a21;
-          --chip-text: #9aa3b8;
-          --primary-bg: #f3f4f6;
-          --primary-text: #0b0b0c;
-          --code-bg: #0d0d0f;
-          --ok: #34d399;
-          --warn: #fbbf24;
-          --bad: #f87171;
-          font-family: Inter, system-ui, sans-serif;
-          background: var(--bg);
-          color: var(--text);
-          min-height: 100vh;
-          padding: 24px;
-          display: grid;
-          grid-template-columns: 340px minmax(0, 1fr);
-          gap: 24px;
-          box-sizing: border-box;
-        }
-        .dl-root[data-theme="light"] {
-          --bg: #f1f1ee;
-          --panel: #fbfbf9;
-          --panel-2: #f4f4f1;
-          --line: #dcdcd6;
-          --line-2: #c9c9c2;
-          --text: #121214;
-          --muted: #62666f;
-          --dim: #8d9099;
-          --accent: #5c6479;
-          --chip: #ecece7;
-          --chip-text: #4b5266;
-          --primary-bg: #121214;
-          --primary-text: #fbfbf9;
-          --code-bg: #f4f4f1;
-          --ok: #0f9d6b;
-          --warn: #b7791f;
-          --bad: #d1433f;
-        }
-        .dl-root *, .dl-root *::before, .dl-root *::after { box-sizing: border-box; }
-        .dl-mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
-
-        /* ---------- panels ---------- */
-        .dl-panel {
-          background: var(--panel);
-          border: 1px solid var(--line);
-          border-radius: 16px;
-        }
-
-        /* ---------- sidebar ---------- */
-        .dl-side {
-          position: sticky;
-          top: 24px;
-          height: calc(100vh - 48px);
-          display: flex;
-          flex-direction: column;
-          padding: 24px 20px 20px;
-          overflow: hidden;
-        }
-        .dl-brand {
-          display: flex; align-items: center; gap: 16px;
-          text-decoration: none; color: inherit; margin-bottom: 22px;
-        }
-        .dl-logo {
-          width: 52px; height: 52px; border-radius: 12px;
-          border: 1px solid var(--line-2); background: var(--panel-2);
-          display: grid; place-items: center;
-          font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-size: 18px;
-        }
-        .dl-brand-name {
-          font-family: 'Barlow Condensed', Inter, sans-serif;
-          font-weight: 800; font-size: 26px; letter-spacing: 0.14em; line-height: 1;
-        }
-        .dl-brand-sub {
-          font-family: 'IBM Plex Mono', monospace; font-size: 12px;
-          color: var(--dim); margin-top: 6px; letter-spacing: 0.04em;
-        }
-        .dl-label {
-          font-family: 'IBM Plex Mono', monospace; font-size: 11px;
-          letter-spacing: 0.2em; text-transform: uppercase; color: var(--dim);
-          margin: 0 0 10px;
-        }
-        .dl-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 18px; }
-        .dl-stat {
-          border: 1px solid var(--line); background: var(--panel-2);
-          border-radius: 10px; padding: 10px 12px;
-        }
-        .dl-stat b { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 20px; font-weight: 600; }
-        .dl-stat span {
-          font-family: 'IBM Plex Mono', monospace; font-size: 9.5px;
-          letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim);
-        }
-        .dl-search {
-          width: 100%; background: var(--panel-2); border: 1px solid var(--line);
-          border-radius: 10px; padding: 10px 12px; color: var(--text);
-          font-size: 13px; outline: none; font-family: 'IBM Plex Mono', monospace;
-          margin-bottom: 14px;
-        }
-        .dl-search::placeholder { color: var(--dim); }
-        .dl-search:focus { border-color: var(--accent); }
-
-        .dl-nav { flex: 1; overflow-y: auto; padding-right: 4px; margin-right: -4px; }
-        .dl-nav::-webkit-scrollbar { width: 5px; }
-        .dl-nav::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 4px; }
-        .dl-group { margin-bottom: 18px; }
-        .dl-nav-item {
-          display: flex; align-items: center; gap: 12px; width: 100%;
-          text-align: left; background: none; border: 1px solid transparent;
-          color: var(--muted); padding: 7px 10px; border-radius: 8px;
-          font-size: 13.5px; cursor: pointer; font-family: inherit;
-          transition: background .15s, color .15s;
-        }
-        .dl-nav-item:hover { color: var(--text); background: var(--panel-2); }
-        .dl-nav-item.on { color: var(--text); background: var(--panel-2); border-color: var(--line-2); }
-        .dl-nav-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--line-2); flex-shrink: 0; }
-        .dl-nav-item.on .dl-nav-dot { background: var(--text); }
-        .dl-nav-text {
-          flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-        }
-        .dl-nav-item.code .dl-nav-text, .dl-nav-text.m { font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; }
-        .dl-legacy {
-          font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .08em;
-          text-transform: uppercase; padding: 1px 5px; border-radius: 4px;
-          color: var(--bad); border: 1px solid var(--line-2);
-        }
-
-        .dl-side-foot { padding-top: 14px; border-top: 1px solid var(--line); display: grid; gap: 10px; }
-        .dl-primary {
-          width: 100%; border: none; cursor: pointer;
-          background: var(--primary-bg); color: var(--primary-text);
-          border-radius: 10px; padding: 13px; font-size: 15px; font-weight: 600; font-family: inherit;
-        }
-        .dl-primary:hover { opacity: .9; }
-        .dl-npm {
-          display: flex; align-items: center; gap: 12px;
-          border: 1px solid var(--line); background: var(--panel-2); border-radius: 10px; padding: 10px 14px;
-        }
-        .dl-npm-logo { font-family: 'IBM Plex Mono', monospace; font-weight: 700; color: #e0352b; font-size: 18px; letter-spacing: -.04em; }
-        .dl-npm b { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 600; }
-        .dl-npm span { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--dim); }
-
-        /* ---------- right column ---------- */
-        .dl-col { display: flex; flex-direction: column; gap: 24px; min-width: 0; }
-        .dl-top {
-          display: flex; align-items: center; justify-content: space-between;
-          gap: 16px; padding: 14px 18px 14px 28px; flex-wrap: wrap;
-        }
-        .dl-crumb { font-family: 'IBM Plex Mono', monospace; font-size: 16px; color: var(--muted); letter-spacing: .03em; display: flex; gap: 10px; align-items: center; min-width: 0; }
-        .dl-crumb b { color: var(--text); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 46vw; }
-        .dl-top-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-        .dl-btn {
-          display: inline-flex; align-items: center; gap: 8px;
-          border: 1px solid var(--line-2); background: var(--panel-2); color: var(--text);
-          border-radius: 8px; padding: 12px 20px; font-size: 15px; font-weight: 600;
-          cursor: pointer; text-decoration: none; font-family: inherit; transition: background .15s;
-        }
-        .dl-btn:hover { background: var(--line); }
-        .dl-btn.solid { background: var(--primary-bg); color: var(--primary-text); border-color: var(--primary-bg); }
-        .dl-btn.solid:hover { opacity: .9; background: var(--primary-bg); }
-        .dl-btn.icon { padding: 0; width: 44px; height: 44px; justify-content: center; font-size: 16px; }
-        .dl-btn-sm { padding: 5px 10px; font-size: 11.5px; font-weight: 500; border-radius: 6px; color: var(--muted); }
-        .dl-burger { display: none; }
-
-        .dl-content { padding: 48px 56px 56px; min-height: 60vh; }
-        .dl-chip {
-          display: inline-block; font-family: 'IBM Plex Mono', monospace; font-size: 12px;
-          letter-spacing: .18em; text-transform: uppercase; color: var(--chip-text);
-          background: var(--chip); border: 1px solid var(--line); border-radius: 4px; padding: 7px 12px;
-        }
-        .dl-chip-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
-        .dl-chip.ok { color: var(--ok); }
-        .dl-chip.warn { color: var(--warn); }
-        .dl-chip.bad { color: var(--bad); }
-        .dl-h1 {
-          font-family: 'Barlow Condensed', Inter, sans-serif; font-weight: 800;
-          text-transform: uppercase; line-height: .95; letter-spacing: -.005em;
-          font-size: clamp(44px, 6.4vw, 96px); margin: 0 0 24px; word-break: break-word;
-        }
-        .dl-h1 .soft { color: var(--accent); display: block; }
-        .dl-h1.tool { font-size: clamp(34px, 4.4vw, 64px); }
-        .dl-lead { font-size: 18px; line-height: 1.65; color: var(--muted); max-width: 760px; margin: 0 0 32px; }
-        .dl-lead b { color: var(--text); font-weight: 600; }
-
-        .dl-steps { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 36px; }
-        .dl-step {
-          font-family: 'IBM Plex Mono', monospace; font-size: 14px; letter-spacing: .04em;
-          border: 1px solid var(--line); background: var(--panel-2); border-radius: 8px; padding: 12px 16px;
-        }
-        .dl-step em { font-style: normal; color: var(--dim); margin: 0 6px; }
-
-        .dl-split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: start; }
-        .dl-stack { display: grid; gap: 16px; }
-        .dl-card { border: 1px solid var(--line); background: var(--panel-2); border-radius: 12px; padding: 20px; }
-        .dl-card-title {
-          font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .2em;
-          text-transform: uppercase; color: var(--dim); margin: 0 0 14px;
-        }
-        .dl-card h3 { margin: 0 0 6px; font-size: 16px; font-weight: 600; }
-        .dl-card p { margin: 0; font-size: 14px; line-height: 1.6; color: var(--muted); }
-        .dl-card code, .dl-lead code {
-          font-family: 'IBM Plex Mono', monospace; font-size: 12px;
-          background: var(--chip); border: 1px solid var(--line); border-radius: 4px; padding: 1px 6px; color: var(--text);
-        }
-        .dl-grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-bottom: 24px; }
-        .dl-inline-pre {
-          margin: 12px 0 0; background: var(--code-bg); border: 1px solid var(--line);
-          border-radius: 8px; padding: 12px 14px; font-family: 'IBM Plex Mono', monospace;
-          font-size: 12.5px; color: var(--text); overflow-x: auto;
-        }
-        .dl-list { margin: 0; padding-left: 18px; color: var(--muted); font-size: 14px; line-height: 1.9; }
-
-        .dl-param { padding: 14px 0; border-bottom: 1px solid var(--line); }
-        .dl-param:first-of-type { padding-top: 0; }
-        .dl-param:last-child { border-bottom: none; padding-bottom: 0; }
-        .dl-param-name { font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-size: 13.5px; }
-        .dl-param-type { font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: var(--dim); margin-left: 8px; }
-        .dl-req {
-          font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase;
-          color: var(--bad); border: 1px solid var(--line-2); border-radius: 4px; padding: 1px 5px; margin-left: 8px;
-        }
-        .dl-param-desc { margin-top: 6px; font-size: 13.5px; line-height: 1.55; color: var(--muted); }
-        .dl-enums { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
-        .dl-ann { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--dim); }
-        .dl-ann b { color: var(--ok); font-weight: 600; }
-        .dl-empty { color: var(--dim); font-size: 13.5px; font-style: italic; }
-
-        /* console */
-        .dl-console { border: 1px solid var(--line); background: var(--code-bg); border-radius: 12px; overflow: hidden; position: sticky; top: 24px; }
-        .dl-console-head {
-          display: flex; align-items: center; justify-content: space-between; gap: 10px;
-          padding: 10px 12px; border-bottom: 1px solid var(--line); background: var(--panel-2); flex-wrap: wrap;
-        }
-        .dl-console-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
-        .dl-console-label { font-size: 12px; color: var(--muted); }
-        .dl-dots { display: flex; gap: 5px; }
-        .dl-dots i { width: 9px; height: 9px; border-radius: 50%; display: block; opacity: .85; }
-        .dl-dots i:nth-child(1) { background: #ef4444; }
-        .dl-dots i:nth-child(2) { background: #eab308; }
-        .dl-dots i:nth-child(3) { background: #22c55e; }
-        .dl-tabs { display: flex; gap: 2px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 3px; flex-wrap: wrap; }
-        .dl-tab {
-          background: none; border: none; color: var(--muted); font-size: 11.5px; font-weight: 500;
-          padding: 5px 10px; border-radius: 5px; cursor: pointer; font-family: inherit;
-        }
-        .dl-tab:hover { color: var(--text); }
-        .dl-tab.on { background: var(--line); color: var(--text); font-weight: 600; }
-        .dl-code {
-          margin: 0; padding: 16px; font-family: 'IBM Plex Mono', monospace; font-size: 12.5px;
-          line-height: 1.65; color: var(--text); overflow: auto; max-height: 520px; white-space: pre;
-        }
-
-        .dl-foot {
-          display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap;
-          font-family: 'IBM Plex Mono', monospace; font-size: 13px; letter-spacing: .06em; color: var(--dim);
-          padding: 0 8px 8px;
-        }
-        .dl-foot a { color: var(--dim); text-decoration: none; }
-        .dl-foot a:hover { color: var(--text); }
-
-        /* ---------- responsive ---------- */
-        @media (max-width: 1280px) {
-          .dl-root { grid-template-columns: 300px minmax(0, 1fr); }
-          .dl-content { padding: 36px 32px 44px; }
-        }
-        @media (max-width: 1080px) {
-          .dl-split { grid-template-columns: 1fr; }
-          .dl-console { position: static; }
-        }
-        @media (max-width: 900px) {
-          .dl-root { grid-template-columns: 1fr; padding: 14px; gap: 14px; }
-          .dl-side {
-            position: fixed; inset: 14px; z-index: 60; height: auto;
-            display: none; box-shadow: 0 20px 60px rgba(0,0,0,.6);
-          }
-          .dl-side.open { display: flex; }
-          .dl-burger { display: inline-flex; }
-          .dl-top { padding: 12px 14px; }
-          .dl-crumb { font-size: 14px; }
-          .dl-content { padding: 28px 18px 36px; }
-          .dl-lead { font-size: 16px; }
-          .dl-hide-m { display: none; }
-        }
-      `}</style>
-
-      <div className="dl-root" data-theme={theme} id="docs-root">
-        {/* ---------------- SIDEBAR ---------------- */}
-        <aside className={`dl-panel dl-side ${menuOpen ? "open" : ""}`}>
-          <a href="/" className="dl-brand">
-            <span className="dl-logo">D/</span>
-            <span>
-              <div className="dl-brand-name">DASHLINT</div>
-              <div className="dl-brand-sub">{tools.length} tools · remote MCP</div>
-            </span>
-          </a>
-
-          <div className="dl-label">At a glance</div>
-          <div className="dl-stats">
-            <div className="dl-stat">
+        <div>
+          <p className="lb">AT A GLANCE</p>
+          <div className="sc" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
+            <div>
               <b>{tools.length}</b>
-              <span>Tools</span>
+              <span>TOOLS</span>
             </div>
-            <div className="dl-stat">
+            <div>
               <b>{RESOURCES.length}</b>
-              <span>Resources</span>
+              <span>RES</span>
             </div>
-            <div className="dl-stat">
+            <div>
               <b>{PROMPTS.length}</b>
-              <span>Prompts</span>
+              <span>PROMPTS</span>
             </div>
           </div>
+        </div>
 
+        <div>
           <input
-            className="dl-search"
+            className="doc-search-box"
             type="text"
             placeholder="Search tools, prompts… (blueprint)"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
+        </div>
 
-          <nav className="dl-nav">
-            <div className="dl-group">
-              <div className="dl-label">Getting started</div>
-              <NavBtn id="overview">Overview &amp; Architecture</NavBtn>
-              <NavBtn id="quickstart">Quickstart &amp; AI Clients</NavBtn>
-              <NavBtn id="sdk">TypeScript SDK</NavBtn>
-            </div>
-
-            {filteredCore.length > 0 && (
-              <div className="dl-group">
-                <div className="dl-label">Core workflow tools ({filteredCore.length})</div>
-                {filteredCore.map((t) => (
-                  <button key={t.name} className={`dl-nav-item code ${selectedId === t.name ? "on" : ""}`} onClick={() => go(t.name)}>
-                    <span className="dl-nav-dot" />
-                    <span className="dl-nav-text">{t.name}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {filteredRes.length > 0 && (
-              <div className="dl-group">
-                <div className="dl-label">MCP resources ({filteredRes.length})</div>
-                {filteredRes.map((r) => (
-                  <button key={r.name} className={`dl-nav-item code ${selectedId === r.name ? "on" : ""}`} onClick={() => go(r.name)}>
-                    <span className="dl-nav-dot" />
-                    <span className="dl-nav-text">{r.name}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {filteredPrompts.length > 0 && (
-              <div className="dl-group">
-                <div className="dl-label">MCP prompts ({filteredPrompts.length})</div>
-                {filteredPrompts.map((p) => (
-                  <button key={p.name} className={`dl-nav-item code ${selectedId === p.name ? "on" : ""}`} onClick={() => go(p.name)}>
-                    <span className="dl-nav-dot" />
-                    <span className="dl-nav-text">{p.name}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {filteredLegacy.length > 0 && (
-              <div className="dl-group">
-                <div className="dl-label">Playbooks &amp; utilities ({filteredLegacy.length})</div>
-                {filteredLegacy.map((t) => (
-                  <button key={t.name} className={`dl-nav-item code ${selectedId === t.name ? "on" : ""}`} onClick={() => go(t.name)}>
-                    <span className="dl-nav-dot" />
-                    <span className="dl-nav-text">{t.name}</span>
-                    <span className="dl-legacy">legacy</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </nav>
-
-          <div className="dl-side-foot">
-            <button className="dl-primary" onClick={() => copy("url", MCP_URL)}>
-              {copied === "url" ? "Copied \u2713" : "Copy MCP URL"}
+        {/* Scrollable Navigation Tree within the Rail */}
+        <nav className="doc-nav-tree">
+          <div>
+            <p className="lb">GETTING STARTED</p>
+            <button className={`doc-nav-btn ${selectedId === "overview" ? "active" : ""}`} onClick={() => go("overview")}>
+              <span className="dot" />
+              <span>Overview &amp; Architecture</span>
             </button>
-            <a className="dl-npm" href="https://www.npmjs.com/package/dashlint-kit" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", color: "inherit" }}>
-              <span className="dl-npm-logo">npm</span>
-              <span>
-                <b>Standalone kit</b>
-                <span>npx dashlint-kit init</span>
+            <button className={`doc-nav-btn ${selectedId === "quickstart" ? "active" : ""}`} onClick={() => go("quickstart")}>
+              <span className="dot" />
+              <span>Quickstart &amp; AI Clients</span>
+            </button>
+            <button className={`doc-nav-btn ${selectedId === "sdk" ? "active" : ""}`} onClick={() => go("sdk")}>
+              <span className="dot" />
+              <span>TypeScript SDK</span>
+            </button>
+          </div>
+
+          {filteredCore.length > 0 && (
+            <div>
+              <p className="lb">CORE WORKFLOW TOOLS ({filteredCore.length})</p>
+              {filteredCore.map((t) => (
+                <button key={t.name} className={`doc-nav-btn code ${selectedId === t.name ? "active" : ""}`} onClick={() => go(t.name)}>
+                  <span className="dot" />
+                  <span className="mono">{t.name}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {filteredRes.length > 0 && (
+            <div>
+              <p className="lb">MCP RESOURCES ({filteredRes.length})</p>
+              {filteredRes.map((r) => (
+                <button key={r.name} className={`doc-nav-btn code ${selectedId === r.name ? "active" : ""}`} onClick={() => go(r.name)}>
+                  <span className="dot" />
+                  <span className="mono">{r.name}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {filteredPrompts.length > 0 && (
+            <div>
+              <p className="lb">MCP PROMPTS ({filteredPrompts.length})</p>
+              {filteredPrompts.map((p) => (
+                <button key={p.name} className={`doc-nav-btn code ${selectedId === p.name ? "active" : ""}`} onClick={() => go(p.name)}>
+                  <span className="dot" />
+                  <span className="mono">{p.name}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {filteredLegacy.length > 0 && (
+            <div>
+              <p className="lb">PLAYBOOKS &amp; LEGACY ({filteredLegacy.length})</p>
+              {filteredLegacy.map((t) => (
+                <button key={t.name} className={`doc-nav-btn code ${selectedId === t.name ? "active" : ""}`} onClick={() => go(t.name)}>
+                  <span className="dot" />
+                  <span className="mono">{t.name}</span>
+                  <span className="dep-pill">legacy</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </nav>
+
+        {/* Bottom Actions (Exact match to landing page rail) */}
+        <div className="bt" style={{ marginTop: "auto" }}>
+          <div className="st">
+            <span>
+              <span className="dot"></span>
+              <b>reusable dashboard output · no API key</b>
+            </span>
+          </div>
+          <button className="btn cp" onClick={handleCopyUrl}>
+            {copiedUrl ? "Copied ✓" : "Copy MCP URL"}
+          </button>
+          <div className="npm-option">
+            <a
+              className="npm-option-link"
+              href="https://www.npmjs.com/package/dashlint-kit"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <img
+                className="npm-option-mark"
+                src="https://raw.githubusercontent.com/npm/logos/master/npm%20logo/npm-logo-red.svg"
+                alt="npm"
+                width="34"
+                height="18"
+              />
+              <span className="npm-option-copy">
+                <span className="npm-option-title">Standalone kit</span>
+                <code className="npm-option-command">npx dashlint-kit init</code>
               </span>
+              <svg className="npm-option-arrow" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M4 12 12 4M5 4h7v7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
             </a>
           </div>
-        </aside>
+        </div>
+      </aside>
 
-        {/* ---------------- RIGHT COLUMN ---------------- */}
-        <div className="dl-col">
-          <header className="dl-panel dl-top">
-            <div className="dl-crumb">
-              <span>dashlint</span>
-              <span>/</span>
-              <span>docs</span>
-              <span>/</span>
-              <b>{crumb}</b>
+      {/* ---------------- RIGHT VIEWPORT (.vp - EXACT SIZE AND GAP OF MAIN UI) ---------------- */}
+      <div className="vp">
+        {/* Top Header (.hs.mh - EXACT MATCH TO LANDING PAGE) */}
+        <header className="hs mh">
+          <div className="m-brand">
+            <i>D/</i>
+            <div>
+              <b>DASHLINT</b>
+              <small>{tools.length} tools · remote MCP</small>
             </div>
-            <div className="dl-top-actions">
-              <button className="dl-btn dl-burger" onClick={() => setMenuOpen((v) => !v)} aria-label="Menu">
-                {menuOpen ? "\u2715" : "\u2630"}
-              </button>
-              <button
-                className="dl-btn icon"
-                onClick={() => setTheme((t) => (t === "dark" ? "light" : "dark"))}
-                aria-label="Toggle theme"
-                title="Toggle theme"
-              >
-                {theme === "dark" ? "\u2600" : "\u263E"}
-              </button>
-              <a href="/" className="dl-btn solid dl-hide-m">How to use</a>
-              <a href="/docs" className="dl-btn dl-hide-m">Docs</a>
-              <a href="https://linkedin.com/in/tanmay-kalbande" target="_blank" rel="noopener noreferrer" className="dl-btn">
-                {"LinkedIn \u2197"}
-              </a>
+          </div>
+          <span className="cr">
+            dashlint / docs / <b>{crumb}</b>
+          </span>
+          <div className="hb">
+            <button
+              className="btn g sm tg"
+              id="tg"
+              aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
+              title={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
+              onClick={toggleTheme}
+            >
+              {theme === "dark" ? (
+                <svg
+                  viewBox="0 0 24 24"
+                  width="16"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <circle cx="12" cy="12" r="4" />
+                  <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+                </svg>
+              ) : (
+                <svg
+                  viewBox="0 0 24 24"
+                  width="16"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" />
+                </svg>
+              )}
+            </button>
+            <a href="/" className="btn sm d-only">
+              How to use
+            </a>
+            <span
+              className="btn-doc-tab d-only"
+              style={{
+                background: "rgba(255, 255, 255, 0.12)",
+                borderColor: "var(--ink)",
+                color: "#fff",
+              }}
+            >
+              <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M2.5 3h7a2 2 0 0 1 2 2v8a1.5 1.5 0 0 0-1.5-1.5H2.5V3z" />
+                <path d="M2.5 11.5h7.5" />
+              </svg>
+              <span>Docs</span>
+            </span>
+            <a
+              className="btn g sm d-only"
+              href="https://linkedin.com/in/tanmay-kalbande"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {"LinkedIn ↗"}
+            </a>
+            <button
+              className="menu-btn"
+              id="menu-btn"
+              aria-label="Open menu"
+              onClick={() => setMenuOpen(true)}
+            >
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="3" y1="12" x2="21" y2="12" />
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <line x1="3" y1="18" x2="21" y2="18" />
+              </svg>
+            </button>
+          </div>
+        </header>
+
+        {/* ---------------- MAIN CLUSTER PANEL (.pn) ---------------- */}
+        {/* The scrolling effect is 100% inside this main cluster container! */}
+        <div className="pn doc-main-cluster">
+          {/* ---------- OVERVIEW ---------- */}
+          {selectedId === "overview" && (
+            <div>
+              <div style={{ marginBottom: 16 }}>
+                <span className="mono" style={{ fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--mu)", background: "var(--s2)", padding: "4px 8px", borderRadius: 4, border: "1px solid var(--ln)" }}>
+                  MCP SERVER · V2.0.0 · API DOCS
+                </span>
+              </div>
+              <h1 style={{ font: "700 clamp(36px, 4.4vw, 64px)/.95 'Oswald', sans-serif", textTransform: "uppercase", margin: "0 0 16px" }}>
+                DOCS FOR THE <span style={{ color: "var(--mu)" }}>DASHLINT MCP.</span>
+              </h1>
+              <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--mu)", maxWidth: 760, margin: "0 0 24px" }}>
+                <b style={{ color: "var(--ink)", fontWeight: 600 }}>DashLint</b> gives your AI assistant the workflow, app shell, analysis playbook and review checklist to build a complete, <b style={{ color: "var(--ink)", fontWeight: 600 }}>reusable interactive dashboard</b> from your data. Keep the code, run it anywhere, update it anytime—your rows stay on your machine.
+              </p>
+
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 28 }}>
+                <span className="mono" style={{ fontSize: 13, background: "var(--s2)", border: "1px solid var(--ln)", borderRadius: 6, padding: "8px 14px", color: "var(--ink)" }}>
+                  1 · Share data + question
+                </span>
+                <span className="mono" style={{ fontSize: 13, background: "var(--s2)", border: "1px solid var(--ln)", borderRadius: 6, padding: "8px 14px", color: "var(--ink)" }}>
+                  2 · AI calls DashLint
+                </span>
+                <span className="mono" style={{ fontSize: 13, background: "var(--s2)", border: "1px solid var(--ln)", borderRadius: 6, padding: "8px 14px", color: "var(--ink)" }}>
+                  3 · Reusable dashboard
+                </span>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 14, marginBottom: 24 }}>
+                <div style={{ border: "1px solid var(--ln)", background: "var(--s2)", borderRadius: 8, padding: 16 }}>
+                  <h3 style={{ margin: "0 0 6px", fontSize: 15, fontWeight: 600 }}>Zero data sent</h3>
+                  <p style={{ margin: 0, fontSize: 13, lineHeight: 1.6, color: "var(--mu)" }}>
+                    Raw rows, PII and files never leave your machine. The assistant profiles columns locally and passes only aggregate metadata to get design blueprints.
+                  </p>
+                </div>
+                <div style={{ border: "1px solid var(--ln)", background: "var(--s2)", borderRadius: 8, padding: 16 }}>
+                  <h3 style={{ margin: "0 0 6px", fontSize: 15, fontWeight: 600 }}>{tools.length} schema-aware tools</h3>
+                  <p style={{ margin: 0, fontSize: 13, lineHeight: 1.6, color: "var(--mu)" }}>
+                    Annotated with <code style={{ fontFamily: "var(--mono)", fontSize: 11 }}>readOnlyHint</code> and <code style={{ fontFamily: "var(--mono)", fontSize: 11 }}>idempotentHint</code> so assistants can cache calls and run safe autonomous loops.
+                  </p>
+                </div>
+                <div style={{ border: "1px solid var(--ln)", background: "var(--s2)", borderRadius: 8, padding: 16 }}>
+                  <h3 style={{ margin: "0 0 6px", fontSize: 15, fontWeight: 600 }}>Standalone HTML output</h3>
+                  <p style={{ margin: 0, fontSize: 13, lineHeight: 1.6, color: "var(--mu)" }}>
+                    Dashboards run in any modern browser with no node, python or server. CSV and Excel are parsed client-side, fully offline.
+                  </p>
+                </div>
+                <div style={{ border: "1px solid var(--ln)", background: "var(--s2)", borderRadius: 8, padding: 16 }}>
+                  <h3 style={{ margin: "0 0 6px", fontSize: 15, fontWeight: 600 }}>Production hardened</h3>
+                  <p style={{ margin: 0, fontSize: 13, lineHeight: 1.6, color: "var(--mu)" }}>
+                    Token-bucket rate limiting (120 req/min), HMAC-verified webhooks, Redis circuit-breaker failover and sanitized payload handlers.
+                  </p>
+                </div>
+              </div>
+
+              <div style={{ border: "1px solid var(--ln)", background: "var(--s2)", borderRadius: 8, padding: 16 }}>
+                <p className="lb" style={{ margin: "0 0 8px" }}>ENDPOINT CONFIGURATION</p>
+                <pre style={{ margin: 0, background: "var(--sf)", border: "1px solid var(--ln)", borderRadius: 6, padding: 12, fontFamily: "var(--mono)", fontSize: 12, color: "var(--ink)", overflowX: "auto" }}>
+{`MCP Transport: Streamable HTTP POST / Server-Sent Events (SSE)
+MCP URL:       ${MCP_URL}
+Protocol Spec: 2025-03-26 (Annotations, Prompts, Resources support)`}
+                </pre>
+              </div>
             </div>
-          </header>
+          )}
 
-          <main className="dl-panel dl-content">
-            {/* ---------- OVERVIEW ---------- */}
-            {selectedId === "overview" && (
-              <div>
-                <div className="dl-chip-row">
-                  <span className="dl-chip">MCP server · v2.0.0 · API docs</span>
-                </div>
-                <h1 className="dl-h1">
-                  Docs for the
-                  <span className="soft">DashLint MCP.</span>
-                </h1>
-                <p className="dl-lead">
-                  <b>DashLint</b> is an orchestration Model Context Protocol server that lets Claude, Cursor, ChatGPT, Windsurf and custom agents build <b>reusable, interactive single-file HTML dashboards</b> from your local data. Your rows stay on your machine.
-                </p>
+          {/* ---------- QUICKSTART ---------- */}
+          {selectedId === "quickstart" && (
+            <div>
+              <div style={{ marginBottom: 16 }}>
+                <span className="mono" style={{ fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--mu)", background: "var(--s2)", padding: "4px 8px", borderRadius: 4, border: "1px solid var(--ln)" }}>
+                  GETTING STARTED · NO API KEY
+                </span>
+              </div>
+              <h1 style={{ font: "700 clamp(36px, 4.4vw, 64px)/.95 'Oswald', sans-serif", textTransform: "uppercase", margin: "0 0 16px" }}>
+                CONNECT YOUR <span style={{ color: "var(--mu)" }}>AI ASSISTANT.</span>
+              </h1>
+              <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--mu)", maxWidth: 760, margin: "0 0 24px" }}>
+                Connect DashLint to any MCP-compliant client in under 30 seconds. No API keys, no account.
+              </p>
 
-                <div className="dl-steps">
-                  <span className="dl-step">1<em>·</em>Share data + question</span>
-                  <span className="dl-step">2<em>·</em>AI calls DashLint</span>
-                  <span className="dl-step">3<em>·</em>Reusable dashboard</span>
-                </div>
-
-                <div className="dl-grid2">
-                  <div className="dl-card">
-                    <h3>Zero data sent</h3>
-                    <p>Raw rows, PII and files never leave your machine. The assistant profiles columns locally and passes only aggregate metadata to get design blueprints.</p>
-                  </div>
-                  <div className="dl-card">
-                    <h3>{tools.length} schema-aware tools</h3>
-                    <p>
-                      Annotated with <code>readOnlyHint</code> and <code>idempotentHint</code> so assistants can cache calls and run safe autonomous loops.
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 20, alignItems: "start" }}>
+                <div style={{ display: "grid", gap: 14 }}>
+                  <div style={{ border: "1px solid var(--ln)", background: "var(--s2)", borderRadius: 8, padding: 16 }}>
+                    <h3 style={{ margin: "0 0 6px", fontSize: 15, fontWeight: 600 }}>Claude Desktop / Claude Code</h3>
+                    <p style={{ margin: 0, fontSize: 13, lineHeight: 1.6, color: "var(--mu)" }}>
+                      Go to <b>Settings → Connectors → Add custom connector</b> and paste the MCP URL.
                     </p>
                   </div>
-                  <div className="dl-card">
-                    <h3>Standalone HTML output</h3>
-                    <p>Dashboards run in any modern browser with no node, python or server. CSV and Excel are parsed client-side, fully offline.</p>
+                  <div style={{ border: "1px solid var(--ln)", background: "var(--s2)", borderRadius: 8, padding: 16 }}>
+                    <h3 style={{ margin: "0 0 6px", fontSize: 15, fontWeight: 600 }}>Cursor IDE</h3>
+                    <p style={{ margin: 0, fontSize: 13, lineHeight: 1.6, color: "var(--mu)" }}>
+                      Open Cursor Settings → Features → MCP Servers → Add new MCP server. Set the type to <code style={{ fontFamily: "var(--mono)", fontSize: 11 }}>command</code> or <code style={{ fontFamily: "var(--mono)", fontSize: 11 }}>sse</code> and use the URL.
+                    </p>
                   </div>
-                  <div className="dl-card">
-                    <h3>Production hardened</h3>
-                    <p>Token-bucket rate limiting (120 req/min), HMAC-verified webhooks, Redis circuit-breaker failover and sanitized payload handlers.</p>
+                  <div style={{ border: "1px solid var(--ln)", background: "var(--s2)", borderRadius: 8, padding: 16 }}>
+                    <h3 style={{ margin: "0 0 6px", fontSize: 15, fontWeight: 600 }}>Standalone CLI kit</h3>
+                    <p style={{ margin: "0 0 8px", fontSize: 13, lineHeight: 1.6, color: "var(--mu)" }}>
+                      Scaffold the runtime and shell template on your machine without an MCP client:
+                    </p>
+                    <pre style={{ margin: 0, background: "var(--sf)", border: "1px solid var(--ln)", borderRadius: 6, padding: 10, fontFamily: "var(--mono)", fontSize: 12, color: "var(--ink)" }}>
+                      npx dashlint-kit init
+                    </pre>
                   </div>
                 </div>
-
-                <div className="dl-card">
-                  <div className="dl-card-title">Endpoint configuration</div>
-                  <pre className="dl-inline-pre" style={{ margin: 0 }}>{`MCP Transport: Streamable HTTP POST / Server-Sent Events (SSE)
-MCP URL:       ${MCP_URL}
-Protocol Spec: 2025-03-26 (Annotations, Prompts, Resources support)`}</pre>
-                </div>
+                <Console
+                  label="claude_desktop_config.json"
+                  body={CONFIG_JSON}
+                  copied={copied === "cfg"}
+                  onCopy={() => copy("cfg", CONFIG_JSON)}
+                />
               </div>
-            )}
+            </div>
+          )}
 
-            {/* ---------- QUICKSTART ---------- */}
-            {selectedId === "quickstart" && (
-              <div>
-                <div className="dl-chip-row">
-                  <span className="dl-chip">Getting started · no API key</span>
-                </div>
-                <h1 className="dl-h1">
-                  Connect your
-                  <span className="soft">AI assistant.</span>
-                </h1>
-                <p className="dl-lead">Connect DashLint to any MCP-compliant client in under 30 seconds. No API keys, no account.</p>
-
-                <div className="dl-split">
-                  <div className="dl-stack">
-                    <div className="dl-card">
-                      <h3>Claude Desktop / Claude Code</h3>
-                      <p>
-                        Go to <b>Settings → Connectors → Add custom connector</b> and paste the MCP URL.
-                      </p>
-                    </div>
-                    <div className="dl-card">
-                      <h3>Cursor IDE</h3>
-                      <p>
-                        Open Cursor Settings → Features → MCP Servers → Add new MCP server. Set the type to <code>command</code> or <code>sse</code> and use the URL.
-                      </p>
-                    </div>
-                    <div className="dl-card">
-                      <h3>Standalone CLI kit</h3>
-                      <p>Scaffold the runtime and shell template on your machine without an MCP client:</p>
-                      <pre className="dl-inline-pre">npx dashlint-kit init</pre>
-                    </div>
-                  </div>
-                  <Console
-                    label="claude_desktop_config.json"
-                    body={CONFIG_JSON}
-                    copied={copied === "cfg"}
-                    onCopy={() => copy("cfg", CONFIG_JSON)}
-                  />
-                </div>
+          {/* ---------- SDK ---------- */}
+          {selectedId === "sdk" && (
+            <div>
+              <div style={{ marginBottom: 16 }}>
+                <span className="mono" style={{ fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--mu)", background: "var(--s2)", padding: "4px 8px", borderRadius: 4, border: "1px solid var(--ln)" }}>
+                  SDK · TYPESCRIPT
+                </span>
               </div>
-            )}
+              <h1 style={{ font: "700 clamp(32px, 4vw, 54px)/.95 'Oswald', sans-serif", textTransform: "uppercase", margin: "0 0 16px" }}>
+                dashlint-sdk
+              </h1>
+              <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--mu)", maxWidth: 760, margin: "0 0 24px" }}>
+                Lightweight, zero-dependency TypeScript client for using DashLint orchestration from agents, pipelines and server backends.
+              </p>
 
-            {/* ---------- SDK ---------- */}
-            {selectedId === "sdk" && (
-              <div>
-                <div className="dl-chip-row">
-                  <span className="dl-chip">SDK · TypeScript</span>
-                </div>
-                <h1 className="dl-h1 tool">dashlint-sdk</h1>
-                <p className="dl-lead">Lightweight, zero-dependency TypeScript client for using DashLint orchestration from agents, pipelines and server backends.</p>
-
-                <div className="dl-split">
-                  <div className="dl-stack">
-                    <div className="dl-card">
-                      <div className="dl-card-title">Installation</div>
-                      <pre className="dl-inline-pre" style={{ margin: 0 }}>npm install dashlint-sdk</pre>
-                    </div>
-                    <div className="dl-card">
-                      <div className="dl-card-title">Client features</div>
-                      <ul className="dl-list">
-                        <li>Type-safe tool calls over native JSON-RPC 2.0</li>
-                        <li>Automatic retry with exponential backoff &amp; circuit breakers</li>
-                        <li>Local data profiling helpers</li>
-                        <li>MCP Prompts and Resources support</li>
-                      </ul>
-                    </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 20, alignItems: "start" }}>
+                <div style={{ display: "grid", gap: 14 }}>
+                  <div style={{ border: "1px solid var(--ln)", background: "var(--s2)", borderRadius: 8, padding: 16 }}>
+                    <p className="lb" style={{ margin: "0 0 8px" }}>INSTALLATION</p>
+                    <pre style={{ margin: 0, background: "var(--sf)", border: "1px solid var(--ln)", borderRadius: 6, padding: 10, fontFamily: "var(--mono)", fontSize: 12, color: "var(--ink)" }}>
+                      npm install dashlint-sdk
+                    </pre>
                   </div>
-                  <Console label="example.ts" body={SDK_EXAMPLE} copied={copied === "sdk"} onCopy={() => copy("sdk", SDK_EXAMPLE)} />
-                </div>
-              </div>
-            )}
-
-            {/* ---------- RESOURCE ---------- */}
-            {activeResource && (
-              <div>
-                <div className="dl-chip-row">
-                  <span className="dl-chip">Resource</span>
-                  <span className="dl-chip ok">{activeResource.mimeType}</span>
-                </div>
-                <h1 className="dl-h1 tool">{activeResource.name}</h1>
-                <p className="dl-lead">{activeResource.description}</p>
-
-                <div className="dl-split">
-                  <div className="dl-stack">
-                    <div className="dl-card">
-                      <div className="dl-card-title">URI descriptor</div>
-                      <pre className="dl-inline-pre" style={{ margin: 0 }}>{activeResource.uri}</pre>
-                    </div>
-                    <div className="dl-card">
-                      <div className="dl-card-title">Usage in assistant context</div>
-                      <p>
-                        Assistants read this resource through the MCP <code>resources/read</code> endpoint to test dashboard generation against realistic multi-column operational data.
-                      </p>
-                    </div>
+                  <div style={{ border: "1px solid var(--ln)", background: "var(--s2)", borderRadius: 8, padding: 16 }}>
+                    <p className="lb" style={{ margin: "0 0 8px" }}>CLIENT FEATURES</p>
+                    <ul style={{ margin: 0, paddingLeft: 18, color: "var(--mu)", fontSize: 13, lineHeight: 1.8 }}>
+                      <li>Type-safe tool calls over native JSON-RPC 2.0</li>
+                      <li>Automatic retry with exponential backoff &amp; circuit breakers</li>
+                      <li>Local data profiling helpers</li>
+                      <li>MCP Prompts and Resources support</li>
+                    </ul>
                   </div>
-                  {(() => {
-                    const body = JSON.stringify(
-                      { jsonrpc: "2.0", id: 1, method: "resources/read", params: { uri: activeResource.uri } },
-                      null,
-                      2
-                    );
-                    return <Console label="JSON-RPC request" body={body} copied={copied === "res"} onCopy={() => copy("res", body)} />;
-                  })()}
                 </div>
+                <Console
+                  label="example.ts"
+                  body={SDK_EXAMPLE}
+                  copied={copied === "sdk"}
+                  onCopy={() => copy("sdk", SDK_EXAMPLE)}
+                />
               </div>
-            )}
+            </div>
+          )}
 
-            {/* ---------- PROMPT ---------- */}
-            {activePrompt && (
-              <div>
-                <div className="dl-chip-row">
-                  <span className="dl-chip">Prompt template</span>
+          {/* ---------- RESOURCE ---------- */}
+          {activeResource && (
+            <div>
+              <div style={{ marginBottom: 16, display: "flex", gap: 8, alignItems: "center" }}>
+                <span className="mono" style={{ fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--mu)", background: "var(--s2)", padding: "4px 8px", borderRadius: 4, border: "1px solid var(--ln)" }}>
+                  RESOURCE
+                </span>
+                <span className="mono" style={{ fontSize: 11, color: "var(--ok)", background: "var(--okd)", padding: "4px 8px", borderRadius: 4 }}>
+                  {activeResource.mimeType}
+                </span>
+              </div>
+              <h1 style={{ font: "700 clamp(28px, 3.4vw, 48px)/1.05 'Oswald', sans-serif", textTransform: "uppercase", margin: "0 0 16px" }}>
+                {activeResource.name}
+              </h1>
+              <p style={{ fontSize: 15, lineHeight: 1.65, color: "var(--mu)", maxWidth: 760, margin: "0 0 24px" }}>
+                {activeResource.description}
+              </p>
+
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 20, alignItems: "start" }}>
+                <div style={{ display: "grid", gap: 14 }}>
+                  <div style={{ border: "1px solid var(--ln)", background: "var(--s2)", borderRadius: 8, padding: 16 }}>
+                    <p className="lb" style={{ margin: "0 0 8px" }}>URI DESCRIPTOR</p>
+                    <pre style={{ margin: 0, background: "var(--sf)", border: "1px solid var(--ln)", borderRadius: 6, padding: 10, fontFamily: "var(--mono)", fontSize: 11.5, color: "var(--ink)", overflowX: "auto" }}>
+                      {activeResource.uri}
+                    </pre>
+                  </div>
+                  <div style={{ border: "1px solid var(--ln)", background: "var(--s2)", borderRadius: 8, padding: 16 }}>
+                    <p className="lb" style={{ margin: "0 0 8px" }}>USAGE IN ASSISTANT CONTEXT</p>
+                    <p style={{ margin: 0, fontSize: 13, lineHeight: 1.6, color: "var(--mu)" }}>
+                      Assistants read this resource through the MCP <code style={{ fontFamily: "var(--mono)", fontSize: 11 }}>resources/read</code> endpoint to test dashboard generation against realistic multi-column operational data.
+                    </p>
+                  </div>
                 </div>
-                <h1 className="dl-h1 tool">{activePrompt.name}</h1>
-                <p className="dl-lead">{activePrompt.description}</p>
+                {(() => {
+                  const body = JSON.stringify(
+                    { jsonrpc: "2.0", id: 1, method: "resources/read", params: { uri: activeResource.uri } },
+                    null,
+                    2
+                  );
+                  return <Console label="JSON-RPC request" body={body} copied={copied === "res"} onCopy={() => copy("res", body)} />;
+                })()}
+              </div>
+            </div>
+          )}
 
-                <div className="dl-split">
-                  <div className="dl-card">
-                    <div className="dl-card-title">Template arguments</div>
-                    {activePrompt.arguments.map((a) => (
-                      <div key={a.name} className="dl-param">
-                        <span className="dl-param-name">{a.name}</span>
-                        {a.required && <span className="dl-req">required</span>}
-                        <div className="dl-param-desc">{a.description}</div>
+          {/* ---------- PROMPT ---------- */}
+          {activePrompt && (
+            <div>
+              <div style={{ marginBottom: 16 }}>
+                <span className="mono" style={{ fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--mu)", background: "var(--s2)", padding: "4px 8px", borderRadius: 4, border: "1px solid var(--ln)" }}>
+                  PROMPT TEMPLATE
+                </span>
+              </div>
+              <h1 style={{ font: "700 clamp(28px, 3.4vw, 48px)/1.05 'Oswald', sans-serif", textTransform: "uppercase", margin: "0 0 16px" }}>
+                {activePrompt.name}
+              </h1>
+              <p style={{ fontSize: 15, lineHeight: 1.65, color: "var(--mu)", maxWidth: 760, margin: "0 0 24px" }}>
+                {activePrompt.description}
+              </p>
+
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 20, alignItems: "start" }}>
+                <div style={{ border: "1px solid var(--ln)", background: "var(--s2)", borderRadius: 8, padding: 16 }}>
+                  <p className="lb" style={{ margin: "0 0 12px" }}>TEMPLATE ARGUMENTS</p>
+                  {activePrompt.arguments.map((a) => (
+                    <div key={a.name} style={{ padding: "10px 0", borderBottom: "1px solid var(--ln)" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <span className="mono" style={{ fontWeight: 600, fontSize: 13, color: "var(--ink)" }}>{a.name}</span>
+                        {a.required && <span className="mono" style={{ fontSize: 10, color: "#f87171", border: "1px solid #7f1d1d", borderRadius: 3, padding: "1px 4px" }}>required</span>}
                       </div>
-                    ))}
-                  </div>
-                  <Console
-                    label="prompt template"
-                    body={activePrompt.template}
-                    copied={copied === "prompt"}
-                    onCopy={() => copy("prompt", activePrompt.template)}
-                  />
+                      <div style={{ marginTop: 4, fontSize: 12.5, color: "var(--mu)", lineHeight: 1.5 }}>{a.description}</div>
+                    </div>
+                  ))}
                 </div>
+                <Console
+                  label="prompt template"
+                  body={activePrompt.template}
+                  copied={copied === "prompt"}
+                  onCopy={() => copy("prompt", activePrompt.template)}
+                />
               </div>
-            )}
+            </div>
+          )}
 
-            {/* ---------- TOOL ---------- */}
-            {activeTool && (
-              <div>
-                <div className="dl-chip-row">
-                  <span className="dl-chip">Tool</span>
-                  <span className="dl-chip ok">Read-only</span>
-                  <span className="dl-chip warn">Idempotent</span>
-                  {activeTool.deprecated && <span className="dl-chip bad">Deprecated</span>}
-                </div>
-                <h1 className="dl-h1 tool">{activeTool.name}()</h1>
-                <p className="dl-lead">{activeTool.description}</p>
+          {/* ---------- TOOL ---------- */}
+          {activeTool && (
+            <div>
+              <div style={{ marginBottom: 16, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                <span className="mono" style={{ fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--mu)", background: "var(--s2)", padding: "4px 8px", borderRadius: 4, border: "1px solid var(--ln)" }}>
+                  TOOL
+                </span>
+                <span className="mono" style={{ fontSize: 11, color: "var(--ok)", background: "var(--okd)", padding: "4px 8px", borderRadius: 4 }}>
+                  Read-only
+                </span>
+                <span className="mono" style={{ fontSize: 11, color: "#fbbf24", background: "rgba(251, 191, 36, 0.08)", padding: "4px 8px", borderRadius: 4 }}>
+                  Idempotent
+                </span>
+                {activeTool.deprecated && (
+                  <span className="mono" style={{ fontSize: 11, color: "#f87171", background: "rgba(248, 113, 113, 0.12)", padding: "4px 8px", borderRadius: 4 }}>
+                    Deprecated
+                  </span>
+                )}
+              </div>
+              <h1 style={{ font: "700 clamp(28px, 3.4vw, 48px)/1.05 'Oswald', sans-serif", textTransform: "uppercase", margin: "0 0 16px" }}>
+                {activeTool.name}()
+              </h1>
+              <p style={{ fontSize: 15, lineHeight: 1.65, color: "var(--mu)", maxWidth: 760, margin: "0 0 24px" }}>
+                {activeTool.description}
+              </p>
 
-                <div className="dl-split">
-                  <div className="dl-stack">
-                    <div className="dl-card">
-                      <div className="dl-card-title">Input parameters</div>
-                      {activeTool.inputSchema.properties && Object.keys(activeTool.inputSchema.properties).length > 0 ? (
-                        Object.entries(activeTool.inputSchema.properties).map(([key, prop]) => {
-                          const isReq = activeTool.inputSchema.required?.includes(key);
-                          return (
-                            <div key={key} className="dl-param">
-                              <span className="dl-param-name">{key}</span>
-                              <span className="dl-param-type">{prop.type || (prop.enum ? "enum" : "object")}</span>
-                              {isReq && <span className="dl-req">required</span>}
-                              {prop.description && <div className="dl-param-desc">{prop.description}</div>}
-                              {prop.enum && (
-                                <div className="dl-enums">
-                                  {prop.enum.map((e) => (
-                                    <code key={e} style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, background: "var(--chip)", border: "1px solid var(--line)", borderRadius: 4, padding: "1px 6px" }}>
-                                      {e}
-                                    </code>
-                                  ))}
-                                </div>
-                              )}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 20, alignItems: "start" }}>
+                <div style={{ display: "grid", gap: 14 }}>
+                  <div style={{ border: "1px solid var(--ln)", background: "var(--s2)", borderRadius: 8, padding: 16 }}>
+                    <p className="lb" style={{ margin: "0 0 12px" }}>INPUT PARAMETERS</p>
+                    {activeTool.inputSchema.properties && Object.keys(activeTool.inputSchema.properties).length > 0 ? (
+                      Object.entries(activeTool.inputSchema.properties).map(([key, prop]) => {
+                        const isReq = activeTool.inputSchema.required?.includes(key);
+                        return (
+                          <div key={key} style={{ padding: "10px 0", borderBottom: "1px solid var(--ln)" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                              <span className="mono" style={{ fontWeight: 600, fontSize: 13, color: "var(--ink)" }}>{key}</span>
+                              <span className="mono" style={{ fontSize: 11, color: "var(--mu)" }}>{prop.type || (prop.enum ? "enum" : "object")}</span>
+                              {isReq && <span className="mono" style={{ fontSize: 10, color: "#f87171", border: "1px solid #7f1d1d", borderRadius: 3, padding: "1px 4px" }}>required</span>}
                             </div>
-                          );
-                        })
-                      ) : (
-                        <div className="dl-empty">
-                          This tool takes no parameters. Call it with an empty object: <code>{"{}"}</code>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="dl-card">
-                      <div className="dl-card-title">Tool annotations</div>
-                      <div className="dl-ann">
-                        <div>readOnlyHint: <b>true</b></div>
-                        <div>destructiveHint: <b>false</b></div>
-                        <div>idempotentHint: <b>true</b></div>
-                        <div>openWorldHint: <b>false</b></div>
+                            {prop.description && <div style={{ marginTop: 4, fontSize: 12.5, color: "var(--mu)", lineHeight: 1.5 }}>{prop.description}</div>}
+                            {prop.enum && (
+                              <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 6 }}>
+                                {prop.enum.map((e) => (
+                                  <code key={e} style={{ fontFamily: "var(--mono)", fontSize: 11, background: "var(--sf)", border: "1px solid var(--ln)", borderRadius: 3, padding: "1px 5px", color: "var(--ink)" }}>
+                                    {e}
+                                  </code>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <div style={{ color: "var(--mu)", fontSize: 13, fontStyle: "italic" }}>
+                        This tool takes no parameters. Call it with an empty object: <code>{"{}"}</code>
                       </div>
-                    </div>
+                    )}
                   </div>
 
-                  {(() => {
-                    const body = toolSnippet(activeTool, codeTab);
-                    const mk = (value: CodeTab, label: string) => ({
-                      value,
-                      label,
-                      active: codeTab === value,
-                      onClick: () => setCodeTab(value),
-                    });
-                    return (
-                      <Console
-                        body={body}
-                        copied={copied === "tool"}
-                        onCopy={() => copy("tool", body)}
-                        tabs={[mk("claude", "Claude Tool"), mk("sdk", "TypeScript SDK"), mk("jsonrpc", "JSON-RPC"), mk("schema", "Schema")]}
-                      />
-                    );
-                  })()}
+                  <div style={{ border: "1px solid var(--ln)", background: "var(--s2)", borderRadius: 8, padding: 16 }}>
+                    <p className="lb" style={{ margin: "0 0 10px" }}>TOOL ANNOTATIONS</p>
+                    <div className="mono" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, fontSize: 11.5, color: "var(--mu)" }}>
+                      <div>readOnlyHint: <b style={{ color: "var(--ok)" }}>true</b></div>
+                      <div>destructiveHint: <b style={{ color: "var(--ok)" }}>false</b></div>
+                      <div>idempotentHint: <b style={{ color: "var(--ok)" }}>true</b></div>
+                      <div>openWorldHint: <b style={{ color: "var(--ok)" }}>false</b></div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            )}
-          </main>
 
-          <footer className="dl-foot">
+                {(() => {
+                  const body = toolSnippet(activeTool, codeTab);
+                  const mk = (value: CodeTab, tabLabel: string) => ({
+                    value,
+                    label: tabLabel,
+                    active: codeTab === value,
+                    onClick: () => setCodeTab(value),
+                  });
+                  return (
+                    <Console
+                      body={body}
+                      copied={copied === "tool"}
+                      onCopy={() => copy("tool", body)}
+                      tabs={[mk("claude", "Claude Tool"), mk("sdk", "TypeScript SDK"), mk("jsonrpc", "JSON-RPC"), mk("schema", "Schema")]}
+                    />
+                  );
+                })()}
+              </div>
+            </div>
+          )}
+
+          {/* Footer at the bottom of the scrollable cluster */}
+          <footer className="mf" style={{ marginTop: "auto", paddingTop: "32px", borderTop: "1px solid var(--ln)" }}>
             <span>Free · open source · MIT</span>
             <span>
-              <a href="/docs">Docs</a> · <a href="/terms">Terms</a> · <a href="/privacy">Privacy</a> · Built with DashLint
+              <a href="/docs" style={{ color: "inherit", textDecoration: "none" }}>Docs</a> · <a href="/terms" style={{ color: "inherit", textDecoration: "none" }}>Terms</a> · <a href="/privacy" style={{ color: "inherit", textDecoration: "none" }}>Privacy</a> · Built with DashLint
             </span>
           </footer>
         </div>
       </div>
+
+      {/* ---------------- MOBILE DRAWER (For screen <= 1100px) ---------------- */}
+      <div className={`drawer ${menuOpen ? "open" : ""}`} id="drawer" style={{ display: menuOpen ? "block" : "none" }}>
+        <div style={{ padding: "16px 20px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <div className="logo">
+              <i>D/</i>
+              <div>
+                <b>DASHLINT</b>
+                <small>{tools.length} tools · remote MCP</small>
+              </div>
+            </div>
+            <button className="btn g sm" onClick={() => setMenuOpen(false)}>
+              ✕
+            </button>
+          </div>
+
+          <input
+            className="doc-search-box"
+            type="text"
+            placeholder="Search tools, prompts…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{ marginBottom: 16 }}
+          />
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: "calc(100vh - 160px)", overflowY: "auto" }}>
+            <button className={`doc-nav-btn ${selectedId === "overview" ? "active" : ""}`} onClick={() => go("overview")}>
+              Overview &amp; Architecture
+            </button>
+            <button className={`doc-nav-btn ${selectedId === "quickstart" ? "active" : ""}`} onClick={() => go("quickstart")}>
+              Quickstart &amp; AI Clients
+            </button>
+            <button className={`doc-nav-btn ${selectedId === "sdk" ? "active" : ""}`} onClick={() => go("sdk")}>
+              TypeScript SDK
+            </button>
+            <p className="lb" style={{ marginTop: 12 }}>TOOLS</p>
+            {tools.map(t => (
+              <button key={t.name} className={`doc-nav-btn code ${selectedId === t.name ? "active" : ""}`} onClick={() => go(t.name)}>
+                <span className="mono">{t.name}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+      <div className={`scrim ${menuOpen ? "on" : ""}`} onClick={() => setMenuOpen(false)} />
     </>
   );
 }
