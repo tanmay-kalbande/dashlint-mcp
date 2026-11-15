@@ -22,7 +22,7 @@ type Tool = {
   };
 };
 
-const tools = (manifest as { tools: Tool[] }).tools;
+const tools = (manifest as unknown as { tools: Tool[] }).tools;
 
 const RESOURCES = [
   {
