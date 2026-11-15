@@ -544,10 +544,15 @@ export default function Home() {
               How to use
             </button>
             <a
-              className="btn g sm d-only"
+              className="btn-doc-tab d-only"
               href="/docs"
+              title="DashLint MCP Documentation"
             >
-              {"Docs ↗"}
+              <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M2.5 3h7a2 2 0 0 1 2 2v8a1.5 1.5 0 0 0-1.5-1.5H2.5V3z" />
+                <path d="M2.5 11.5h7.5" />
+              </svg>
+              <span>Docs</span>
             </a>
             <a
               className="btn g sm d-only"
@@ -748,11 +753,15 @@ export default function Home() {
                   </a>
                 </div>
                 <a
-                  className="btn g sm"
+                  className="btn-doc-tab"
                   href="/docs"
-                  style={{ width: "100%", marginBottom: "8px" }}
+                  style={{ width: "100%", marginBottom: "8px", justifyContent: "center" }}
                 >
-                  {"Docs ↗"}
+                  <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M2.5 3h7a2 2 0 0 1 2 2v8a1.5 1.5 0 0 0-1.5-1.5H2.5V3z" />
+                    <path d="M2.5 11.5h7.5" />
+                  </svg>
+                  <span>API Documentation</span>
                 </a>
                 <a
                   className="btn g sm"

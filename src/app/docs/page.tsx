@@ -463,35 +463,76 @@ export default function DocsPage() {
           overflow: hidden;
           box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
         }
+        .ad-nav-switcher {
+          display: flex;
+          align-items: center;
+          background: #13171f;
+          border: 1px solid #222a38;
+          border-radius: 8px;
+          padding: 3px;
+          gap: 2px;
+        }
+        .ad-nav-tab {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 5px 12px;
+          font-size: 12px;
+          font-weight: 500;
+          color: #94a3b8;
+          border-radius: 6px;
+          text-decoration: none;
+          transition: all 0.15s ease;
+          cursor: pointer;
+        }
+        .ad-nav-tab:hover {
+          color: #f1f5f9;
+          background: rgba(255, 255, 255, 0.04);
+        }
+        .ad-nav-tab.active {
+          color: #ffffff;
+          background: #1e2736;
+          font-weight: 600;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        }
         .ad-code-tabs {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          background: #141820;
-          border-bottom: 1px solid #222936;
-          padding: 0 12px;
+          background: #0e1117;
+          border-bottom: 1px solid #1f2633;
+          padding: 8px 12px;
+          gap: 12px;
         }
         .ad-tabs-left {
           display: flex;
+          background: #151a22;
+          border: 1px solid #222b3a;
+          padding: 3px;
+          border-radius: 6px;
           gap: 2px;
         }
         .ad-code-tab {
-          background: none;
+          background: transparent;
           border: none;
-          padding: 10px 12px;
-          font-size: 12px;
-          color: #9ca3af;
-          cursor: pointer;
+          padding: 5px 11px;
+          font-size: 11px;
           font-weight: 500;
-          border-bottom: 2px solid transparent;
+          color: #94a3b8;
+          border-radius: 4px;
+          cursor: pointer;
           font-family: inherit;
+          transition: all 0.15s ease;
         }
         .ad-code-tab:hover {
-          color: #f3f4f6;
+          color: #f1f5f9;
+          background: rgba(255, 255, 255, 0.05);
         }
         .ad-code-tab.active {
-          color: #60a5fa;
-          border-bottom-color: #3b82f6;
+          color: #ffffff;
+          background: #243044;
+          font-weight: 600;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
         }
         .ad-copy-btn {
           background: #1a202c;
@@ -569,12 +610,20 @@ export default function DocsPage() {
       <div className="anthropic-docs subpage" id="docs-root">
         {/* Navigation Bar */}
         <header className="ad-nav">
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
             <a href="/" className="ad-brand">
               <span className="ad-logo">DASHLINT</span>
               <span className="ad-badge-docs">DOCS</span>
               <span className="ad-badge-version">v2.0.0</span>
             </a>
+            <div className="ad-nav-switcher">
+              <a href="/" className="ad-nav-tab">
+                <span>Server</span>
+              </a>
+              <div className="ad-nav-tab active">
+                <span>API Docs</span>
+              </div>
+            </div>
           </div>
 
           <div className="ad-nav-search">
@@ -1063,31 +1112,38 @@ console.log("Generated blueprint:", blueprint);`}
                   {/* Right Column: Interactive Code Console */}
                   <div className="ad-panel-right">
                     <div className="ad-code-tabs">
-                      <div className="ad-tabs-left">
-                        <button
-                          className={`ad-code-tab ${codeTab === "claude" ? "active" : ""}`}
-                          onClick={() => setCodeTab("claude")}
-                        >
-                          Claude Tool
-                        </button>
-                        <button
-                          className={`ad-code-tab ${codeTab === "sdk" ? "active" : ""}`}
-                          onClick={() => setCodeTab("sdk")}
-                        >
-                          TypeScript SDK
-                        </button>
-                        <button
-                          className={`ad-code-tab ${codeTab === "jsonrpc" ? "active" : ""}`}
-                          onClick={() => setCodeTab("jsonrpc")}
-                        >
-                          JSON-RPC
-                        </button>
-                        <button
-                          className={`ad-code-tab ${codeTab === "schema" ? "active" : ""}`}
-                          onClick={() => setCodeTab("schema")}
-                        >
-                          Schema
-                        </button>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <div style={{ display: "flex", gap: 5, paddingLeft: 4 }}>
+                          <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#ef4444", opacity: 0.85, display: "inline-block" }} />
+                          <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#eab308", opacity: 0.85, display: "inline-block" }} />
+                          <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#22c55e", opacity: 0.85, display: "inline-block" }} />
+                        </div>
+                        <div className="ad-tabs-left">
+                          <button
+                            className={`ad-code-tab ${codeTab === "claude" ? "active" : ""}`}
+                            onClick={() => setCodeTab("claude")}
+                          >
+                            Claude Tool
+                          </button>
+                          <button
+                            className={`ad-code-tab ${codeTab === "sdk" ? "active" : ""}`}
+                            onClick={() => setCodeTab("sdk")}
+                          >
+                            TypeScript SDK
+                          </button>
+                          <button
+                            className={`ad-code-tab ${codeTab === "jsonrpc" ? "active" : ""}`}
+                            onClick={() => setCodeTab("jsonrpc")}
+                          >
+                            JSON-RPC
+                          </button>
+                          <button
+                            className={`ad-code-tab ${codeTab === "schema" ? "active" : ""}`}
+                            onClick={() => setCodeTab("schema")}
+                          >
+                            Schema
+                          </button>
+                        </div>
                       </div>
                       <button
                         className="ad-copy-btn"
