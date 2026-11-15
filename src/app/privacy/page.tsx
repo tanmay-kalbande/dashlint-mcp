@@ -63,7 +63,7 @@ export default function PrivacyPage() {
           .legal-h1 { font-size: 22px; }
         }
       `}</style>
-      <main className="legal-page">
+      <main className="legal-page subpage">
         <a href="/" className="legal-back">{"\u2190"} Back to DashLint</a>
         <h1 className="legal-h1">Privacy Policy</h1>
         <p className="legal-date">Last updated: November 2026</p>

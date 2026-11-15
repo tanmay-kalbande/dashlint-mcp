@@ -265,7 +265,7 @@ export default function DocsPage() {
         }
       `}</style>
 
-      <main className="docs-page">
+      <main className="docs-page subpage">
         <a href="/" className="docs-back">
           {"\u2190"} Back to DashLint
         </a>

@@ -167,12 +167,13 @@ export default function AdminPage() {
 
   return (
     <main
+      className="subpage"
       style={{
         maxWidth: 960,
         margin: "0 auto",
         padding: "40px 24px 80px",
-        fontFamily: "Inter, system-ui, sans-serif",
-        color: "#e5e7eb",
+        fontFamily: "var(--sans)",
+        color: "var(--ink)",
       }}
     >
       {/* Top Header */}
